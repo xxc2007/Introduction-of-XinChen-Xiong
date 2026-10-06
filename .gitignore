@@ -1,0 +1,14 @@
+# 过程产物与本地环境，一律不入库
+*.log
+.DS_Store
+Thumbs.db
+.mimosa/
+node_modules/
+.tmp/
+*.bak
+# 部署目标（真实主机/登录名/密钥路径）——仓库里只允许 .deploy.env.example
+.deploy.env
+scripts/.local-deploy.env
+
+# 本地预览服务器产生的临时文件
+.serve.pid

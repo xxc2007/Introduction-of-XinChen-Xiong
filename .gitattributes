@@ -1,0 +1,21 @@
+# 换行符统一：仓库与部署一律 LF
+# 背景：工作区 CRLF 经 tar 部署后会造成服务器文件与仓库 blob 字节不一致，
+# 使逐字节同步核验出现假性差异。
+* text=auto eol=lf
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.svg text eol=lf
+*.woff binary
+*.woff2 binary
+*.mp3 binary
+*.m4a binary
+*.mp4 binary
+
+# 第三方库不计入语言统计
+assets/vendor/*.js linguist-vendored=true linguist-detectable=false
+assets/fonts/*.woff2 binary linguist-vendored=true
