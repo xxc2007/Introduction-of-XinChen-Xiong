@@ -23,12 +23,17 @@ if [ "$LOCAL" = "$REMOTE" ]; then echo "  ✓ $N 个文件全部一致"
 else echo "  ✗ 差异："; diff <(printf '%s\n' "$LOCAL") <(printf '%s\n' "$REMOTE") | head -20; FAIL=1; fi
 
 echo "── B. 本地 HEAD ↔ GitHub 仓库树"
-LOCAL_TREE="$(git rev-parse HEAD^{tree})"
-GH_TREE="$(gh api "repos/$REPO/git/trees/HEAD" --jq '.sha' 2>/dev/null || true)"
-if [ -z "$GH_TREE" ]; then echo "  ! 取不到远端树（网络或仓库未建）"; FAIL=1
-elif [ "$LOCAL_TREE" = "$GH_TREE" ]; then echo "  ✓ 树哈希相同 $LOCAL_TREE"
-else
-  echo "  ! 树哈希不同（本地 $LOCAL_TREE / 远端 $GH_TREE），逐文件比对："
+# 原来这里比的是「本地 tree 哈希 ↔ gh api git/trees/HEAD 的 .sha」，而那个接口在 HEAD 这种
+# 写法下回来的是 commit 的 sha（实测两次都是 0170a18…，等于 HEAD），于是永远报「树哈希不同」——
+# 一条恒红的检查等于没有检查，还会把真差异埋进它的回退分支里。
+# 现在两句话：先比 HEAD（判等就一句话），再逐个比部署集里每个文件的 git blob sha。
+LOCAL_HEAD="$(git rev-parse HEAD)"
+GH_HEAD="$(gh api "repos/$REPO/commits/HEAD" --jq '.sha' 2>/dev/null || true)"
+if [ -z "$GH_HEAD" ]; then echo "  ! 取不到远端 HEAD（网络或仓库未建）"; FAIL=1
+elif [ "$GH_HEAD" = "$LOCAL_HEAD" ]; then echo "  ✓ 远端 HEAD 与本地同一个提交 $LOCAL_HEAD"
+else echo "  ✗ 远端 HEAD 是 $GH_HEAD，本地是 $LOCAL_HEAD（没推上去，或推上去的不是这一份）"; FAIL=1; fi
+if [ -n "$GH_HEAD" ]; then
+  echo "  └ 逐文件比对部署集："
   gh api "repos/$REPO/git/trees/HEAD?recursive=1" --jq '.tree[] | select(.type=="blob") | "\(.sha) \(.path)"' \
     | sort -k2 > /tmp/gh-blobs.txt
   BAD=0
@@ -92,9 +97,17 @@ while IFS= read -r u; do
   lp="${u%%\?*}"; lp="${lp#/}"
   [ -f "$lp" ] || { echo "  ! $u 在仓库里没有对应文件"; BADASSET=1; continue; }
   l="$(sha256sum "$lp" | cut -d' ' -f1)"
-  r="$(curl -sL -A "$UA" "https://$DEPLOY_SITE$u" | sha256sum | cut -d' ' -f1)"
-  if [ "$l" = "$r" ]; then printf '  ✓ %-52s 字节一致\n' "$u"
-  else printf '  ✗ %-52s 公网与仓库不一致（边缘命中旧副本）\n' "$u"; BADASSET=1; fi
+  # 换过一次 ?v= 之后每个 URL 都是全新的缓存键，第一次回源可能撞上 CF 正在填充（拿到半截或错误页），
+  # 于是报出假红——实测过：同一份 main.js 紧接着手工比就是一致的。不一致时最多再取两次。
+  r=""; n=0
+  while [ "$n" -lt 3 ]; do
+    n=$((n+1))
+    r="$(curl -sL -A "$UA" "https://$DEPLOY_SITE$u" | sha256sum | cut -d' ' -f1)"
+    [ "$l" = "$r" ] && break
+    [ "$n" -lt 3 ] && sleep 3
+  done
+  if [ "$l" = "$r" ]; then printf '  ✓ %-52s 字节一致%s\n' "$u" "$([ "$n" -gt 1 ] && printf '（第 %s 次取回才对上）' "$n")"
+  else printf '  ✗ %-52s 公网与仓库不一致（取回 %s 次仍不同，边缘命中旧副本）\n' "$u" "$n"; BADASSET=1; fi
 done <<< "$ASSETS"
 [ "$BADASSET" = 0 ] && echo "  ✓ $NA 条资源引用逐个对上" || FAIL=1
 
