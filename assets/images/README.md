@@ -22,8 +22,8 @@
 
 - 拍摄方式：**真实浏览器渲染**，Playwright 1.63 驱动本机 Chrome（`C:/Program Files/Google/Chrome/Application/chrome.exe`），
   `viewport 1280×800`、`deviceScaleFactor 1`、`waitUntil networkidle` 后再等 5 s，让入场动画与数字滚动跑完，然后截图。
-- 本机 DNS 把 `xxc2007.me` 解析到代理假 IP `198.18.0.104`（DoH 查到的真实记录是 Cloudflare `104.21.25.57` / `172.67.223.3`），
-  但 HTTPS 请求确实打到了线上：响应头 `Server: cloudflare`、`Last-Modified: Wed, 23 Sep 2026 04:53:07 GMT`、`CF-RAY: a469197d2a9b8ec0-NRT`。
+- 本机 DNS 会把域名解析到代理侧的假 IP，因此「能不能连通」不可信；判定是否真打到线上，看的是响应头——
+  `Server: cloudflare`、`CF-RAY` 与服务器的 `Last-Modified` 三者齐全，说明截图取自生产站点。
   **两张图都取自线上站点，未使用本地副本兜底**；`D:\nanchang15-website\site\index.html` 与线上首页逐字节相同（`cmp` 通过），可作交叉印证。
   GEOHOT 本地没有检出，只有线上版本，因此更不存在兜底替换。
 - 裁切：1280×800 → 1200×750 用**裁**不用压。纪念册取 `x=40`（保住右上角语言胶囊，实测内容横向范围 61–1204）；
