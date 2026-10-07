@@ -55,9 +55,10 @@ done
 echo "── D. 本地 ↔ 公网（经 Cloudflare）"
 UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126 Safari/537.36"
 # Cloudflare 的 Email Address Obfuscation 会改写 mailto: 并注入 email-decode.min.js，
-# 这是站点级功能不是缓存陈旧，比对前先把它归一化掉。
-cf_norm() { sed -e 's|<script data-cfasync="false" src="/cdn-cgi/scripts/[^"]*email-decode\.min\.js"></script>||g' \
-               -e 's|<a href="/cdn-cgi/l/email-protection#[0-9a-f]*"><span class="__cf_email__" data-cfemail="[0-9a-f]*">\[email&amp;#160;protected\]</span></a>|MAILTO|g'; }
+# 这是站点级功能不是缓存陈旧，比对前先归一化掉。
+# 归一化只有 tools/normalize-cf.mjs 这一份实现：这里以前另写了一串 sed，
+# 结果是「脚本说公网不一致、手工比对说一致」——两份规则各自漂移，谁也不知道该信谁。
+cf_norm() { node tools/normalize-cf.mjs --diff -; }
 for f in index.html en/index.html; do
   [ -f "$f" ] || continue
   case "$f" in index.html) u="/";; *) u="/en/";; esac
