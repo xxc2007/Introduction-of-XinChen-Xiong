@@ -177,16 +177,32 @@ Playwright 驱动本机 Chrome，`viewport 1280×800`、`deviceScaleFactor 1`、
 工作区和索引里都查不到这四个（`git ls-files assets/images` 13 项、`ls` 13 项，其中一项就是本文件的前身）。
 它们的尺寸、来源、Pillow/libjpeg 那段取舍过程，本文一律不再描述——**文件不在了，描述就不该留着**。
 
-顺带三条由这次实测翻出来的、不属于本文动手范围的旧账：
+顺带四条由这次实测翻出来的账，前三条不属于本文的动手范围：
 
-1. `index.html:48` 和 `en/index.html:49` 的 JSON-LD `"image"` 还指着 `https://xxc2007.me/assets/images/avatar.webp`，
-   而这个文件已经删了。页面 `<img>` 用的是 `avatar.jpg`，只有结构化数据还在指旧地址。
-2. `docs/build-contract.md` §0 那行还写着 `avatar.jpg (9.8 KB) / avatar.webp (5.3 KB)`，两个数字都是旧版。
-3. `README.md:156` / `README.en.md:157` 的目录树注释还写着「另有实测清单 README.md」，指的是本文搬走之前的那份。
+1. ~~`index.html` 与 `en/index.html` 的 JSON-LD `"image"` 指着已经删掉的 `avatar.webp`。~~
+   **本文写完之前已被并行提交 `38f86e8` 修掉**，复查现状：`index.html:48` 与 `en/index.html:49` 现在都是
+   `https://xxc2007.me/assets/images/avatar.jpg`。留这句是为了说明本文核对到的时刻。
+2. `docs/build-contract.md` §0 那行还写着 `avatar.jpg (9.8 KB) / avatar.webp (5.3 KB)`，两个数字都是旧版；
+   同一文件第 52 行还写着 `.avatar(圆框)`，而 `style.css:299` 那条已经注明「不加圆框、不加外环、不加描边」。
+3. `README.md:156` / `README.en.md:157` 的目录树注释还写着「另有实测清单 README.md」/ "a measured asset manifest"，
+   指的是本文搬走之前的那份。
+4. **线上还有个缓存尾巴**：`avatar.webp` 与 `favicon.svg` 早已从仓库删除，公网
+   `https://xxc2007.me/assets/images/avatar.webp` 却仍然返回 200——那是 Cloudflare 边缘缓存的旧副本。
+   同一批地址在源站上带 `Host` 头请求 `http://127.0.0.1/…` 实测都是 **404**（2026-10-07 复核）。
+   所以这类「仓库里没有、线上还回 200」先按边缘缓存处理，别当成部署漏了文件，也别急着把文件加回去。
 
-这三处都落在别人正在审的文件里，等站长或对应负责方处理。
+第 2、3 两条落在别人正在审的文件里，等站长或对应负责方处理。
 
-## 十 · 这台机器上当前的工具版本
+## 十 · 本文前身那个公网 URL 现在是什么状态
+
+`https://xxc2007.me/assets/images/README.md` 曾经能直接取到全文（它就躺在 `assets/` 里，被归档清单整目录带上去的）。
+2026-10-07 处理：文件从仓库删除（本文取代它），服务器上的那一份单独删掉，实测
+源站 `http://127.0.0.1/assets/images/README.md`（带 `Host` 头）与公网
+`https://xxc2007.me/assets/images/README.md` 都是 **404**，同期 `/assets/images/avatar.jpg` 仍是 **200**。
+机制上真正的闸门是 `scripts/deploy.sh:60` 的归档清单——它只打 `index.html en 404.html robots.txt sitemap.xml assets`，
+`docs` 从来不在里面，所以本文（以及 `docs/` 下其它内部文档）不会被部署到公网。**要往 `docs/` 放东西，不要往 `assets/` 放。**
+
+## 十一 · 这台机器上当前的工具版本
 
 写在这是为了让上面每条命令可追。旧清单里那两个版本号今天都对不上了：
 Playwright 实测已是 `1.64.0-alpha`（旧写 1.63）；Pillow `12.3` 无法核对——本机 PATH 上没有 python，
