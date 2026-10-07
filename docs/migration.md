@@ -91,13 +91,19 @@ cp .deploy.env.example .deploy.env      # .gitignore 第 10 行排除它，绝�
 
 然后：
 
-1. 把 `deploy/nginx.conf.example` 拷成 `/etc/nginx/sites-available/xxc2007.me`（它就是为这一步准备的，路径与真机一致），
+1. 先让 webroot 存在且属主对：`sudo mkdir -p /var/www/intro && sudo chown -R www-data:www-data /var/www/intro`。
+   （这一步在挂配置之前——原顺序是先 reload 再建目录，中间那一次 reload 指向一个不存在的根。）
+2. **证书必须在挂这份配置之前拿到**，否则第 3 步的 `nginx -t` 一定失败：`:443` 那两个 server 引用了
+   `ssl_certificate` / `ssl_certificate_key`，文件不在 nginx 就不让过。而 certbot 的 webroot 验证又要求
+   `:80` 已经在服务——先只挂一个最小的 `:80` server（root 指向 `/var/www/intro`，留好
+   `/.well-known/acme-challenge/`），`certbot certonly --webroot` 拿到证书，再整份替换。
+   `deploy/nginx.conf.example` 文件头把这三步顺序写死了，照它做即可。
+3. 把 `deploy/nginx.conf.example` 拷成 `/etc/nginx/sites-available/xxc2007.me`（它就是为这一步准备的，路径与真机一致），
    `ln -s` 进 `sites-enabled`，`nginx -t` 通过后 `systemctl reload nginx`。
-2. 让 webroot 存在且属主对：`sudo mkdir -p /var/www/intro && sudo chown -R www-data:www-data /var/www/intro`。
-3. 一条命令上线：`bash scripts/deploy.sh "首次迁移部署"`。它按五步走——
+4. 一条命令上线：`bash scripts/deploy.sh "首次迁移部署"`。它按五步走——
    闸门（`check-parity` / `check-links` / `check-bytes` + 对所有 `scripts/*.sh` 做 `bash -n`、对 `tools/*.mjs` 做 `node --check`）
    → 提交并 `git push`（重试 3 次）→ `git archive HEAD` 上服务器 → `verify-sync.sh` 四方核验 → 带 `Host` 头逐前缀探活。
-4. 切域名根（见「五」）。
+5. 切域名根（见「五」）。
 
 ---
 

@@ -3,6 +3,16 @@
 # 用法：拷成 /etc/nginx/sites-available/xxc2007.me → 软链进 sites-enabled → nginx -t → reload
 # 需要你自己填的：证书路径（certbot 出来的那份）、GEOHOT 与 Artalk 的端口、以及 webroot 归属。
 #
+# 先解证书，再挂这份配置——否则第一步就会卡住：:443 那两个 server 里的 ssl_certificate
+# 指向的文件不存在时 nginx -t 直接失败；而 certbot 的 webroot 验证又要求 :80 已经在服务。
+# 破法是按顺序来，别一上来就整份拷：
+#   1) 先只挂一个最小的 :80 server（root 指向介绍站目录 + 留 /.well-known/acme-challenge/），
+#      nginx -t && reload，确认 http://域名/ 能打开；
+#   2) certbot certonly --webroot ... 拿到证书；
+#   3) 再整份替换成下面这一份，nginx -t && reload。
+#   （证书路径本身不是秘密：/etc/letsencrypt/live/<域名>/privkey.pem 这种写法可以留在仓库里，
+#     私钥内容不在里面。check-links 对这条开了口子。）
+#
 # 归属：介绍站拿 / 、/en/ 、/assets/ 、/404.html 、/favicon.ico ；
 #       /nc15/ 是纪念册（alias /var/www/nc15/），/geohot 反代 :3000，/comment/ 反代 :23366。
 # /comment/ 为什么必须在域名根：纪念册的 wall.js 用根绝对路径请求 Artalk API，

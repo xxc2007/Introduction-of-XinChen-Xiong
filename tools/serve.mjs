@@ -6,8 +6,12 @@ import { extname, join, resolve, sep } from "node:path";
 
 const PORT = Number(process.argv[2] || 8899);
 const ROOT = resolve(process.cwd());
-// 纪念册仓库（迁移后应为 /nc15/ 前缀）；不存在时该前缀直接 404
-const NC15 = process.env.NC15_DIR ? resolve(process.env.NC15_DIR) : "D:\\nanchang15-website\\site";
+/* 纪念册仓库挂到 /nc15/，用来在迁移前做真机验证。
+   这里不写死任何一台机器的绝对路径——换一台克隆它就会指到一个不存在的地方，
+   然后 /nc15/ 静默 404，看起来像"母本没了"而不是"你没告诉我在哪"。
+   默认按同目录的邻居猜一次，猜不到就明说，用 NC15_DIR 显式指。 */
+const NC15 = resolve(process.env.NC15_DIR || join(ROOT, "..", "nanchang15-website", "site"));
+if (!existsSync(NC15)) console.log(`  ! 没找到纪念册仓库（试的是 ${NC15}）：/nc15/ 会返回 404。要一起预览就 NC15_DIR=<路径> node tools/serve.mjs`);
 
 const MIME = {
   ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8",
