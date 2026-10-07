@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>肆零肆 · 这个地址下没有东西 · 熊鑫晨</title>
+<meta name="description" content="这个地址下没有东西。首页、English、纪念册、地理热点四个已经上线的地址列在下面。">
+<meta name="author" content="熊鑫晨">
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#F0EEE6">
+<style>
+/* 这一页不引 main.js：没有动效、没有交互，静态就能读完。
+   下面这段只服务 404 独有的两个类，位置放在两份外链之前——
+   style.css 加载成功时它说了算，加载失败（或字体切片没下来）时，
+   衬线与颜色都退到系统字族和硬编码的纸墨值，页面照样站得住。 */
+.nf-note{max-width:46em;margin-bottom:clamp(26px,3.4vw,40px)}
+.nf-links{list-style:none;max-width:46em;margin-top:clamp(8px,1.4vw,16px);
+  border-top:1px solid var(--line,#E4DFD3)}
+.nf-links li{border-bottom:1px solid var(--line,#E4DFD3)}
+.nf-links a{
+  display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 14px;
+  padding:15px 2px;text-decoration:none;
+}
+.nf-links .zh{
+  font-family:var(--serif,Georgia,"Times New Roman","Songti SC","STSong","Noto Serif CJK SC","SimSun",serif);
+  font-size:clamp(18px,1vw + 14px,22px);font-weight:700;letter-spacing:.03em;
+  color:var(--ink,#1F1E1D);
+}
+.nf-links .en{font-size:14px;letter-spacing:.02em;color:var(--muted,#6E6A5E)}
+.nf-links a:hover .zh,.nf-links a:focus-visible .zh{color:var(--terra-ink,#A8492A)}
+@media (max-width:420px){.nf-links a{gap:2px 10px;padding:13px 2px}}
+</style>
+<link rel="stylesheet" href="./assets/fonts/noto-serif-sc/wght.css?v=a1b2">
+<link rel="stylesheet" href="./assets/css/style.css?v=a1b2">
+</head>
+<body>
+
+<a class="skip" href="#main">跳到主要内容</a>
+
+<header class="topbar">
+  <a class="brand" href="./"><b>熊鑫晨</b><span>Xiong Xinchen</span></a>
+</header>
+
+<main id="main">
+  <section class="nf">
+    <h1 class="sec-title"><span class="num">肆零肆</span><span class="eyebrow">NOT FOUND</span><span class="zh">这个地址下没有东西</span></h1>
+
+    <p class="nf-note">这一页我没有写过，所以这里确实没有东西可读；下面几个地址是我已经放上线的，从哪一个进去都一样。</p>
+
+    <ul class="nf-links">
+      <li><a href="./" hreflang="zh-Hans"><span class="zh">首页</span><span class="en" lang="en">The Chinese page you meant to open.</span></a></li>
+      <li><a href="./en/" hreflang="en"><span class="zh">English</span><span class="en" lang="en">The same page in English.</span></a></li>
+      <li><a href="/nc15/"><span class="zh">纪念册</span><span class="en" lang="en">The memorial site for my old school.</span></a></li>
+      <li><a href="/geohot/"><span class="zh">地理热点</span><span class="en" lang="en">GEOHOT, a daily geography digest.</span></a></li>
+    </ul>
+  </section>
+</main>
+
+<footer class="foot">
+  <p class="foot-sign">编辑标准与代码 · 熊鑫晨</p>
+  <p class="foot-meta">2026 · MIT 协议</p>
+</footer>
+
+</body>
+</html>

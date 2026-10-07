@@ -1,0 +1,22 @@
+# robots.txt · xxc2007.me 域名根
+# 本文件由个人介绍站拥有，管辖的是整个域名：根目录是介绍站，
+# /nc15/ 是纪念册（纯静态，全部可爬，不要 Disallow），
+# /geohot/ 是反代到本机 Node 服务的地理热点。
+# 注：Cloudflare 托管的 content-signal 段在本文件之上生效，这里只声明本站规则与站点地图。
+
+User-agent: *
+Allow: /
+
+# 以下三条沿用 GEOHOT 迁移前的既有规则，路径不带尾斜杠：
+# admin 是后台、starred 与 feedback 是需登录的写入口，都不该进索引。
+Disallow: /geohot/admin
+Disallow: /geohot/starred
+Disallow: /geohot/feedback
+# /geohot/api/v1/ 与 /geohot/api/mcp 是故意留给他们爬的（公开数据接口与 MCP 入口），别在这里加 Disallow。
+
+# /comment/ 是 Artalk 留言后端（反代），必须留在域名根：
+# 纪念册的 wall.js 用根绝对路径调它，跟着搬到 /nc15/comment/ 会让留言墙整块失效，
+# 所以这一条路径既不 Disallow 也不挪走。
+
+Sitemap: https://xxc2007.me/sitemap.xml
+Sitemap: https://xxc2007.me/nc15/sitemap.xml
