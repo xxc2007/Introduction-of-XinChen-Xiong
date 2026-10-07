@@ -5,7 +5,7 @@ import { execFileSync } from "node:child_process";
 import { gzipSync } from "node:zlib";
 import { join, resolve } from "node:path";
 
-const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
+const ROOT = resolve(process.cwd());
 const files = execFileSync("git", ["ls-files"], { cwd: ROOT }).toString().trim().split("\n");
 const KB = n => Math.round(n / 102.4) / 10;
 const gz = p => gzipSync(readFileSync(join(ROOT, p))).length;

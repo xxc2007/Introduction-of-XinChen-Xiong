@@ -4,7 +4,7 @@ import { readFileSync, existsSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { dirname, resolve, join } from "node:path";
 
-const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
+const ROOT = resolve(process.cwd());
 const files = execFileSync("git", ["ls-files"], { cwd: ROOT }).toString().trim().split("\n")
   .filter(f => /\.(html|css|js|mjs|md|xml|json|svg)$/.test(f));
 

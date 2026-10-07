@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-label="Introduction of XinChen Xiong · xxc2007.me · 青山湖畔的纪念册 · GEOHOT 地理热点">
+  <rect width="1200" height="400" fill="#F0EEE6"/>
+  <g fill="none" stroke="#E4DFD3" stroke-width="1.4" stroke-linecap="round">
+    <path d="M640 322c96-58 190 26 288-22s216-96 300-56"/>
+    <path d="M640 348c104-52 198 32 296-16s210-88 300-52"/>
+    <path d="M640 374c112-46 206 38 304-10s204-80 296-48"/>
+    <path d="M640 296c88-64 182 20 280-28s222-104 308-62"/>
+  </g>
+  <path d="M640 296c88-64 182 20 280-28s222-104 308-62" fill="none" stroke="#D97757" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
+  <circle cx="920" cy="268" r="5.5" fill="#D97757"/>
+  <rect x="16.5" y="16.5" width="1167" height="367" fill="none" stroke="#E4DFD3" stroke-width="1"/>
+  <g font-family="Georgia, 'Times New Roman', 'Songti SC', 'Noto Serif CJK SC', SimSun, serif">
+    <text x="72" y="96" fill="#6E6A5E" font-size="20" letter-spacing="6">熊鑫晨 · XIONG XINCHEN</text>
+    <text x="72" y="176" fill="#1F1E1D" font-size="58" letter-spacing="1">Introduction of XinChen Xiong</text>
+    <text x="72" y="222" fill="#6E6A5E" font-size="23" letter-spacing="3">xxc2007.me</text>
+    <g stroke="#E4DFD3" stroke-width="1" fill="none">
+      <rect x="72" y="262" width="252" height="46"/>
+      <rect x="336" y="262" width="196" height="46"/>
+    </g>
+    <text x="198" y="291" text-anchor="middle" fill="#1F1E1D" font-size="20">青山湖畔的纪念册</text>
+    <text x="434" y="291" text-anchor="middle" fill="#1F1E1D" font-size="20">GEOHOT 地理热点</text>
+    <text x="1128" y="356" text-anchor="end" fill="#6E6A5E" font-size="17" letter-spacing="2">MIT License · 2026</text>
+  </g>
+</svg>

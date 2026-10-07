@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="熊鑫晨 Xiong Xinchen · 我还没写出改变世界的代码。 · xxc2007.me">
+  <rect width="1200" height="630" fill="#F0EEE6"/>
+  <g fill="none" stroke="#E4DFD3" stroke-width="1.4" stroke-linecap="round">
+    <path d="M-10 570C190 532 390 600 590 564S990 488 1210 540"/>
+    <path d="M-10 592C190 554 390 622 590 586S990 510 1210 562"/>
+    <path d="M-10 614C190 576 390 644 590 608S990 532 1210 584"/>
+    <path d="M-10 636C190 598 390 666 590 630S990 554 1210 606"/>
+  </g>
+  <path d="M-10 548C190 510 390 578 590 542S990 466 1210 518" fill="none" stroke="#D97757" stroke-width="1.6" stroke-linecap="round" opacity="0.92"/>
+  <circle cx="590" cy="542" r="6" fill="#D97757"/>
+  <rect x="20.5" y="20.5" width="1159" height="589" fill="none" stroke="#E4DFD3" stroke-width="1"/>
+  <g font-family="Georgia, 'Times New Roman', 'Songti SC', 'Noto Serif CJK SC', SimSun, serif">
+    <text x="96" y="128" fill="#6E6A5E" font-size="21" letter-spacing="7">INTRODUCTION</text>
+    <text x="1104" y="128" text-anchor="end" fill="#6E6A5E" font-size="21" letter-spacing="3">xxc2007.me</text>
+    <text x="96" y="272" fill="#1F1E1D" font-size="132" letter-spacing="6">熊鑫晨</text>
+    <text x="100" y="330" fill="#6E6A5E" font-size="33" letter-spacing="9">Xiong Xinchen</text>
+    <text x="96" y="424" fill="#1F1E1D" font-size="43" letter-spacing="2">我还没写出改变世界的代码。</text>
+    <text x="96" y="468" fill="#6E6A5E" font-size="22" letter-spacing="1">用 AI 做出的两个网站 · 设计与前端 · GIS 制图</text>
+  </g>
+</svg>

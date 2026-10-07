@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const ROOT = new URL("..", import.meta.url).pathname.replace(/^\/(\w:)/, "$1");
+const ROOT = resolve(process.cwd());
 const message = process.argv[2] || `deploy ${new Date().toISOString().slice(0, 10)}`;
 const repo = process.argv[3] || process.env.GH_REPO || "xxc2007/Introduction-of-XinChen-Xiong";
 

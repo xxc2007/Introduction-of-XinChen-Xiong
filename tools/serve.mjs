@@ -5,7 +5,7 @@ import { createReadStream, statSync, existsSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 
 const PORT = Number(process.argv[2] || 8899);
-const ROOT = resolve(new URL("..", import.meta.url).pathname.replace(/^\/(\w:)/, "$1"));
+const ROOT = resolve(process.cwd());
 // 纪念册仓库（迁移后应为 /nc15/ 前缀）；不存在时该前缀直接 404
 const NC15 = process.env.NC15_DIR ? resolve(process.env.NC15_DIR) : "D:\\nanchang15-website\\site";
 

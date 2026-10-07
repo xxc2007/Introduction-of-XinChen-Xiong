@@ -124,7 +124,15 @@ html[lang^="en"] .motto{font-style:italic}
 .btn-repo:hover,.btn-repo:focus-visible,.copy-mail:hover,.copy-mail:focus-visible{
   color:var(--terra-ink);border-color:var(--terra);background:rgba(217,119,87,.07);
 }
-.copy-mail.is-copied,.copy-mail[data-copied="true"]{color:var(--terra-ink);border-color:var(--terra)}
+.copy-mail.is-copied,.copy-mail[data-copied="true"],
+.copy-mail[data-state="copied"]{color:var(--terra-ink);border-color:var(--terra)}
+.copy-mail[data-state="manual"]{color:var(--ink);border-color:var(--terra)}
+/* 行内 <code>（work-card 事实条里的 industry/）：纸白 + 发丝框，圆角仍是全站唯一的 2px */
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  font-size:.86em;letter-spacing:0;color:var(--ink);
+  background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:1px 5px;
+}
 /* 链接下划线扫过：单条 1px 实线 scaleX，不用渐变遮罩 */
 .mail{position:relative;text-decoration:none;display:inline-block}
 .mail::after{
@@ -181,6 +189,12 @@ html[lang^="en"] .motto{font-style:italic}
 .controls>*{position:relative}         /* .lang-menu 相对各自的包裹层定位 */
 
 /* ---------- 语言 pill + 下拉菜单（复刻母本 AMD 式样） ---------- */
+.lang{position:relative;display:flex;flex:none}   /* .controls>* 已给 relative，这里再钉一次：
+                                                     flex:none = 菜单与 pill 永不被 nav 挤出去 */
+/* 翻译插件会把「被翻译的片段」包进 <font> 并写内联 color/background，
+   pill 因此变成黄底黑字；.notranslate + translate="no" 是 HTML 侧的隔离标记，这里兜住漏网染色。 */
+.notranslate{flex:none}
+.notranslate font{color:inherit;background:inherit}
 .lang-btn{
   font-size:14px;color:var(--terra-ink);
   border-color:rgba(217,119,87,.5);padding:8px 12px;
@@ -188,12 +202,24 @@ html[lang^="en"] .motto{font-style:italic}
 .lang-btn:hover{background:rgba(217,119,87,.12)}
 .lang-btn[aria-expanded="true"]{background:rgba(217,119,87,.14);border-color:var(--terra-deep)}
 .lang-btn svg,.sound svg{width:15px;height:15px;flex:none}
-.lang-chev{transition:transform .25s var(--ease)}
+/* 地球与 chevron 的描边归currentColor（HTML 上的 stroke-width 属性会被下面的 CSS 覆盖） */
+.lang-globe{
+  width:15px;height:15px;flex:none;fill:none;stroke:currentColor;
+  stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.88;
+}
+.lang-current{font-size:14px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+.lang-caret,.lang-chev{
+  width:12px;height:12px;flex:none;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .25s var(--ease);
+}
+.lang-btn[aria-expanded="true"] .lang-caret,
 .lang-btn[aria-expanded="true"] .lang-chev{transform:rotate(180deg)}
 .lang-menu{
   position:absolute;top:calc(100% + 10px);right:0;z-index:90;
-  min-width:178px;padding:6px;list-style:none;
-  background:var(--paper);border:1px solid var(--line);border-radius:2px;
+  min-width:178px;max-width:calc(100vw - var(--gut) * 2);   /* 390px 上永不越界（契约 §6） */
+  padding:6px;list-style:none;
+  background:var(--paper);border:1px solid var(--line);border-radius:2px;   /* 分层只靠发丝线：无投影 */
   display:flex;flex-direction:column;gap:2px;
   animation:langIn .18s var(--ease) both;
 }
@@ -202,7 +228,8 @@ html[lang^="en"] .motto{font-style:italic}
 .lang-menu a{
   display:flex;align-items:center;justify-content:space-between;gap:14px;
   padding:9px 12px;border-radius:2px;
-  font-size:15px;color:var(--ink);text-decoration:none;
+  font-family:var(--serif);font-size:15px;font-weight:700;letter-spacing:.03em;
+  color:var(--ink);text-decoration:none;
   transition:background-color .2s var(--ease),color .2s var(--ease);
 }
 .lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink)}
@@ -215,6 +242,18 @@ html[lang^="en"] .motto{font-style:italic}
 .lang-menu [aria-current="true"]>a::after,.lang-menu a[aria-current="true"]::after{
   content:"✓";font-family:var(--sans);font-size:14px;line-height:1;
 }
+/* HTML 已经自带勾形 SVG（本项目两页都这么做）时，收回上面那条 CSS 生成的 ✓，避免双勾 */
+.lang-menu a:has(.lang-check)::after{content:none}
+/* 尾部 ✓：只在当前语言那一项显形，颜色跟随 --terra-ink 的文字色纪律 */
+.lang-check{
+  width:14px;height:14px;flex:none;
+  fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+  opacity:0;
+}
+.lang-menu [aria-selected="true"] .lang-check,
+.lang-menu a[aria-current="true"] .lang-check,
+.lang-menu li[aria-selected="true"] a .lang-check{opacity:1}
+.lang-menu [aria-selected="false"] .lang-check{display:none}
 
 /* ---------- 声音 pill（无 JS 时不出现，见 §14） ---------- */
 .sound{
@@ -223,13 +262,20 @@ html[lang^="en"] .motto{font-style:italic}
 }
 .sound:hover{color:var(--terra-ink);border-color:var(--terra);background:rgba(217,119,87,.07)}
 .sound[aria-pressed="true"]{color:var(--terra-ink);border-color:rgba(217,119,87,.6);background:rgba(217,119,87,.12)}
+.sound:focus-visible{color:var(--terra-ink);border-color:var(--terra-deep)}
+/* 开/关两条文案都在 DOM 里，靠 aria-pressed 整对调转：默认只露「Sound off」。
+   用 display 而不是 opacity——display:none 的那条同时退出无障碍树，读屏不会念两遍。 */
+.sound-on{display:none}
+.sound-off{display:inline}
+.sound[aria-pressed="true"] .sound-on{display:inline}
+.sound[aria-pressed="true"] .sound-off{display:none}
 
 /* ---------- 顶部 2px 滚动进度（贴在顶栏下沿） ---------- */
+/* main.js 每帧写 progress.style.width，所以这里用 width 承态；
+   静止（无 JS / 未滚动）时宽度 0，等于不存在。 */
 .progress{
-  position:absolute;left:0;right:0;bottom:0;height:2px;
-  background:var(--terra);
-  transform:scaleX(var(--p,var(--scroll,0)));transform-origin:0 50%;
-  pointer-events:none;
+  position:absolute;left:0;bottom:0;height:2px;width:var(--p,0);
+  max-width:100%;background:var(--terra);pointer-events:none;
 }
 
 /* ── 06 · 首屏 hero ── */
@@ -247,6 +293,25 @@ html[lang^="en"] .motto{font-style:italic}
   position:absolute;inset:0;z-index:0;width:100%;height:100%;
   pointer-events:none;opacity:.9;
 }
+/* 纸屑场的静态兜底：main.js 建不出 WebGL 时在 .hero 上写 data-field="off"，
+   scene.js 自身失败写 "lost"。两种状态 alike：画布撤出布局，文字背后只留两圈
+   同心发丝环——无渐变、无投影，只用 --line 加一点 --terra 描边，hero 依旧站得住。
+   环被 hero 自己裁掉一段，读起来像 #works 的等高线；顺带保证 390px 不产生横向滚动。 */
+.hero[data-field="off"],.hero[data-field="lost"]{overflow:clip}
+.hero[data-field="off"] #field,.hero[data-field="lost"] #field{display:none;opacity:0}
+.hero[data-field="off"]::before,.hero[data-field="lost"]::before,
+.hero[data-field="off"]::after,.hero[data-field="lost"]::after{
+  content:"";position:absolute;z-index:0;pointer-events:none;
+  border:1px solid var(--line);border-radius:50%;aspect-ratio:1;
+}
+.hero[data-field="off"]::before,.hero[data-field="lost"]::before{
+  width:min(74vw,640px);right:calc(var(--gut) * -1);top:clamp(6px,4vw,58px);
+}
+.hero[data-field="off"]::after,.hero[data-field="lost"]::after{
+  width:min(46vw,380px);right:calc(var(--gut) + 46px);top:clamp(70px,12vw,168px);
+  border-color:rgba(217,119,87,.42);
+}
+.hero[data-field="off"] .avatar,.hero[data-field="lost"] .avatar{outline-offset:6px}
 .hero .avatar{
   width:clamp(112px,13vw,152px);flex:none;
   border:1px solid var(--line);border-radius:50%;background:var(--paper);
@@ -372,6 +437,9 @@ main>section,.sec{
 }
 .work-card .btn-row,.card-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(22px,2.8vw,30px)}
 .btn-live,.btn-repo{padding:11px 22px}
+/* 两枚按钮在 HTML 里是 .work-card 的直接子元素（没有 wrapper 也无妨）：
+   同为 inline-flex，天然并排；给相邻的那一枚补上间距，靠 .work-card>*+* 撑行距。 */
+.work-card .btn-live+.btn-repo{margin-left:12px}
 
 /* ── 10 · 叁 · HOW（ol.steps 四步） ── */
 .steps{list-style:none;counter-reset:step;display:grid;gap:0}
