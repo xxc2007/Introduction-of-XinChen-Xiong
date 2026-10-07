@@ -40,7 +40,18 @@ echo "  ✓ 闸门通过"
 
 echo "== 2/5 提交并推送 GitHub =="
 if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
-  git add -A
+  # 只暂存这个仓库真正会发布的文件。以前这里是 `git add -A`：
+  # 一轮并行核查里，某个代理在仓库根留下了 wall2.json（Artalk 评论接口的一次响应转储），
+  # 它就被连着提交并推到了公开仓库。临时产物应当留在仓库外，不能靠"顺手一起提交"进主干。
+  git add -u
+  for d in index.html en 404.html robots.txt sitemap.xml assets docs deploy scripts tools LICENSE README.md README.en.md .gitignore .gitattributes; do
+    [ -e "$d" ] && git add -- "$d"
+  done
+  LEFT="$(git ls-files --others --exclude-standard)"
+  if [ -n "$LEFT" ]; then
+    echo "  ! 这些未跟踪文件不会被提交（多半是临时产物，请删掉或挪到仓库外）："
+    echo "$LEFT" | sed 's/^/      /'
+  fi
   MSG="${1:-站点更新 $(date +%F)}"
   case "$MSG" in feat*|fix*|docs*|chore*|refactor*|perf*|test*|style*|build*|ci*|update*) git commit -m "$MSG";; *) git commit -m "update: $MSG";; esac
   echo "  已提交 $(git log -1 --format='%h %s')"
