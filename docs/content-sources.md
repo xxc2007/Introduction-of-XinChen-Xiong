@@ -63,7 +63,7 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 | 卡二事实条①「建在开源框架 AIHOT 之上，地理这一层全部收在 `industry/` 一个目录里」 | profile README 第 40 行「它建在开源框架 AIHOT 之上…全在 `industry/` 一个文件夹里」 | `gh api repos/xxc2007/GeoHot/contents/industry --jq '.[].name'` | 2026-10-07 |
 | 卡二事实条②「采集 → 预筛 → 两次独立打分 → 门槛由空间显著性决定」 | profile README 第 40 行与 GeoHot README 管线段 | `grep -n '空间显著性' research/geohot-README.md` | 2026-10-07 |
 | 卡二事实条③「前端 React Router 8 服务端渲染，后端、采集与分析各自独立成服务。」（`index.html` 第 156 行） | GeoHot README：技术栈表「前端」= **React Router 8** SSR + React 19 + **Tailwind v4**（第 213 行）、目录树 `apps/web`（第 191 行）+ `apps/api` Fastify（189）+ `apps/worker` 采集与分析队列（190）+ `packages/backend` 引擎（193） | `gh api repos/xxc2007/GeoHot/readme --jq .content \| base64 -d` 后 `grep -n 'React Router\|前端'`（2026-10-07 实测） | 2026-10-07 <!-- 已核对：旧记录「前端不用框架，后端独立部署」与上游 README 冲突（前端就是 React 框架），上游 README 与页面当前文案一致，已按上游改写 --> |
-| 两张作品截图 `shot-nc15.webp`（28,624 B）/ `shot-geohot.webp`（32,500 B），HTML 声明 1200×750 | **真实浏览器实拍线上站点**（Playwright 驱动本机 Chrome，1280×800 视口，裁成 1200×750）；取证过程写在 `assets/images/README.md` | 该清单记录：响应头 `Server: cloudflare` + `CF-RAY` + `Last-Modified` 三者齐全才算取自线上；未用本地副本兜底。字节用 `wc -c assets/images/shot-*.webp` 复算 | 2026-10-07 |
+| 两张作品截图 `shot-nc15.webp`（28,624 B）/ `shot-geohot.webp`（32,500 B），HTML 声明 1200×750 | **真实浏览器实拍线上站点**（Playwright 驱动本机 Chrome，1280×800 视口，裁成 1200×750）；取证过程写在 `docs/image-provenance.md` | 该清单记录：响应头 `Server: cloudflare` + `CF-RAY` + `Last-Modified` 三者齐全才算取自线上；未用本地副本兜底。字节用 `wc -c assets/images/shot-*.webp` 复算 | 2026-10-07 |
 | 两个 `开源仓库` 链接 | `github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School`、`github.com/xxc2007/GeoHot` | `gh api repos/xxc2007/<repo> --jq .html_url` | 2026-10-07 |
 
 ### 叁 · HOW `#how`
@@ -98,7 +98,7 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 |---|---|---|
 | `canonical` / `hreflang` / `og:url` = `https://xxc2007.me/` 与 `/en/` | `docs/site-spec.md` §5 | `grep -n 'canonical' index.html` |
 | JSON-LD `Person`：`name` `alternateName` `url` `email` `image` `address.addressCountry: China` `sameAs` ×7 | 上面各行 | `sed -n '38,58p' index.html` |
-| `og:image` = `https://xxc2007.me/assets/images/og-card.png`，配 `og:image:alt` 一句中文说明 | 分享卡由 `og-card.svg` 在 Chrome 里 1:1 栅格化（过程记在 `assets/images/README.md`） | `grep -n 'og:image' index.html`；`node -e "…readUInt32BE(16/20)…"` 实测 IHDR **1200×630**，PNG **74,866 B** | 2026-10-07 |
+| `og:image` = `https://xxc2007.me/assets/images/og-card.png`，配 `og:image:alt` 一句中文说明 | 分享卡由 `og-card.svg` 在 Chrome 里 1:1 栅格化（过程记在 `docs/image-provenance.md`） | `grep -n 'og:image' index.html`；`node -e "…readUInt32BE(16/20)…"` 实测 IHDR **1200×630**，PNG **74,866 B** | 2026-10-07 |
 
 <!-- 已核对：09:35 那次 og:image 还指着 300×300 头像，09:53 复查已接到 1200×630 的 og-card.png——这条曾列在待核对里，现已闭合。 -->
 
