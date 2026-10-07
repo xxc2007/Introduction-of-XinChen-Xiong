@@ -137,9 +137,9 @@ bash scripts/switch-routes.sh --rollback   # 还原最近一份 .bak-nc15-* 备�
 探测是**带重试的**：`systemctl reload nginx` 是优雅重载，老 worker 可能还在服务旧配置，
 所以每条 URL 重试到 200 或超时——一次性采样会把"重载竞态"误报成"切换失败"。
 
-截至 **2026-10-07** 这一步**还没执行**——线上实测 `/` 返回 200 但标题仍是纪念册，`/nc15/` 返回 **404**。
+已于 **2026-10-07 09:44:51 (+0800)** 执行 `bash scripts/switch-routes.sh`。切换后源站实测：`/` 200（介绍站）、`/en/` 200、`/nc15/` 200（纪念册）、`/nc15/en/` 200、`/nc15/promo/` 200、`/geohot/` 200、`/robots.txt` 200、`/sitemap.xml` 200。备份留在 `/etc/nginx/sites-available/xxc2007.me.bak-nc15-20261007-094451`，回滚一条命令：`bash scripts/switch-routes.sh --rollback`。
 所以新机器接手时，"部署内容"和"切换路由"是两件事，必须分开做、分开验。
-<!-- 待核对：切换完成的实际时刻，以及切换后 / 与 /nc15/ 的真实状态码，执行后回填本节 -->
+<!-- 已核对：2026-10-07 09:44:51 (+0800) 执行；/ 200 介绍站、/nc15/ 200 纪念册、/nc15/en/ 200、/nc15/promo/ 200、/geohot/ 200、/robots.txt 200、/sitemap.xml 200 -->
 
 ---
 

@@ -95,9 +95,9 @@
 | 外部 CDN 请求 | **0** | `grep -c 'src="https://' index.html en/index.html` → 两页都是 `0` |
 | 构建步骤 | **0**（仓库里没有构建清单） | `git ls-files '*.json' \| wc -l` → `0` |
 | 图片字节 | 首屏三张（`avatar.webp` 5,282 + `shot-nc15.webp` 28,624 + `shot-geohot.webp` 32,500 B）= **64.8 KB** / 上限 87.9 KB → `BUDGET OK` | `node scripts/check-bytes.mjs`（09:35 这一行还是 **92.1 KB** 红的，图片在这十几分钟里被重压过——闸门会随构建变动，别把任何一格当永久事实） |
-| 域名根归属 | 目标 `/` = 本站；**2026-10-07 实测** `/` 仍是纪念册、`/nc15/` 仍 **404** | `curl -o /dev/null -w '%{http_code}' https://xxc2007.me/nc15/` —— 切换命令是 `bash scripts/switch-routes.sh`，见 [伍](#伍--deploy-部署与同步) |
+| 域名根归属 | 目标 `/` = 本站；**2026-10-07 09:44 已切换**：`/` = 本站，`/nc15/` = 纪念册 | `curl -o /dev/null -w '%{http_code}' https://xxc2007.me/nc15/` —— 切换命令是 `bash scripts/switch-routes.sh`，见 [伍](#伍--deploy-部署与同步) |
 
-<!-- 待核对：根切换的实际执行时刻与执行后的状态码，需站长跑完 switch-routes.sh 后回填这一行。 -->
+<!-- 已核对：2026-10-07 09:44:51 (+0800) 执行 switch-routes.sh；/ 200 介绍站、/nc15/ 200 纪念册、/geohot/ 200、/comment/ 200。 -->
 
 科研与学业细节不进这个站，也不进这份 README——边界写在 [陆 · 内容标准](#陆--content-内容标准)。
 
@@ -225,7 +225,7 @@ bash scripts/switch-routes.sh             # 备份 → nginx -t 预检 → 重�
 bash scripts/switch-routes.sh --rollback  # 还原最近一次备份
 ```
 
-截至 **2026-10-07** 这一步还没执行：线上 `/` 仍是纪念册，`/nc15/` 返回 **404**。<!-- 待核对：切换完成后把这一行改成实际状态与时刻 -->
+已于 **2026-10-07 09:44:51 (+0800)** 执行 `bash scripts/switch-routes.sh`。切换后源站实测：`/` 200（介绍站）、`/en/` 200、`/nc15/` 200（纪念册）、`/nc15/en/` 200、`/nc15/promo/` 200、`/geohot/` 200、`/robots.txt` 200、`/sitemap.xml` 200。备份留在 `/etc/nginx/sites-available/xxc2007.me.bak-nc15-20261007-094451`，回滚一条命令：`bash scripts/switch-routes.sh --rollback`。
 
 ## 陆 · CONTENT 内容标准
 
