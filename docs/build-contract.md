@@ -14,13 +14,27 @@
 <link rel="stylesheet" href="./assets/fonts/noto-serif-sc/wght.css">
 <link rel="stylesheet" href="./assets/css/style.css?v=INTRO_VER">
 <script type="module" src="./assets/js/main.js?v=INTRO_VER"></script>
+<img src="./assets/images/avatar.jpg?v=INTRO_VER" ...>
 ```
 ```js
+// assets/js/main.js 内：动态 import 也要带上同一个指纹
+const VER = (import.meta.url.match(/[?&]v=([0-9a-z]{4,8})/) || [])[1] || 'dev';
+await import('./scene.js?v=' + VER);
 // assets/js/scene.js 内
 import * as THREE from "../vendor/three.module.min.js";
 ```
-只有 `canonical` / `hreflang` / `og:url` / `og:image` / JSON-LD 里的站址用绝对地址 `https://xxc2007.me/…`。
-`INTRO_VER` 是构建版本串（4 位十六进制），HTML 里四处引用必须同一个值。
+只有 `canonical` / `hreflang` / `og:url` / `og:image` / JSON-LD 里的站址用绝对地址 `https://xxc2007.me/…`，
+并且**不带** `?v=`——分享卡与结构化数据要的是规范地址。
+`INTRO_VER` 是构建版本串（跟着 HEAD 走，`deploy.sh` 每次部署重算），
+同一页里所有 `?v=` 必须是同一个值，`check-parity.mjs` 钉住这一点。
+
+**为什么连图片与动态 import 也要带指纹**：nginx 的长缓存是**按扩展名**命中的，
+跟查询串无关——`.css/.js/.webp/.jpg` 一律 `immutable, max-age=1年`。
+所以「原地换内容」等于把旧字节钉一年：实测过两次，
+一次是 `scene.js` 改了但线上 CDN 仍回 13,884 B 的旧版（HEAD 已是 14,384 B），
+一次是头像按要求去掉圆框、换回原图后被旧缓存钉住。
+结论写进契约：**凡是被 HTML 引用、且内容可能原地更新的资源，一律带 `?v=`**；
+只有文件名本身会变的资源（字体切片）才允许不带。
 
 ## 1. 设计令牌（照抄，不改值）
 
