@@ -4,7 +4,7 @@
 
 | 资产 | 路径 | 事实 |
 | --- | --- | --- |
-| 头像 | `assets/images/avatar.jpg` (9.8 KB) / `avatar.webp` (5.3 KB) | 300×300，站长本人提供的原图 |
+| 头像 | `assets/images/avatar.jpg`（26,762 B，唯一一份；`avatar.webp` 已删，站长要求原图直出） | 300×300，站长本人提供的原图，不转码、不裁切、不加圆框 |
 | Three.js | `assets/vendor/three.module.min.js` | r0.180.0，338,908 B（gzip 79,147 B），MIT，文件头 license 注释保留 |
 | 衬线字体 | `assets/fonts/noto-serif-sc/wght.css` + `files/`（101 个 woff2 切片） | 与纪念册同一份，按 `unicode-range` 惰性加载 |
 
@@ -49,7 +49,7 @@ body
      .lang（地球 svg + 当前语言名 + chevron；展开 .lang-menu 两项，选中项带 ✓）
    .progress（顶部 2px 滚动进度）
  main#main
-   section#top.hero      ：canvas#field + .avatar(圆框) + h1 + p.motto + p.hero-sub + a.hero-cta(#about) + .scroll-cue
+   section#top.hero      ：canvas#field(aria-hidden) + .avatar(原图直出，无圆框/描边/底色) + h1 + p.motto + p.hero-sub + a.hero-cta(#about) + .scroll-cue
    section#about         ：div.sec-head（<span class=sec-index>壹 · ABOUT</span><h2>关于我</h2>）+ hr.sec-rule
                            p×3 + dl.facts（4 组：身份 / 所在地 / 邮箱 / 现在在做）
    section#works         ：h2（贰 · WORKS 两个网站）+ svg.contours（背景等高线装饰）

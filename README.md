@@ -40,7 +40,7 @@
 <p><b>一眼数</b></p>
 
 [![网站](https://img.shields.io/badge/🌐_网站-xxc2007.me-D97757)](https://xxc2007.me/)
-[![仓库](https://img.shields.io/badge/仓库-145_个跟踪文件-1F1E1D)](https://github.com/xxc2007/Introduction-of-XinChen-Xiong)
+[![仓库](https://img.shields.io/badge/仓库-146_个跟踪文件-1F1E1D)](https://github.com/xxc2007/Introduction-of-XinChen-Xiong)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![语言](https://img.shields.io/badge/语言-2_页-1F1E1D)](#其三--state-现状与边界)
 [![章节](https://img.shields.io/badge/章节-5_节-1F1E1D)](#其三--state-现状与边界)
@@ -116,7 +116,7 @@
 
 | 项 | 现值 | 口径（怎么核实的） |
 |---|---|---|
-| 仓库文件 | 索引口径 **145** 个；工作区实际存在 **146** 个 | `git ls-files \| wc -l` = 145（其中 4 个已删但还留在索引里：`git ls-files --deleted \| wc -l`）· 索引 + 未跟踪去重后逐个判存在 = 146 |
+| 仓库文件 | 索引与工作区同为 **146** 个 | `git ls-files \| wc -l` = 146；`git ls-files --deleted \| wc -l` = 0；`git ls-files --others --exclude-standard \| wc -l` = 0（11:56 复测：先前那 4 个"已删但留在索引"的项已提交，两个口径重新对齐） |
 | 页面 | **3** 个 HTML（zh / en / 404） | `git ls-files '*.html' \| wc -l` = 3 |
 | 章节 | **5** 节（ABOUT / WORKS / HOW / BELIEFS / CONTACT），`<section>` **6** 个 | `node scripts/check-parity.mjs` 打印的 `h2=5 section=6` |
 | 已上线作品 | **2** 个：纪念册 `/nc15/`、GEOHOT `/geohot/` | 两个地址都在页面上有入口；路由见 [贰](#贰--site-map-站点结构) |
@@ -153,7 +153,7 @@ Introduction-of-XinChen-Xiong/
 │   ├── js/scene.js         # Three.js 纸屑场（导出 initField(canvas)，把 uEnergy 交给 main.js），建不出来就抛错让 main.js 兜底
 │   ├── vendor/             # 自托管 Three.js 两个文件，零 CDN，文件头 license 注释保留
 │   ├── fonts/noto-serif-sc/# 自托管可变衬线：wght.css（101 条 @font-face）+ files/ 101 片，按 unicode-range 惰性拉
-│   └── images/             # 头像 jpg、两张作品截图 webp、banner.svg、og-card（svg + png 1200×630）、favicon 三枚、本 README 的三张配图；另有实测清单 README.md
+│   └── images/             # 头像 jpg、两张作品截图 webp、banner.svg、og-card（svg + png 1200×630）、favicon 三枚、本 README 的三张配图（实测清单挪到 `docs/image-provenance.md`，不再随站点发布）
 ├── scripts/                # check-parity · check-links · check-bytes · deploy.sh · verify-sync.sh · switch-routes.sh
 ├── tools/                  # serve.mjs 本地预览（把纪念册挂到 /nc15/）· gh-publish.mjs 备用发布通道 · normalize-cf.mjs Cloudflare 改写归一化
 ├── deploy/                 # nginx.conf.example（占位符示例；真实生效文件在服务器 /etc/nginx 下）

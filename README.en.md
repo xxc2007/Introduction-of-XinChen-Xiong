@@ -117,7 +117,7 @@ The full effect → byte cost → fallback inventory lives in [docs/design.md](d
 
 | Item | Current value | How it was verified |
 |---|---|---|
-| Repository files | **145** by index; **146** actually present in the working tree | `git ls-files \| wc -l` = 145 (4 of them are deleted but still in the index: `git ls-files --deleted \| wc -l`) · index + untracked, deduplicated and tested with `[ -f ]` = 146 |
+| Repository files | **146**, identical in the index and in the working tree | `git ls-files \| wc -l` = 146; `git ls-files --deleted \| wc -l` = 0; `git ls-files --others --exclude-standard \| wc -l` = 0 (re-measured 11:56 — the 4 files that were deleted-but-still-in-the-index are now committed, so the two measures agree again) |
 | Pages | **3** HTML files (zh / en / 404) | `git ls-files '*.html' \| wc -l` = 3 |
 | Sections | **5** (`h2.sec-title`), **6** `<section>` elements | `node scripts/check-parity.mjs` prints `h2=5 section=6` |
 | Live projects | **2**: the memorial at `/nc15/`, GEOHOT at `/geohot/` | Both entry points are on the page; routing table in [II](#ii--site-map) |
@@ -154,7 +154,7 @@ Introduction-of-XinChen-Xiong/
 │   ├── js/scene.js         # Three.js confetti field, exports initField(canvas) and hands uEnergy to main.js; throws so main.js can cover for it
 │   ├── vendor/             # Two self-hosted Three.js files, no CDN, license header intact
 │   ├── fonts/noto-serif-sc/# Self-hosted variable serif: wght.css (101 @font-face) + 101 slices fetched by unicode-range
-│   └── images/             # Avatar (jpg), two project shots (webp), banner.svg, og-card (svg + 1200×630 png), three favicons, the three figures used by this README, plus a measured asset manifest
+│   └── images/             # Avatar (jpg), two project shots (webp), banner.svg, og-card (svg + 1200×630 png), three favicons, the three figures used by this README (the measured manifest moved to `docs/image-provenance.md` and is no longer published with the site)
 ├── scripts/                # check-parity · check-links · check-bytes · deploy.sh · verify-sync.sh · switch-routes.sh
 ├── tools/                  # serve.mjs local preview (mounts the memorial at /nc15/) · gh-publish.mjs fallback publisher · normalize-cf.mjs Cloudflare rewriter normaliser
 ├── deploy/                 # nginx.conf.example (placeholders; the live file lives under /etc/nginx on the server)
