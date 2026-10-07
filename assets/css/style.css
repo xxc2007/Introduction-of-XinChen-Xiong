@@ -233,10 +233,11 @@ code{
   transition:background-color .2s var(--ease),color .2s var(--ease);
 }
 .lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink)}
-/* ✓ 由 CSS 生成：HTML 只标 aria-selected，两页结构因此完全一致（parity 好核对） */
+/* 选中态：--terra-ink 文字 + 一挡极淡的赤陶底色 + 尾部 ✓。
+   ✓ 优先用 HTML 自带的 .lang-check；下面的 CSS 生成勾是兜底，两页结构因此可互校（parity 好核对）。 */
 .lang-menu [aria-selected="true"]>a,.lang-menu a[aria-selected="true"],
 .lang-menu [aria-current="true"]>a,.lang-menu a[aria-current="true"]{
-  color:var(--terra-ink);font-weight:600;background:rgba(217,119,87,.09);
+  color:var(--terra-ink);font-weight:900;background:rgba(217,119,87,.09);
 }
 .lang-menu [aria-selected="true"]>a::after,.lang-menu a[aria-selected="true"]::after,
 .lang-menu [aria-current="true"]>a::after,.lang-menu a[aria-current="true"]::after{
@@ -251,8 +252,7 @@ code{
   opacity:0;
 }
 .lang-menu [aria-selected="true"] .lang-check,
-.lang-menu a[aria-current="true"] .lang-check,
-.lang-menu li[aria-selected="true"] a .lang-check{opacity:1}
+.lang-menu a[aria-current="true"] .lang-check{opacity:1}
 .lang-menu [aria-selected="false"] .lang-check{display:none}
 
 /* ---------- 声音 pill（无 JS 时不出现，见 §14） ---------- */
@@ -294,7 +294,7 @@ code{
   pointer-events:none;opacity:.9;
 }
 /* 纸屑场的静态兜底：main.js 建不出 WebGL 时在 .hero 上写 data-field="off"，
-   scene.js 自身失败写 "lost"。两种状态 alike：画布撤出布局，文字背后只留两圈
+   scene.js 自身失败写 "lost"。两种状态同处理：画布撤出布局，文字背后只留两圈
    同心发丝环——无渐变、无投影，只用 --line 加一点 --terra 描边，hero 依旧站得住。
    环被 hero 自己裁掉一段，读起来像 #works 的等高线；顺带保证 390px 不产生横向滚动。 */
 .hero[data-field="off"],.hero[data-field="lost"]{overflow:clip}
@@ -311,7 +311,6 @@ code{
   width:min(46vw,380px);right:calc(var(--gut) + 46px);top:clamp(70px,12vw,168px);
   border-color:rgba(217,119,87,.42);
 }
-.hero[data-field="off"] .avatar,.hero[data-field="lost"] .avatar{outline-offset:6px}
 .hero .avatar{
   width:clamp(112px,13vw,152px);flex:none;
   border:1px solid var(--line);border-radius:50%;background:var(--paper);

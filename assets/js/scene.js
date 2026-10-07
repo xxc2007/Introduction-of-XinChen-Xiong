@@ -221,7 +221,8 @@ export function initField(canvas, opts = {}) {
   scene.add(lines);
   scene.add(points);
 
-  let raf = 0, destroyed = false, running = false, inView = true, hidden = false;
+  let raf = 0, destroyed = false, running = false, inView = true;
+  let hidden = !!(typeof document !== "undefined" && document.hidden);
   let last = 0, t = 0, progress = 0;
   let px = 0, py = 0, tx = 0, ty = 0, parallax = false;
   let warm = 0, acc = 0, sampled = 0, degraded = false;

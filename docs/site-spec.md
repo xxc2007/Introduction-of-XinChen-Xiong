@@ -65,7 +65,7 @@
 | 8 | 等高线装饰（贰 节背景） | 内联 SVG `stroke-dasharray` 揭示动画，单色 `--line` | 静态显示 |
 | 9 | 桌面自定义光标墨点 | 仅 `(hover:hover)` 且非 reduced-motion | 触屏不注入 |
 
-总量红线：首屏 JS（含 Three.js）gzip ≤ 200 KB；CSS ≤ 45 KB；HTML ≤ 60 KB/页；图片 ≤ 60 KB；音频 ≤ 200 KB。
+总量红线：首屏 JS（含 Three.js）gzip ≤ 200 KB；CSS ≤ 45 KB；HTML ≤ 60 KB/页；首屏图片（头像 + 两张作品截图）≤ 90 KB；音频 ≤ 200 KB。分享卡 `og-card.png`、仓库横幅 `banner.svg`、favicon 不进首屏，另计 ≤ 200 KB。
 
 ## 4. 无障碍与降级（不可协商）
 

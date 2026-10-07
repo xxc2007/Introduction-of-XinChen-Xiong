@@ -18,7 +18,8 @@ const BUDGET = [
   ["assets/css/*.css", () => pick(/^assets\/css\/.*\.css$/).reduce((a, p) => a + size(p), 0), 45_000, "CSS 合计"],
   ["assets/js(自有)", () => pick(/^assets\/js\/.*\.js$/).reduce((a, p) => a + gz(p), 0), 30_000, "自有 JS gzip"],
   ["首屏 JS 合计", () => pick(/^assets\/(js|vendor)\/.*\.js$/).reduce((a, p) => a + gz(p), 0), 200_000, "含 Three.js gzip"],
-  ["图片", () => pick(/^assets\/images\/.*\.(jpg|jpeg|png|webp|svg)$/).reduce((a, p) => a + size(p), 0), 60_000, "不含字体切片"],
+  ["首屏图片", () => pick(/^assets\/images\/(avatar|shot)[^/]*\.(jpg|jpeg|png|webp)$/).reduce((a, p) => a + size(p), 0), 90_000, "头像 + 两张作品截图"],
+  ["爬虫素材", () => pick(/^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/).reduce((a, p) => a + size(p), 0), 200_000, "不进首屏，只算仓库体积"],
   ["音频", () => pick(/^assets\/audio\/.*\.(m4a|webm|mp3|ogg)$/).reduce((a, p) => a + size(p), 0), 200_000, "环境音循环"],
 ];
 

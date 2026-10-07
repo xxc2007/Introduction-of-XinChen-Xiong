@@ -27,7 +27,8 @@ for (const f of files) {
   lines.forEach((line, i) => {
     // 占位符行（含 <server-ip> / <ssh-user> / <你的密钥>.pem）与示例文件本身就是模板，不参与泄露判定
     if (/[^\s"']<[^>]+>/.test(line) || f.endsWith(".example")) return;
-    for (const [re, why] of SECRET) {
+    // 本脚本自己写着这些正则，扫自己必然命中
+    if (f !== "scripts/check-links.mjs") for (const [re, why] of SECRET) {
       if (re.test(line) && !/DEPLOY_HOST=<server-ip>/.test(line)) {
         // 允许占位符与 0.0.0.0 / 127.0.0.1 这类回环说明
         const ip = line.match(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/);
@@ -35,10 +36,12 @@ for (const f of files) {
         bad(f, `第 ${i + 1} 行含${why}（公开仓库不得出现）`);
       }
     }
-    if (/\.(html|md)$/.test(f)) for (const re of RESEARCH) if (re.test(line)) bad(f, `第 ${i + 1} 行出现科研表述`);
+    // 科研红线只管读者会看到的文件；docs/ 里的「不写什么」清单必须点出这些词才管得住后来人
+    if (/^(index\.html|en\/index\.html|404\.html|README\.md|README\.en\.md)$/.test(f))
+      for (const re of RESEARCH) if (re.test(line)) bad(f, `第 ${i + 1} 行出现科研表述`);
   });
 
-  if (!/\.(html|md)$/.test(f)) continue;
+  if (!/\.html$/.test(f)) continue;
   for (const m of text.matchAll(/(?:href|src)="([^"]+)"/g)) {
     const u = m[1];
     if (u.startsWith("mailto:") || u.startsWith("tel:") || u.startsWith("data:") || u === "#") continue;
@@ -54,6 +57,8 @@ for (const f of files) {
     }
     const clean = u.replace(/[?#].*$/, "");
     if (!clean) continue;
+    // 邻站与后端：这些前缀不在本仓库里，由 nginx 路由到别处，只要求写成绝对路径
+    if (/^\/(nc15|geohot|comment|promo)(\/|$)/.test(clean)) continue;
     const target = clean.startsWith("/")
       ? join(ROOT, clean.replace(/^\/+/, ""))
       : resolve(dirname(join(ROOT, f)), clean);

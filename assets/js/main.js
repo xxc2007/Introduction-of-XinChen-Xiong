@@ -68,6 +68,13 @@ let scene = null;
 (async function bootField() {
   const canvas = $('#field');
   if (!canvas) return;
+  /* Three.js 本体 gzip 约 180 KB：省流量模式或慢链路下不拉它，直接走 CSS 静态底纹 */
+  const conn = navigator.connection;
+  if (conn && (conn.saveData || /^(slow-2g|2g)$/.test(conn.effectiveType || ''))) {
+    const hero = $('.hero');
+    if (hero) hero.dataset.field = 'off';
+    return;
+  }
   try {
     const mod = await import('./scene.js');
     if (typeof mod.initField !== 'function') throw new TypeError('scene.js 未导出 initField');
