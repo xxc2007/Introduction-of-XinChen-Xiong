@@ -4,7 +4,7 @@
 
 # Introduction of XinChen Xiong
 
-> *"I haven't written any code that changed the world yet."*
+> *"I haven't written code that changed the world yet."*
 
 [![Live Site](https://img.shields.io/badge/🌐_Live-xxc2007.me-D97757)](https://xxc2007.me/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
