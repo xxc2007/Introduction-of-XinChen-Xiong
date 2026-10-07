@@ -231,15 +231,18 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
       if (o) { ev.preventDefault(); select(o); }
     }
 
+  });
+
   /* 关闭只由「焦点离开整个控件」触发。早先这里是 Tab 就 close()：
      Tab 从按钮走进菜单后菜单立刻被隐藏、焦点掉回 <body>，
-     菜单项因此永远无法被键盘到达（WCAG 2.4.3 / 2.4.7）。 */
+     菜单项因此永远无法被键盘到达（WCAG 2.4.3 / 2.4.7）。
+     这段必须待在初始化作用域——挂在 keydown 回调里的话，它要等第一次按键才注册，
+     而且每按一次键就多挂一个监听器。 */
   wrap.addEventListener('focusout', (ev) => {
     if (!isOpen()) return;
     const to = ev.relatedTarget;
     if (to && (wrap.contains(to) || menu.contains(to))) return;
     close(false);
-  });
   });
 
   function select(o) {
