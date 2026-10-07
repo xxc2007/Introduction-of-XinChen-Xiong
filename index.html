@@ -21,11 +21,12 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="./assets/images/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="./assets/images/favicon.ico" type="image/x-icon">
 <link rel="icon" href="./assets/images/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="./assets/images/apple-touch-icon.png">
 <link rel="icon" href="./assets/images/favicon.ico" type="image/x-icon" sizes="32x32">
-<link rel="stylesheet" href="./assets/fonts/noto-serif-sc/wght.css?v=ec4efd">
-<link rel="stylesheet" href="./assets/css/style.css?v=ec4efd">
+<link rel="stylesheet" href="./assets/fonts/noto-serif-sc/wght.css?v=74efe5">
+<link rel="stylesheet" href="./assets/css/style.css?v=74efe5">
 <noscript>
 <style>
 /* 关掉脚本时：脚本本来要揭示的内容全部直接显示，两个语言链接摊平仍可点击。
@@ -33,7 +34,7 @@
 .reveal{opacity:1!important;transform:none!important}
 .lang-menu[hidden]{display:flex!important;position:static;padding:0;border:none;background:none}
 .lang-menu{flex-direction:row;gap:6px}
-.sound,.scroll-cue,.progress{display:none!important}
+.scroll-cue,.progress{display:none!important}
 </style>
 </noscript>
 <script type="application/ld+json">
@@ -77,20 +78,17 @@
     <!-- 语言切换：notranslate 防止翻译插件把它撑开。
          没有脚本时 .lang-menu 里两个链接仍可点（见 noscript 样式）。 -->
     <div class="lang notranslate" translate="no">
-      <button type="button" class="lang-btn" aria-haspopup="menu" aria-expanded="false" aria-label="切换语言，当前语言：简体中文">
+      <button type="button" class="lang-btn" aria-haspopup="menu" aria-expanded="false" aria-label="切换语言，当前语言：简体中文" aria-controls="lang-menu">
         <svg class="lang-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3c2.6 2.6 3.9 5.7 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.7-3.9-9S9.4 5.6 12 3z"/></svg>
         <span class="lang-current" translate="no" aria-hidden="true">简体中文</span>
         <svg class="lang-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </button>
-      <ul class="lang-menu" role="menu" aria-label="语言" hidden>
-        <li><a role="menuitem" href="./" hreflang="zh-Hans" lang="zh-Hans" translate="no" aria-current="true">简体中文<svg class="lang-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></a></li>
-        <li><a role="menuitem" href="./en/" hreflang="en" lang="en" translate="no">English</a></li>
+      <ul id="lang-menu" class="lang-menu" role="menu" aria-label="语言" hidden>
+        <li role="none"><a role="menuitem" href="./" hreflang="zh-Hans" lang="zh-Hans" translate="no" aria-current="true">简体中文<svg class="lang-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></a></li>
+        <li role="none"><a role="menuitem" href="./en/" hreflang="en" lang="en" translate="no">English</a></li>
       </ul>
     </div>
 
-    <button type="button" class="sound" aria-pressed="false" aria-label="环境音，当前关闭">
-      <span class="sound-on">声音开</span><span class="sound-off">声音关</span>
-    </button>
   </div>
 
   <span class="progress" aria-hidden="true"></span>
@@ -100,12 +98,12 @@
 
   <!-- ============ 首屏 ============ -->
   <section class="hero" id="top">
-    <canvas id="field" role="img" aria-label="装饰用的一片浅色纸屑，在文字后面缓慢飘动，不承载任何信息"></canvas>
-    <div class="avatar"><img src="./assets/images/avatar.webp" alt="熊鑫晨的头像" width="300" height="300"></div>
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="avatar"><img src="./assets/images/avatar.jpg" alt="熊鑫晨的头像" width="300" height="300"></div>
     <h1>熊鑫晨</h1>
     <p class="motto">我还没写出改变世界的代码。</p>
     <p class="hero-sub">但用 AI 做出了自己的第一个网站——把母校装进一个可以随时回去的网页。</p>
-    <a class="hero-cta" href="#about">关于我</a>
+    <a class="hero-cta" data-magnetic href="#about">关于我</a>
     <p class="scroll-cue" aria-hidden="true">往下滑</p>
   </section>
 
@@ -119,7 +117,7 @@
     <dl class="facts reveal">
       <div><dt>姓名</dt><dd>熊鑫晨 · Xiong Xinchen</dd></div>
       <div><dt>所在地</dt><dd>中国</dd></div>
-      <div><dt>邮箱</dt><dd><a href="mailto:xxc200707@gmail.com">xxc200707@gmail.com</a></dd></div>
+      <div><dt>邮箱</dt><dd><a href="mailto:xxc200707%40gmail.com">xxc200707&#64;gmail.com</a></dd></div>
       <div><dt>正在做</dt><dd>两个已经上线的网站：青山湖畔的纪念册，和 GEOHOT 地理热点。</dd></div>
     </dl>
   </section>
@@ -139,26 +137,26 @@
       <h3>青山湖畔的纪念册 · 纪念南昌市第十五中学</h3>
       <p class="lede">把母校做成一个可以随时访问的地址。</p>
       <img class="shot" src="./assets/images/shot-nc15.webp" alt="纪念册网站的首屏：米白纸面、衬线标题与校园实景照片" width="1200" height="750" loading="lazy">
-      <ul class="facts">
+      <ul class="facts" role="list">
         <li>纯 HTML / CSS / 原生 JS，结构、样式、行为三分离，没有构建步骤。</li>
         <li>25 张我自己拍的校园实景，八个机位的时光漫游。</li>
         <li>一张中文定位图、一面无需登录的自托管留言墙、十种语言。</li>
       </ul>
-      <a class="btn-live" href="https://xxc2007.me/nc15/" target="_blank" rel="noopener noreferrer">线上访问</a>
-      <a class="btn-repo" href="https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School" target="_blank" rel="noopener noreferrer">开源仓库</a>
+      <a class="btn-live" data-magnetic href="https://xxc2007.me/nc15/" target="_blank" rel="noopener noreferrer">线上访问</a>
+      <a class="btn-repo" data-magnetic href="https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School" target="_blank" rel="noopener noreferrer">开源仓库</a>
     </article>
 
     <article class="work-card reveal">
       <h3>GEOHOT · 地理热点</h3>
       <p class="lede">每天早上八点，出一份地理日报。</p>
       <img class="shot" src="./assets/images/shot-geohot.webp" alt="GEOHOT 首页：带入选分的地理条目列表与每日日报" width="1200" height="750" loading="lazy">
-      <ul class="facts">
+      <ul class="facts" role="list">
         <li>建在开源框架 AIHOT 之上，地理这一层全部收在 <code>industry/</code> 一个目录里。</li>
         <li>信源先采集、再预筛，然后两次独立打分，门槛由空间显著性决定。</li>
         <li>前端 React Router 8 服务端渲染，后端、采集与分析各自独立成服务。</li>
       </ul>
-      <a class="btn-live" href="https://xxc2007.me/geohot/" target="_blank" rel="noopener noreferrer">线上访问</a>
-      <a class="btn-repo" href="https://github.com/xxc2007/GeoHot" target="_blank" rel="noopener noreferrer">开源仓库</a>
+      <a class="btn-live" data-magnetic href="https://xxc2007.me/geohot/" target="_blank" rel="noopener noreferrer">线上访问</a>
+      <a class="btn-repo" data-magnetic href="https://github.com/xxc2007/GeoHot" target="_blank" rel="noopener noreferrer">开源仓库</a>
     </article>
   </section>
 
@@ -166,7 +164,7 @@
   <section id="how">
     <div class="sec-head reveal"><span class="sec-index">叁 · HOW</span><h2>我怎么做事</h2></div>
     <hr class="sec-rule reveal">
-    <ol class="steps reveal">
+    <ol class="steps reveal" role="list">
       <li><b>先想清楚它是干什么的。</b>动笔之前，我先写下这一页要让人做成哪件事。</li>
       <li><b>设计与建造。</b>版式、字体、前端——结构、样式、行为各归一个文件。</li>
       <li><b>地图这一层自己做。</b>底图用高德的瓦片，中文标注、八个机位和定位图是我做的。</li>
@@ -198,11 +196,11 @@
     <div class="sec-head reveal"><span class="sec-index">伍 · CONTACT</span><h2>找到我</h2></div>
     <hr class="sec-rule reveal">
     <p class="reveal">写信最稳妥。其余几个地方，是我把东西放出来的地方。</p>
-    <a class="mail" href="mailto:xxc200707@gmail.com">xxc200707@gmail.com</a>
-    <button type="button" class="copy-mail" aria-label="复制邮箱地址到剪贴板">复制</button>
+    <a class="mail" href="mailto:xxc200707%40gmail.com">xxc200707&#64;gmail.com</a>
+    <button type="button" class="copy-mail" data-magnetic aria-label="复制邮箱地址到剪贴板">复制</button>
     <p class="copy-hint" role="status" aria-live="polite"></p>
 
-    <ul class="social reveal">
+    <ul class="social reveal" role="list">
       <li><a href="https://xxc2007.me/" target="_blank" rel="noopener noreferrer" aria-label="个人网站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3c2.6 2.6 3.9 5.7 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.7-3.9-9S9.4 5.6 12 3z"/></svg><span>个人站</span></a></li>
       <li><a href="https://github.com/xxc2007" target="_blank" rel="noopener noreferrer" aria-label="GitHub 主页"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg><span>GitHub</span></a></li>
       <li><a href="https://www.douyin.com/user/MS4wLjABAAAA-AYW1RCpFjwJmoMTnZy1vKmOQopmBOUjPLN9phlDpjI" target="_blank" rel="noopener noreferrer" aria-label="抖音主页"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg><span>抖音</span></a></li>
@@ -220,6 +218,6 @@
   <p class="foot-meta">2026 · MIT 协议 · <a href="#top">返回顶部 ↑</a></p>
 </footer>
 
-<script type="module" src="./assets/js/main.js?v=ec4efd"></script>
+<script type="module" src="./assets/js/main.js?v=74efe5"></script>
 </body>
 </html>

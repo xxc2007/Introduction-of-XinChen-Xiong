@@ -20,7 +20,6 @@ const BUDGET = [
   ["首屏 JS 合计", () => pick(/^assets\/(js|vendor)\/.*\.js$/).reduce((a, p) => a + gz(p), 0), 200_000, "含 Three.js gzip"],
   ["首屏图片", () => pick(/^assets\/images\/(avatar|shot)[^/]*\.(jpg|jpeg|png|webp)$/).reduce((a, p) => a + size(p), 0), 90_000, "头像 + 两张作品截图"],
   ["爬虫素材", () => pick(/^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/).reduce((a, p) => a + size(p), 0), 200_000, "不进首屏，只算仓库体积"],
-  ["音频", () => pick(/^assets\/audio\/.*\.(m4a|webm|mp3|ogg)$/).reduce((a, p) => a + size(p), 0), 200_000, "环境音循环"],
 ];
 
 let fail = 0;

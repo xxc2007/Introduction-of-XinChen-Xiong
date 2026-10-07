@@ -6,8 +6,7 @@
 | --- | --- | --- |
 | 头像 | `assets/images/avatar.jpg` (9.8 KB) / `avatar.webp` (5.3 KB) | 300×300，站长本人提供的原图 |
 | Three.js | `assets/vendor/three.module.min.js` | r0.180.0，338,908 B（gzip 79,147 B），MIT，文件头 license 注释保留 |
-| 环境音 | `assets/audio/ambient.m4a` (96 KB) / `ambient.ogg` (98 KB) | 12 秒、44.1 kHz 单声道、G 大三和弦软垫、LFO 周期=12 s 故可无缝循环 |
-| 衬线字体 | `assets/fonts/noto-serif-sc/wght.css` + `files/`（102 个 woff2 切片） | 与纪念册同一份，按 `unicode-range` 惰性加载 |
+| 衬线字体 | `assets/fonts/noto-serif-sc/wght.css` + `files/`（101 个 woff2 切片） | 与纪念册同一份，按 `unicode-range` 惰性加载 |
 
 引用写法一律**相对路径**（这样站点放在域名根或任何子路径都能跑）：
 
@@ -48,7 +47,6 @@ body
    nav#nav  → 5 个 <a href="#…">：about works how beliefs contact
    .controls
      .lang（地球 svg + 当前语言名 + chevron；展开 .lang-menu 两项，选中项带 ✓）
-     button.sound（aria-pressed；无 JS 时不出现）
    .progress（顶部 2px 滚动进度）
  main#main
    section#top.hero      ：canvas#field + .avatar(圆框) + h1 + p.motto + p.hero-sub + a.hero-cta(#about) + .scroll-cue
@@ -74,17 +72,17 @@ body
 - 所在地：只写 `China`（GitHub profile 原文）。**不得**写南昌/九江为他的住址，**不得**使用 28.7208°N 115.9322°E（那是校园定位坐标）。
 - 邮箱：`xxc200707@gmail.com`（来源 GitHub profile API 与各仓库 commit 作者）。
 - 作品一：`青山湖畔的纪念册 · 纪念南昌市第十五中学`，线上 `https://xxc2007.me/nc15/`，仓库 `In-memory-of-Nanchang-No.-15-Middle-School`；事实条：纯 HTML/CSS/Vanilla JS、结构·样式·行为三分离、25 张自己拍摄的校园实景、八机位时光漫游、一张中文定位图、一面无需登录的自托管留言墙、10 种语言。
-- 作品二：`GEOHOT 地理热点`，线上 `https://xxc2007.me/geohot/`，仓库 `GeoHot`（MIT）；事实条：建在开源框架 AIHOT 之上、行业层集中在 `industry/` 一个目录、信源采集→预筛→两次独立打分→按空间显著性定门槛、每天早上 8 点出一份地理日报、无框架前端与后端分离。
+- 作品二：`GEOHOT 地理热点`，线上 `https://xxc2007.me/geohot/`，仓库 `GeoHot`（MIT）；事实条：建在开源框架 AIHOT 之上、行业层集中在 `industry/` 一个目录、信源采集→预筛→两次独立打分→按空间显著性定门槛、每天早上 8 点出一份地理日报、前端 React Router 8 服务端渲染、后端与采集分析各自独立成服务。
 - 信条（逐字三条）：`地理不止是知识，是一种看世界的方式。` / `做出来比说出来有用。` / `实践是唯一的检验标准。`
 - 社媒（顺序与 URL 逐字照抄）：个人站 `https://xxc2007.me/`、GitHub `https://github.com/xxc2007`、抖音 `https://www.douyin.com/user/MS4wLjABAAAA-AYW1RCpFjwJmoMTnZy1vKmOQopmBOUjPLN9phlDpjI`、小红书 `https://www.xiaohongshu.com/user/profile/63bac6500000000026006c47`、哔哩哔哩 `https://space.bilibili.com/31961476`、X `https://x.com/xxc2007`、YouTube `https://www.youtube.com/@xxc2007`。
 - 页脚署名式样：`编辑标准与代码 · 熊鑫晨`，接 `· MIT License · 2026`。
 
 ## 4. 禁止出现（check-links.mjs 会扫，命中即失败）
 
-1. 科研/学术：论文、期刊、开题、文献、课题组、导师、实验室、GPA、`青藏高原`、`气候变化研究`。
+1. 科研/学术：论文、期刊、开题、文献、课题组、导师、实验室、GPA、具体研究主题（一律不点名）。
 2. 学业表述：`课程作业`、年级/班级、获奖、奖学金、实习、`2025届` 之外的任何就学细节。
 3. 头衔膨胀：`全栈工程师`、`资深开发者`、`专家`；社交数字（stars/followers/账号创建时间）不得当成就展示。
-4. 主机信息：源站 IP、`ssh -i`、`.pem` 文件名、`xxc@`（占位符 `<server-ip>`/`<ssh-user>` 除外）。
+4. 主机信息：源站 IP、`ssh -i`、`.pem` 文件名、`<ssh-user>@`（占位符 `<server-ip>`/`<ssh-user>` 除外）。
 5. 上游署名：不得把 AIHOT 的名字/Logo/版权写成他的；GEOHOT 站内署名是「地理热点编辑部」。
 6. 任何编造：没有来源的句子一律不写。宁可少一句，不可错一句。
 
@@ -94,7 +92,7 @@ body
 | --- | --- |
 | `assets/css/style.css` | 全部样式与组件、响应式（≥1200 / 768 / ≤420 三档）、`prefers-reduced-motion` 降级、发丝线图标卡 |
 | `assets/js/scene.js` | Three.js 首屏粒子场（导出 `initField(canvas)`），无 WebGL 时抛错由 main.js 兜底 |
-| `assets/js/main.js` | 揭示动画、磁吸、卡片倾斜、语言菜单、音频、进度条、复制邮箱、光标墨点 |
+| `assets/js/main.js` | 揭示动画、磁吸、卡片倾斜、语言菜单、进度条、复制邮箱、光标墨点 |
 | `index.html` / `en/index.html` | 结构与文案 |
 | `404.html`、`robots.txt`、`sitemap.xml`、`assets/images/*` | 配套页与图 |
 | `README*.md`、`docs/*` | 仓库展示与迁移文档 |
@@ -102,7 +100,6 @@ body
 ## 6. 无障碍硬指标
 
 - 语言菜单：`button[aria-haspopup=menu][aria-expanded]` + `ul[role=menu]` + `li > a[role=menuitem]`（选中项标 `aria-current=true`，与纪念册同一套语义）；Esc 关闭并把焦点还给按钮；无 JS 时 `.lang-menu` 里两个 `<a>` 仍可点。
-- 声音按钮：`aria-pressed`，默认 `false`（不自动播放）；点击才 `audio.play()`，淡入 1.2 s / 淡出 0.6 s。
 - `canvas#field`：`role="img"` + `aria-label`（中文页写装饰性说明，英文页对应翻译）。
 - 焦点：`:focus-visible{outline:2px solid var(--terra-ink);outline-offset:3px}`。
 - 正文对比度 ≥ 7:1；`--muted` 只用于 ≥14px 的辅助文字（对 cream 5.0:1）。

@@ -172,7 +172,7 @@ C 与 D 分开跑是刻意的：合成一条就会被 Cloudflare 的改写制造
 git status --short                # 应该是空的；不空说明 deploy.sh 没帮你提交完
 node scripts/check-parity.mjs     # 中英两页 10 项数量 + 5 组集合必须全 ✓
 node scripts/check-links.mjs      # 链接可达 + 主机信息红线
-node scripts/check-bytes.mjs      # 七行字节预算（当前图片行仍在压 → 见下）
+node scripts/check-bytes.mjs      # 逐类字节预算（当前图片行仍在压 → 见下）
 ```
 
 ---

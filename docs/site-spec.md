@@ -40,7 +40,7 @@
 
 | 节 | 锚点 | 内容 | 事实来源 |
 | --- | --- | --- | --- |
-| 顶栏 | — | 左：署名徽标「熊鑫晨」；中：锚点导航；右：语言 pill + 声音 pill + 进度条 | — |
+| 顶栏 | — | 左：署名徽标「熊鑫晨」；中：锚点导航；右：语言 pill + 进度条 | — |
 | 首屏 | `#top` | 头像（发丝线圆框）+ `熊鑫晨 · Xiong Xinchen` + 大字引言「我还没写出改变世界的代码。」+ 一行身份说明 + Three.js 纸屑粒子场 + 下滑提示 | profile README 原句 |
 | 壹 · ABOUT | `#about` | 我是谁：地理科学专业在读、方向 GIS 与遥感、独立开发者、一个人 + AI 做完整站；坐标/所在地仅在已核实前提下写 | profile README |
 | 贰 · WORKS | `#works` | 两张作品卡：① 青山湖畔的纪念册（→ `/nc15/`）② GEOHOT 地理热点（→ `/geohot/`）。每张含：一句话自述（引用他自己的原话）、事实条（栈/形态）、`线上访问` + `开源仓库` 两个入口 | 两站页面 + 两仓库 README |
@@ -59,13 +59,12 @@
 | 2 | 滚动逐节揭示 | `IntersectionObserver` + `--reveal` 变量，位移 ≤14px、时长 520ms、错峰 60ms | `prefers-reduced-motion` 下直接呈现 |
 | 3 | 磁吸按钮 / 链接下划线扫过 | pointermove 位移 ≤6px，缓出；纯 CSS 下划线 `scaleX` | 触屏不绑定 |
 | 4 | 作品卡 3D 倾斜 | `rotateX/Y ≤ 5deg` + 发丝高光边，`transform-style: preserve-3d` | 触屏/reduced-motion 关闭 |
-| 5 | 环境音 | 自托管短循环（≤200 KB，m4a/webm 双份），**默认关闭**，首次点击淡入 1.2s、静音 pill 常驻 | 无音频文件时 pill 隐藏；不自动播放 |
-| 6 | 语言切换 pill | 复刻纪念册：地球图标 + 当前语言名 + chevron，展开列表，选中项赤陶橙 + ✓；`localStorage` 记忆；键盘可达（Esc 关闭、焦点归位） | 无 JS 时是两个可点链接 |
-| 7 | 滚动进度条 + 节号计数 | 顶部 2px 赤陶橙进度 + 右侧当前节标 | 纯 CSS 可降级 |
-| 8 | 等高线装饰（贰 节背景） | 内联 SVG `stroke-dasharray` 揭示动画，单色 `--line` | 静态显示 |
-| 9 | 桌面自定义光标墨点 | 仅 `(hover:hover)` 且非 reduced-motion | 触屏不注入 |
+| 5 | 语言切换 pill | 复刻纪念册：地球图标 + 当前语言名 + chevron，展开列表，选中项赤陶橙 + ✓；`localStorage` 记忆；键盘可达（Esc 关闭、焦点归位） | 无 JS 时是两个可点链接 |
+| 6 | 滚动进度条 + 节号计数 | 顶部 2px 赤陶橙进度 + 右侧当前节标 | 纯 CSS 可降级 |
+| 7 | 等高线装饰（贰 节背景） | 内联 SVG `stroke-dasharray` 揭示动画，单色 `--line` | 静态显示 |
+| 8 | 桌面自定义光标墨点 | 仅 `(hover:hover)` 且非 reduced-motion | 触屏不注入 |
 
-总量红线：首屏 JS（含 Three.js）gzip ≤ 200 KB；CSS ≤ 45 KB；HTML ≤ 60 KB/页；首屏图片（头像 + 两张作品截图）≤ 90 KB；音频 ≤ 200 KB。分享卡 `og-card.png`、仓库横幅 `banner.svg`、favicon 不进首屏，另计 ≤ 200 KB。
+总量红线：首屏 JS（含 Three.js）gzip ≤ 200 KB；CSS ≤ 45 KB；HTML ≤ 60 KB/页；首屏图片（头像 + 两张作品截图）≤ 90 KB。分享卡 `og-card.png`、仓库横幅 `banner.svg`、favicon 不进首屏，另计 ≤ 200 KB。
 
 ## 4. 无障碍与降级（不可协商）
 
@@ -73,7 +72,7 @@
 2. `prefers-reduced-motion: reduce`：停止 RAF、粒子静止、揭示直接完成。
 3. 键盘可达：跳过链接、焦点可见（`--terra-ink` 2px outline）、语言菜单 Esc 关闭并焦点归位。
 4. 对比度：正文 ≥ 7:1（ink/cream 实测）；任何赤陶橙**作为文字**必须用 `--terra-ink`。
-5. `<canvas>` 给 `role="img"` + `aria-label`（说明这是装饰性粒子场）；音频 pill 有 `aria-pressed`。
+5. `<canvas>` 给 `role="img"` + `aria-label`（说明这是装饰性粒子场）。
 6. 移动端 ≤420px 与 390px 宽度不得出现横向滚动；语言菜单不超出视口。
 
 ## 5. 双语与 SEO
@@ -88,7 +87,7 @@
 ## 6. 仓库与部署契约
 
 - 仓库名（GitHub 不允许空格）：`Introduction-of-XinChen-Xiong`，展示标题 `Introduction of XinChen Xiong`，License **MIT**，`homepage` 设为 `https://xxc2007.me/`。
-- 目录：`index.html`、`en/`、`assets/{css,js,vendor,fonts,images,audio}`、`404.html`、`robots.txt`、`sitemap.xml`、`docs/`、`scripts/`、`tools/`、`README.md`、`README.en.md`、`LICENSE`、`.gitattributes`、`.gitignore`。
+- 目录：`index.html`、`en/`、`assets/{css,js,vendor,fonts,images}`、`404.html`、`robots.txt`、`sitemap.xml`、`docs/`、`scripts/`、`tools/`、`README.md`、`README.en.md`、`LICENSE`、`.gitattributes`、`.gitignore`。
 - 一键：`bash scripts/deploy.sh "说明"` = 提交 → 推 GitHub → `git archive HEAD` 上服务器 → 本机/仓库/服务器/CDN 四方逐字节核验。
 - **仓库与文档里绝不出现源站 IP 与 SSH 登录名**：`scripts/deploy.sh` 从 gitignore 的 `.deploy.env` 读取 `DEPLOY_HOST/DEPLOY_USER/DEPLOY_KEY`，示例一律 `<server-ip>` / `<ssh-user>`。
 - 迁移演练：`docs/migration.md` 必须证明「克隆仓库 → 一条命令 → 站点在新机器上跑起来」。

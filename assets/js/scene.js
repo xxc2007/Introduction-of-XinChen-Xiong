@@ -185,7 +185,7 @@ export function initField(canvas, opts = {}) {
   if (!probe) throw new Error("no-webgl");
 
   const host = canvas.parentElement || canvas;
-  const seed = (typeof opts.seed === "number" ? opts.seed : 20070725) | 0;
+  const seed = (typeof opts.seed === "number" ? opts.seed : 0x9e3779b9) | 0;
   const reduced = typeof opts.reducedMotion === "boolean" ? opts.reducedMotion : prefersReducedMotion();
   const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
   const count = tierCount(opts);
@@ -238,6 +238,12 @@ export function initField(canvas, opts = {}) {
     if (destroyed) return;
     const w = host.clientWidth || canvas.clientWidth || 1;
     const h = host.clientHeight || canvas.clientHeight || 1;
+    /* DPR 可能在换屏/缩放时改变，这里重读一次，否则像素比与 gl_PointSize 会失真 */
+    const dprNow = Math.min(window.devicePixelRatio || 1, DPR_CAP);
+    if (dprNow !== uni.uDpr.value) {
+      uni.uDpr.value = dprNow;
+      renderer.setPixelRatio(dprNow);
+    }
     renderer.setSize(w, h, false); /* false：不覆盖 CSS 里 inset:0 的尺寸 */
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -262,18 +268,22 @@ export function initField(canvas, opts = {}) {
   const onVis = () => { hidden = !!document.hidden; if (!reduced) sync(); };
 
   let io = null, ro = null;
+  /* 两个观察器分别兜底：若 ResizeObserver 缺失时把 io 一起置 null，
+     已在跑的 IntersectionObserver 就再也拿不到句柄、destroy 时无法断开 */
   try {
     io = new IntersectionObserver((es) => {
       inView = es.length ? es[es.length - 1].isIntersecting : true;
       if (!reduced) sync();
     }, { threshold: 0 });
     io.observe(host);
+  } catch (e) { io = null; }
+  try {
     ro = new ResizeObserver(() => {
       if (destroyed || resizeTimer) return;
       resizeTimer = setTimeout(applySize, 120); /* 合并连续 resize，绝不逐帧 setSize */
     });
     ro.observe(host);
-  } catch (e) { io = null; ro = null; }
+  } catch (e) { ro = null; }
 
   function frame(now) {
     raf = requestAnimationFrame(frame);

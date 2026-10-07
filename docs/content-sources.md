@@ -24,7 +24,7 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 |---|---|---|---|
 | `熊鑫晨` / `Xiong Xinchen`（`h1` 与 `en` 页 `h1`） | profile README 第 1 行标题 `# 熊鑫晨 · Xiong Xinchen` | `gh api users/xxc2007 --jq .name` + profile README 第 1 行 | 2026-10-07 |
 | `我还没写出改变世界的代码。` | profile README **第 3 行**，逐字 | `grep -n '改变世界' profile-README.md` | 2026-10-07 |
-| `但我和 AI 做出了自己的第一个网站——把母校装进一个可以随时回去的网页。` | 改写自 profile README 第 5 行；**一处人称/介词改动：原文「但用 AI 做出了」，页面写「但我和 AI 做出了」** | 同一行对照；build-contract §3 记的是「但用 AI 做出了…」原句 | 2026-10-07 <!-- 待核对：这处「用 → 和」的改写需本人认可，否则按原句回改 --> |
+| `但用 AI 做出了自己的第一个网站——把母校装进一个可以随时回去的网页。` | profile README **第 5 行**开头一句，**逐字**（此前记录的「用 → 我和」改写已回退） | `grep -n '但用 AI 做出了' index.html`（第 105 行）对照 profile README 第 5 行：`gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d` → 第 5 行原文即「但用 AI 做出了」 | 2026-10-07 <!-- 已核对：页面与 README 同句，无改写 --> |
 | 头像 `avatar.webp`（HTML 声明 `width="300" height="300"`，实测 5,282 B） | 站长本人提供的原图（`docs/build-contract.md` §0 记的是 `avatar.jpg` 9,814 B + `avatar.webp` 5,282 B；2026-10-07 09:46 页面上只留 webp 一份） | `wc -c assets/images/avatar.webp`；`grep -o 'avatar[a-z.]*' index.html`；规格明确禁止"生成/使用不存在的人物照片" | 2026-10-07 |
 | `canvas#field` 的 `aria-label`（"装饰用的一片浅色纸屑…不承载任何信息"） | 本站自己的实现说明（`docs/build-contract.md` §6 硬指标） | `grep -n 'role="img"' index.html` | 2026-10-07 |
 
@@ -57,12 +57,12 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 | 卡一事实条①「纯 HTML / CSS / 原生 JS，结构、样式、行为三分离，没有构建步骤」 | 纪念册 README 第 28 行同句 | `grep -n '三分离' nanchang15-website/site/README.md` | 2026-10-07 |
 | 卡一事实条②「25 张…八个机位的时光漫游」 | 纪念册 README 第 26 行、第 70 行「8 个机位、8 张全幅照片」 | `grep -n '机位' nanchang15-website/site/README.md` | 2026-10-07 |
 | 卡一事实条③「一张中文定位图、一面无需登录的自托管留言墙、十种语言」 | 纪念册 README 第 26 / 64 / 81–85 行 | `grep -n '自托管' nanchang15-website/site/README.md` | 2026-10-07 |
-| 卡一 `线上访问` 指向 `https://xxc2007.me/nc15/` | 目标路由（`deploy/nginx.conf.example` 第 66 行 + `docs/site-spec.md` §0 的子路径约定） | **2026-10-07 实测该地址仍 HTTP 404**：`curl -o /dev/null -w '%{http_code}' https://xxc2007.me/nc15/` | 2026-10-07 <!-- 待核对：切换执行后此链接才成立，见下方红字 --> |
+| 卡一 `线上访问` 指向 `https://xxc2007.me/nc15/` | 目标路由（`deploy/nginx.conf.example` 第 66 行 + `docs/site-spec.md` §0 的子路径约定） | **2026-10-07 10:21（+0800）实测 HTTP 200**：`curl -s -o /dev/null -w '%{http_code}' -A 'Mozilla/5.0' https://xxc2007.me/nc15/` → `200`（此前记的 404 是域名根切换之前的状态，09:44 切换后已失效） | 2026-10-07 <!-- 已核对：`/nc15/` 现返回 200，见 migration.md「五」的切换记录 --> |
 | 卡二标题 `GEOHOT · 地理热点` | GeoHot 仓库 README 首行与 `industry/site.ts` 的站名 | `gh api repos/xxc2007/GeoHot --jq .full_name` | 2026-10-07 |
 | 卡二自述 `每天早上八点，出一份地理日报。` | profile README 第 40 行「每天早上 8 点出一份地理日报」；GeoHot README 同句 | `grep -n '8 点' research/geohot-README.md` | 2026-10-07 |
 | 卡二事实条①「建在开源框架 AIHOT 之上，地理这一层全部收在 `industry/` 一个目录里」 | profile README 第 40 行「它建在开源框架 AIHOT 之上…全在 `industry/` 一个文件夹里」 | `gh api repos/xxc2007/GeoHot/contents/industry --jq '.[].name'` | 2026-10-07 |
 | 卡二事实条②「采集 → 预筛 → 两次独立打分 → 门槛由空间显著性决定」 | profile README 第 40 行与 GeoHot README 管线段 | `grep -n '空间显著性' research/geohot-README.md` | 2026-10-07 |
-| 卡二事实条③「前端不用框架，后端独立部署」 | GeoHot README 技术栈段 | 同上 | 2026-10-07 |
+| 卡二事实条③「前端 React Router 8 服务端渲染，后端、采集与分析各自独立成服务。」（`index.html` 第 156 行） | GeoHot README：技术栈表「前端」= **React Router 8** SSR + React 19 + **Tailwind v4**（第 213 行）、目录树 `apps/web`（第 191 行）+ `apps/api` Fastify（189）+ `apps/worker` 采集与分析队列（190）+ `packages/backend` 引擎（193） | `gh api repos/xxc2007/GeoHot/readme --jq .content \| base64 -d` 后 `grep -n 'React Router\|前端'`（2026-10-07 实测） | 2026-10-07 <!-- 已核对：旧记录「前端不用框架，后端独立部署」与上游 README 冲突（前端就是 React 框架），上游 README 与页面当前文案一致，已按上游改写 --> |
 | 两张作品截图 `shot-nc15.webp`（28,624 B）/ `shot-geohot.webp`（32,500 B），HTML 声明 1200×750 | **真实浏览器实拍线上站点**（Playwright 驱动本机 Chrome，1280×800 视口，裁成 1200×750）；取证过程写在 `assets/images/README.md` | 该清单记录：响应头 `Server: cloudflare` + `CF-RAY` + `Last-Modified` 三者齐全才算取自线上；未用本地副本兜底。字节用 `wc -c assets/images/shot-*.webp` 复算 | 2026-10-07 |
 | 两个 `开源仓库` 链接 | `github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School`、`github.com/xxc2007/GeoHot` | `gh api repos/xxc2007/<repo> --jq .html_url` | 2026-10-07 |
 
@@ -71,7 +71,7 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 | 页面上出现的 | 出处 | 怎么核 | 核实日期 |
 |---|---|---|---|
 | 四条步骤（先想清楚 / 设计与建造 / 地图自己画 / 上线并且养着它） | 由 profile README 第 7 行的分工句 + 第 5 行"照片全部自己拍摄"、纪念册 README 的部署段展开；**这四句是本站的编辑性表述，不是逐字引用** | 对照 `grep -n '设计、前端' profile-README.md` | 2026-10-07 |
-| 收尾句 `设计、前端、GIS 制图、部署运维，全部与 AI 协作完成。我负责想清楚要做什么。` | profile README **第 7 行**逐字，仅末句两处改动：「全部 AI 协作完成」→「全部**与** AI 协作完成」，「我负责想清楚要**纪念**什么」→「要**做**什么」 | 同一行对照 | 2026-10-07 <!-- 待核对：「纪念 → 做」是为了涵盖第二个站而做的改写，需本人认可 --> |
+| 收尾句 `设计、前端、GIS 制图、部署运维，全部 AI 协作完成。我负责想清楚要纪念什么。` | profile README **第 7 行**逐字，**零改动**（此前记的两处改写「全部 AI 协作完成 → 全部**与** AI 协作完成」「要**纪念**什么 → 要**做**什么」**都已回退成原句**） | 两侧同句对照：`grep -n '全部 AI 协作完成' index.html`（第 173 行）＝ profile README 第 7 行（`gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d`，2026-10-07 实测逐字相同） | 2026-10-07 <!-- 已核对：改写已回退；注意 docs/site-spec.md §2 与 build-contract.md §3 仍写着「我负责想清楚要做什么」，与页面不一致，待站长定 --> |
 
 ### 肆 · BELIEFS `#beliefs`
 
@@ -135,7 +135,7 @@ profile README 里也没写。而 GEOHOT 的代码里明写 `contactEmail: null 
    （纪念册 `index.html` 第 80、582 行），**不是他的居住地**。所在地只有一个来源、一个值：`China`。
    另一个诱惑来自 GitHub profile 的 `.company = "JiuJiang university"` 与 `.blog`——那是 profile 字符串，
    只能按原文引用，**不许写成校名+城市来推定他住在哪**。
-5. **社交平台数字**：followers = 0、两个仓库各 1 star、`public_repos = 5`、账号创建于 2026-03-30。
+5. **社交平台数字**：followers = 0、两个仓库各 1 star、`public_repos = 6`（2026-10-07 `gh api users/xxc2007 --jq .public_repos` → `6`；六个是 GeoHot、In-memory-of-Nanchang-No.-15-Middle-School、Introduction-of-XinChen-Xiong（本站）、xxc2007、xxc2007-me、xxc2007.github.io）、账号创建于 2026-03-30。
    这些是 API 数出来的，但它们不是成就，也不做徽章。profile README 里那个 `<!-- STATS-START -->` 统计块属于 profile 仓库，不进作品仓库。
 6. **头衔膨胀**：`全栈工程师`、`资深开发者`、`专家`、`独立顾问`。他页面里只出现"我负责想清楚要做什么"这一种自我描述。
 7. **上游署名**：GEOHOT 建在开源框架 AIHOT 之上，但 AIHOT 的名字、Logo、版权都不是他的（GeoHot 的 `LICENSE` 版权行仍是上游，站内不使用 AIHOT 名字与 Logo）。
@@ -156,7 +156,7 @@ profile README（pushed 2026-10-01）**比 GEOHOT 仓库 README（pushed 2026-10
 | 「站上没有配任何 LLM Key」（第 40 行） | GeoHot README 明写 2026-10-06 起接入第三方大模型服务 | 介绍站的卡二**不提** LLM Key 这件事 |
 | 「教材式六分类」（第 40 行） | GeoHot README 与其徽章都是**七个分类**（两个旧分类于 2026-10-03 删除） | 卡二不写分类数；要写只能写七个 |
 | 「本地 173 项后端测试 / 16 项前端测试 / 30 项冒烟检查全绿」 | GeoHot README 自己拒绝硬抄数（"别抄数"），测试数每天在漂 | 介绍站**一个测试数字都不写** |
-| 徽章 `Public Repos-4`、`Total Stars-0` | profile API `.public_repos = 5`；两个项目仓库各 1 star | 不写仓库数、不写星数（连 Star History 也不配星数徽章） |
+| 徽章 `Public Repos-4`、`Total Stars-0` | profile API `.public_repos = 6`（2026-10-07 `gh api users/xxc2007 --jq .public_repos` → `6`；比早先记录的 5 多出的那一个正是本站仓库 `Introduction-of-XinChen-Xiong`）；两个项目仓库各 1 star | 不写仓库数、不写星数（连 Star History 也不配星数徽章） |
 | GEOHOT 的「信源 98+1 个 / 收录 2842 / 事件 1627 / 精选 48 / 日报 4 期」 | 线上 about 渲染的是另一组每天在变的数（实测当时为 85 个信源、8,578 条、精选 54、2 期） | 卡二**不写任何 GEOHOT 计数**；那是 GEOHOT 自己的口径，归 `/api/site/stats` |
 
 ---

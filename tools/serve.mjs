@@ -15,7 +15,7 @@ const MIME = {
   ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml",
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp",
   ".ico": "image/x-icon", ".woff2": "font/woff2", ".woff": "font/woff",
-  ".m4a": "audio/mp4", ".ogg": "audio/ogg", ".mp3": "audio/mpeg",
+
   ".txt": "text/plain; charset=utf-8", ".xml": "application/xml; charset=utf-8",
   ".map": "application/json",
 };
@@ -50,6 +50,12 @@ const server = createServer((req, res) => {
   createReadStream(file).pipe(res);
 });
 
+server.on("error", (e) => {
+  console.log(e.code === "EADDRINUSE"
+    ? `端口 ${PORT} 已被占用——换个端口：node tools/serve.mjs 8900`
+    : `预览服务器启动失败：${e.message}`);
+  process.exit(1);
+});
 server.listen(PORT, "127.0.0.1", () => {
   console.log(`预览： http://127.0.0.1:${PORT}/  （/nc15/ → ${NC15}）`);
 });

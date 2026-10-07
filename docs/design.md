@@ -4,7 +4,7 @@
 > 前者抄不走（它是取舍），后者必须每次改完重新核。凡本文写的比值、字节、毫秒、粒子数，
 > 都来自实际跑过的命令，复算式记在仓库外的 `readme-numbers.md`（同目录 `raw.txt` 是原始输出）。
 
-核对时刻：**2026-10-07 09:35–09:53（+0800）**，`main` 分支，`git ls-files | wc -l` = **144**（09:35 时是 138）。
+核对时刻：**2026-10-07 09:35–09:53（+0800）**，`main` 分支，`git ls-files | wc -l` = **144**（09:35 时是 138）。10:21 重跑同一条命令 = **145**：索引里仍算着 4 项已从工作区删除、尚未提交的条目（`git ls-files -d` 可查），那四项提交后这一计数会是 **141**。
 站点仍在构建：`assets/images/` 与 `assets/js/` 在这十几分钟里被改写过数次，所以**字节类数字都是那一刻的快照**，
 唯一一次闸门翻脸也照实记：09:35 `node scripts/check-bytes.mjs` 报 `BUDGET FAILED`（「头像 + 两张作品截图」92.1 KB / 87.9 KB），
 09:53 同一行变成 **64.8 KB → `BUDGET OK`**——图片被重压过，不是数字写错了。
@@ -160,8 +160,8 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 
 ## 伍 · INTERACTIONS 交互清单（效果 / 成本 / 三档降级）
 
-全站只有 **4** 个每帧写入者挂在同一条 rAF 链上（`grep -c 'updaters.push' assets/js/main.js` = 4：
-进度条、弹性跟随组、音量斜坡、光标墨点），滚动与 resize 事件只调 `schedule()`，
+全站只有 **3** 个每帧写入者挂在同一条 rAF 链上（`grep -c 'updaters.push' assets/js/main.js` = 3：
+进度条、弹性跟随组、光标墨点），滚动与 resize 事件只调 `schedule()`，
 一个帧里跑完所有写入——**没有第二个循环**。
 
 | 效果 | 实现 | 实测成本 | `prefers-reduced-motion` | 无 WebGL | 无 JS |
@@ -176,7 +176,6 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 | 作品卡 3D 倾斜 | 只在 `FINE && !COARSE && !RM` 绑定：`nx,ny ∈ [-.5,.5]`，`×10` → **±5 deg**；插值系数 0.2，`|d| ≤ 0.05` 即归零并停帧 | 每卡 2 个 transform 分量，最多 2 张卡 | 不绑定（`CSS` 里 `.work-card{transform:none}` 兜住） | 不相关 | `.work-card` 静止态无 transform |
 | 磁吸按钮 | `if (HOVER && !RM)` 遍历 `[data-magnetic]`，位移上限 **6 px**，写 `translate3d` | 0 字节增量 | 不绑定 | — | 不生效 |
 | 语言菜单 | 复刻母本 AMD 式样：地球图标 + 当前语言名 + chevron，`listbox/option` 语义，`Esc` 关闭并焦点归位，`↑↓ Home End Enter Tab` 全可达，选中项 `--terra-ink` + `✓`；`localStorage` 键 `intro-lang` **只提示不代跳** | 无额外请求（两份 HTML 各自带完整菜单） | `.lang-menu` 的 `langIn .18s` 入场动画关掉 | 不相关 | `html.no-js` 把 `.lang-btn` 隐藏、`.lang-menu` 摊平成两个 `<a>`（另有 `<noscript>` 兜底样式），两页互链始终可点 |
-| 环境音 | 自托管 12.000 s 无缝循环（`ambient.m4a` **96,326 B** / `ambient.ogg` **98,127 B**），`LEVEL = .5`，WebAudio `GainNode` 淡入 **1.2 s** / 淡出 **0.6 s** 后 `pause()`；m4a 不支持就换 ogg；两条都失败就 `btn.hidden = true` | 默认 **0 B**（`preload:'none'`，首次点击才建元素） | 与动效偏好无关（它是声音，不是动效），但 `aria-pressed` 默认 `false`，绝不自动播放 | 不相关 | 按钮不出现（CSS `html.no-js .sound{display:none}`） |
 | 复制邮箱 | `navigator.clipboard.writeText` → 失败退回隐藏 `<textarea>` + `execCommand`；回显写进 `aria-live="polite"` 的 `.copy-status`，**1800 ms** 后清空；再失败提示"已选中，按 Ctrl+C" | 无 | 不相关 | 不相关 | 按钮无 JS 不出现，但 `<a href="mailto:">` 一直是明文地址 |
 | 桌面光标墨点 | 仅 `FINE && !RM`；`8px` 圆点，`opacity .85`，命中热区 `scale(2.6)`，插值 0.22/0.18 | 运行时插入 1 个 `div`，`aria-hidden` | 不注入 | — | 不注入 |
 | 锚点平滑滚动 | 事件委托，`behavior: RM ? 'auto' : 'smooth'`，含 `#top` 回顶；跳转后给目标补 `tabindex="-1"` 并 `focus({preventScroll:true})` | 零字节 | 直接跳（`auto`） | 不相关 | 浏览器原生锚点跳转仍然工作 |
@@ -190,7 +189,7 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
    `.scroll-cue::after`、`.work-card`、`.mail::after` 拉回静止终态。
 2. **拿不到 WebGL**：`scene.js` 抛 `no-webgl`，`main.js` 兜住并把 hero 退化为两圈发丝环——**粒子是装饰，不是内容**。
 3. **关掉 JavaScript**：`html.no-js`（`main.js` 第 5 行才换成 `js`）+ `<noscript>` 样式 + `@media (scripting:none)`
-   三重兜底：全部内容可读、5 个锚点可点、语言菜单摊平成两个链接、声音按钮与进度条干脆不出现。
+   三重兜底：全部内容可读、5 个锚点可点、语言菜单摊平成两个链接、进度条干脆不出现。
 
 ### 一处必须写下来的事实：减弱动效**不省字节**
 
@@ -230,5 +229,5 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 - 正文对比度实测 **14.328:1**（ink / cream），远高于 7:1 的红线；辅助文字下限字号 14px 与 `--muted` 绑在一起。
 - 缓存与安全头由 nginx 提供（`X-Content-Type-Options` / `Referrer-Policy` / `X-Frame-Options`、HTML `no-cache`、
   带 `?v=` 的资源 30 天、`/assets/fonts/` 一年），见 `deploy/nginx.conf.example`。
-- 想新增效果之前先量字节：`node scripts/check-bytes.mjs` 的七行预算就是闸门本身。2026-10-07 09:53 全绿，
+- 想新增效果之前先量字节：`node scripts/check-bytes.mjs` 的逐类预算行就是闸门本身。2026-10-07 09:53 全绿，
   但 09:35 那次图片行是红的——**闸门随构建变动，别把一次绿当成永久的**。

@@ -55,7 +55,7 @@ cat > /tmp/nc15-block.conf <<'BLOCK'
         alias /var/www/nc15/;
         index index.html;
         try_files $uri $uri/ =404;
-        error_page 404 = /nc15/404.html;
+        error_page 404 =404 /nc15/404.html;
         location ~* \.(css|js|mjs|map|woff2?|png|jpe?g|gif|svg|ico|webp|avif|m4a|ogg)$ {
             add_header Cache-Control "public, max-age=31536000, immutable" always;
         }

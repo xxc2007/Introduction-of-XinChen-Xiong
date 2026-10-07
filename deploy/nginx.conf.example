@@ -1,96 +1,434 @@
-# xxc2007.me — 域名根放个人介绍站，纪念册迁到 /nc15/
-# 这是**示例配置**（占位符路径），真实生效文件在服务器 /etc/nginx/sites-available/xxc2007.me
+# =============================================================================
+# xxc2007.me · 个人介绍站 · nginx 站点配置示例（按 2026-10-07 线上结构照抄）
+# 目标位置：新服务器 /etc/nginx/sites-available/xxc2007.me，再软链到 sites-enabled
+# 这份只是示例：线上以服务器上的文件为准，改配置先改线上，再回抄这里。
 # 迁移步骤与回滚见 docs/migration.md。
 #
-# 三条不能动的约束：
-#   1) /comment/ 是 Artalk 反代，必须留在**域名根**（纪念册的 wall.js 用根绝对路径调它，
-#      跟着搬到 /nc15/comment/ 会让留言墙整块失效）。
-#   2) /geohot/ 是反代到 127.0.0.1:3000 的 Node 服务，前缀与优先级都要保持 ^~。
-#   3) Cloudflare 回源是明文 80，任何 Location 都必须写死 https://$host，
-#      相对跳转会被拼成 http:// 把访客送去明文。
+# ── 路径归属：一个域名根挂着三个站，动手前先认清哪块是谁的 ──────────────────
+#   介绍站（本仓库，root /var/www/intro）拥有：
+#       /              首页（简体中文）
+#       /en/           英文版
+#       /assets/       css / js / fonts / images / audio
+#       /404.html      介绍站自己的 404（internal，只允许 error_page 内部命中）
+#       /index.html、/robots.txt、/sitemap.xml、/giscus-theme.css
+#   邻站（不在本仓库，它们的前缀和优先级都别碰）：
+#       /nc15/         纪念册，alias /var/www/nc15/，由它自己的仓库独立部署
+#       /geohot        反代 127.0.0.1:3000 的 Node 服务
+#       /comment/      反代 127.0.0.1:23366 的 Artalk 留言服务
+#
+# ── /comment/ 为什么不能跟着纪念册搬进 /nc15/ ───────────────────────────────
+#   1) 纪念册的 assets/wall.js 里写的是 var API = '/comment/api/v2'，根绝对路径，
+#      浏览器拼出来永远是 https://xxc2007.me/comment/api/v2。把反代挪到
+#      /nc15/comment/ 之后，它照旧打域名根，留言墙整块失效。
+#   2) 库里已有的留言按 page_key 存，wall.js 用的是 var PAGE = '/guestbook'。
+#      这个 /guestbook 是 Artalk 的 page_key，不是 URL —— 域名根下并没有这条路径，
+#      所以它不参与「纪念册搬家」，改前改后都必须一字不变，动一下就是让全部老留言失联。
+#   → 结论：/comment/ 与 /geohot 刻意留在域名根，^~ 前缀也必须保持。
+#
+# ── 换新机器要你自己补的东西（示例给不了）──────────────────────────────────
+#   * DNS：xxc2007.me 与 www.xxc2007.me 的 A 记录指向 <server-ip>（Cloudflare 橙云代理）
+#   * 上传：站包传到 <ssh-user>@<server-ip>:/var/www/intro。源站 IP 与登录名都不进仓库，
+#     只从本地 .deploy.env 读；仓库和文档里一律写 <server-ip> / <ssh-user>。
+#   * 证书：先 certbot --nginx -d xxc2007.me -d www.xxc2007.me，才会有下面两个
+#     /etc/letsencrypt/live/xxc2007.me/ 路径
+#   * 两个上游要在新机上装好并带数据过去：Artalk(127.0.0.1:23366)、geohot(127.0.0.1:3000)
+#   * /var/www/nc15 归纪念册仓库，介绍站迁移不产出它；新机缺这个目录 /nc15/ 就是 404
+#
+# ── 四条不能动的约束 ───────────────────────────────────────────────────────
+#   1) /comment/ 的 ^~ 必须保留：否则静态资源正则会截胡 /comment/static/images/*.jpg 头像。
+#   2) 80 端口直接服务内容、不做 http→https 跳转：Cloudflare Flexible 是明文回源，
+#      一跳就重定向循环。访客侧强制 https 请在 Cloudflare 开「Always Use HTTPS」。
+#   3) 所有 Location 写死 https://$host：相对跳转按连接协议拼，会被拼成 http://。
+#   4) add_header 不被子 location 继承（本层一出现 add_header 就不再继承上层），
+#      所以每个自带 add_header 的 location 都得把安全头整套重抄一遍。
+#   另：80 与 443 两块的差异是线上原样（只有 443 发 HSTS；= /geohot 补斜杠那条只写在 80），
+#      照抄即可，不是笔误。
+# =============================================================================
 
+# ---- www 归一：无论 http/https 一律 301 到裸域 ----
 server {
     listen 80;
     listen [::]:80;
-    server_name xxc2007.me;
-
-    # 证书续签路径不重定向
-    location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; }
-    location / { return 301 https://$host$request_uri; }
+    server_name www.xxc2007.me;
+    return 301 https://xxc2007.me$request_uri;
 }
 
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name xxc2007.me;
+    server_name www.xxc2007.me;
 
     ssl_certificate     /etc/letsencrypt/live/xxc2007.me/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/xxc2007.me/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
 
-    # ── 个人介绍站 = 域名根 ──────────────────────────────────────────
+    return 301 https://xxc2007.me$request_uri;
+}
+
+# ---- 裸域 · HTTP（保留直服务，防 CF Flexible 回源被重定向循环） ----
+server {
+    listen 80;
+    listen [::]:80;
+    server_name xxc2007.me;
+    absolute_redirect off;
+
     root /var/www/intro;
     index index.html;
+    charset utf-8;
+    server_tokens off;
 
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
 
-    gzip on;
-    gzip_types text/css application/javascript image/svg+xml application/json text/xml application/xml;
-    gzip_min_length 1024;
+    error_page 404 /404.html;
 
-    # 带 ?v= 指纹的静态资源：长缓存（HTML 里的版本串一变就自然失效）
-    location ~* \.(css|js|woff2?|webp|jpg|jpeg|png|svg|ico|m4a|ogg)$ {
-        expires 30d;
-        add_header Cache-Control "public, max-age=2592000, immutable";
+    # HTML/robots/sitemap 永远回源校验（配 ETag 命中 304）——杜绝浏览器启发式缓存吃掉新版页面/脚本
+    location = /index.html {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+    location = /robots.txt  {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+    location = /sitemap.xml {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        default_type "text/plain";
+    }
+
+    # giscus 自定义主题：允许 giscus.app 跨域加载（保留，防止回退使用）
+    location = /giscus-theme.css {
+        add_header Access-Control-Allow-Origin "https://giscus.app" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         try_files $uri =404;
     }
-    # 字体切片单独放宽（文件名已按内容编号，不会变）
-    location ^~ /assets/fonts/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        try_files $uri =404;
-    }
-    # HTML 不缓存，保证发布即时可见
-    location ~* \.html$ { add_header Cache-Control "no-cache"; }
 
-    # 无扩展名路径 → 目录首页（/ 与 /en/）
-    location / {
-        try_files $uri $uri/ =404;
-        error_page 404 /404.html;
+    # Artalk 留言服务反代（本机 127.0.0.1:23366）
+    # ^~ 必须保留：阻止下方静态资源正则截胡 /comment/static/images/*.jpg（留言头像）
+    location ^~ /comment/ {
+        proxy_pass http://127.0.0.1:23366/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 2m;
     }
-    location = /404.html { internal; }
 
-    # ── 纪念册 → /nc15/ ────────────────────────────────────────────
-    location = /nc15 { return 301 https://$host/nc15/; }
+    # 静态资源长缓存：页面用 ?v= 版本号；照片/字体内容不变更，换内容请换文件名
+    location ~* \.(css|js|mjs|map|woff2?|ttf|otf|png|jpe?g|gif|svg|ico|webp|avif)$ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # 纪念册迁到 /nc15/：站内绝对路径已带 /nc15 前缀；/comment/ 与 /geohot/ 留在域名根
+    # —— 纪念册迁到 /nc15/ ——
+    # 站内绝对路径已带 /nc15 前缀；/comment/（Artalk）与 /geohot/ 刻意留在域名根。
+    # 旧路径（域名根时代）用 301 收敛到 /nc15/：内部改写会让同一页面在两个 URL 上都是 200，
+    # 属于重复内容且不指向规范链接。/en/ 与 /assets/ 已归介绍站，所以不在名单里。
+    rewrite ^/(zh-Hant|ja|ko|ru|es|fr|pt|ar|promo|images|maplibre|data)(/.*)?$ /nc15/$1$2 permanent;
+
+    # 介绍站自身的 HTML 每次回源校验：/en/ 与 /404.html 此前没有 Cache-Control，
+    # 浏览器按启发式缓存，改版后老访客会长期看到旧页面。/404.html 收为 internal：
+    # 直接访问它不再回一个 200 的「假页面」，只允许 error_page 内部命中。
+    location = /en/index.html {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+    location = /404.html {
+        internal;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+
+    # /nc15/ 的 HTML 此前完全没有 Cache-Control。nginx 的 add_header 不被子 location 继承
+    # ——父层一声明，子层就得把安全头整套重抄，否则子层响应反而丢头。
     location ^~ /nc15/ {
         alias /var/www/nc15/;
         index index.html;
         try_files $uri $uri/ =404;
-        # 404 用纪念册自己的页面（它的链接已带 /nc15 前缀）
-        error_page 404 = /nc15/404.html;
+        error_page 404 =404 /nc15/404.html;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+        location ~* \.(css|js|mjs|map|woff2?|ttf|otf|mp4|m4a|ogg|png|jpe?g|gif|svg|ico|webp|avif)$ {
+            add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        }
     }
-    location ^~ /nc15/promo/ {
-        alias /var/www/nc15/promo/;
-        index index.html;
+    # robots/sitemap/404 用顶层精确 location：精确匹配优先于上面的 ^~ 前缀，
+    # 且不嵌进 alias 块里——alias 下再套子 location 是 nginx 的已知坑。
+    location = /nc15/robots.txt {
+        alias /var/www/nc15/robots.txt;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+    location = /nc15/sitemap.xml {
+        alias /var/www/nc15/sitemap.xml;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+    location = /nc15/404.html {
+        internal;
+        alias /var/www/nc15/404.html;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
-    # ── 邻站：保持原样 ─────────────────────────────────────────────
-    location ^~ /geohot {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
+    location = /nc15 { return 308 https://$host/nc15/; }
+
+    location / {
+        try_files $uri $uri/ =404;
     }
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_types text/css application/javascript image/svg+xml application/json;
+
+# ---- ADD: GEOHOT 反代（/geohot/ 子路径）----
+# 不剥前缀：应用构建时带 BASE_PATH=/geohot 并自行归一化入站路径，故原样转发。
+# 裸路径补斜杠：客户端路由的 basename 是 /geohot，裸路径在浏览器里解析不到首页。
+# 目标写死 https，不要用相对路径——相对 Location 按连接协议拼接，而 Cloudflare 是明文回源。
+location = /geohot {
+    return 308 https://$host/geohot/;
+}
+
+location ^~ /geohot {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade           $http_upgrade;
+    client_max_body_size 10m;
+    proxy_connect_timeout 5s;
+    proxy_send_timeout    60s;
+    proxy_read_timeout    60s;
+}
+
+location ^~ /geohot/api/mcp {
+    proxy_pass http://127.0.0.1:3000/geohot/api/mcp;
+    proxy_http_version 1.1;
+    proxy_set_header Connection        "";
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade           $http_upgrade;
+    proxy_buffering    off;
+    proxy_cache        off;
+    proxy_read_timeout 1h;
+    proxy_send_timeout 1h;
+    chunked_transfer_encoding on;
+    client_max_body_size 1m;
+}
+
+}
+
+# ---- 裸域 · HTTPS ----
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name xxc2007.me;
+
+    root /var/www/intro;
+    index index.html;
+    charset utf-8;
+    server_tokens off;
+
+    ssl_certificate     /etc/letsencrypt/live/xxc2007.me/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/xxc2007.me/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    error_page 404 /404.html;
+
+    # HTML/robots/sitemap 永远回源校验（配 ETag 命中 304）——杜绝浏览器启发式缓存吃掉新版页面/脚本
+    location = /index.html {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+    location = /robots.txt  {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+    location = /sitemap.xml {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+
+    location ^~ /.well-known/acme-challenge/ {
+        default_type "text/plain";
+    }
+
+    # giscus 自定义主题：允许 giscus.app 跨域加载（保留，防止回退使用）
+    location = /giscus-theme.css {
+        add_header Access-Control-Allow-Origin "https://giscus.app" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+        try_files $uri =404;
+    }
+
+    # Artalk 留言服务反代（本机 127.0.0.1:23366）
+    # ^~ 必须保留：阻止下方静态资源正则截胡 /comment/static/images/*.jpg（留言头像）
     location ^~ /comment/ {
-        proxy_pass http://127.0.0.1:23366;
-        proxy_http_version 1.1;
+        proxy_pass http://127.0.0.1:23366/;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 2m;
     }
+
+    # 静态资源长缓存：页面用 ?v= 版本号；照片/字体内容不变更，换内容请换文件名
+    location ~* \.(css|js|mjs|map|woff2?|ttf|otf|png|jpe?g|gif|svg|ico|webp|avif)$ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+
+    # 纪念册迁到 /nc15/：站内绝对路径已带 /nc15 前缀；/comment/ 与 /geohot/ 留在域名根
+    # —— 纪念册迁到 /nc15/ ——
+    # 站内绝对路径已带 /nc15 前缀；/comment/（Artalk）与 /geohot/ 刻意留在域名根。
+    # 旧路径（域名根时代）用 301 收敛到 /nc15/：内部改写会让同一页面在两个 URL 上都是 200，
+    # 属于重复内容且不指向规范链接。/en/ 与 /assets/ 已归介绍站，所以不在名单里。
+    rewrite ^/(zh-Hant|ja|ko|ru|es|fr|pt|ar|promo|images|maplibre|data)(/.*)?$ /nc15/$1$2 permanent;
+
+    # 介绍站自身的 HTML 每次回源校验：/en/ 与 /404.html 此前没有 Cache-Control，
+    # 浏览器按启发式缓存，改版后老访客会长期看到旧页面。/404.html 收为 internal：
+    # 直接访问它不再回一个 200 的「假页面」，只允许 error_page 内部命中。
+    location = /en/index.html {
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+    location = /404.html {
+        internal;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+
+    # /nc15/ 的 HTML 此前完全没有 Cache-Control。nginx 的 add_header 不被子 location 继承
+    # ——父层一声明，子层就得把安全头整套重抄，否则子层响应反而丢头。
+    location ^~ /nc15/ {
+        alias /var/www/nc15/;
+        index index.html;
+        try_files $uri $uri/ =404;
+        error_page 404 =404 /nc15/404.html;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+
+        location ~* \.(css|js|mjs|map|woff2?|ttf|otf|mp4|m4a|ogg|png|jpe?g|gif|svg|ico|webp|avif)$ {
+            add_header Cache-Control "public, max-age=31536000, immutable" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+        }
+    }
+    # robots/sitemap/404 用顶层精确 location：精确匹配优先于上面的 ^~ 前缀，
+    # 且不嵌进 alias 块里——alias 下再套子 location 是 nginx 的已知坑。
+    location = /nc15/robots.txt {
+        alias /var/www/nc15/robots.txt;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+    location = /nc15/sitemap.xml {
+        alias /var/www/nc15/sitemap.xml;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+    location = /nc15/404.html {
+        internal;
+        alias /var/www/nc15/404.html;
+        add_header Cache-Control "no-cache" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+
+    location = /nc15 { return 308 https://$host/nc15/; }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    gzip on;
+    gzip_comp_level 5;
+    gzip_types text/css application/javascript image/svg+xml application/json;
+
+# ---- ADD: GEOHOT 反代（/geohot/ 子路径）----
+# 不剥前缀：应用构建时带 BASE_PATH=/geohot 并自行归一化入站路径，故原样转发。
+location ^~ /geohot/ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade           $http_upgrade;
+    client_max_body_size 10m;
+    proxy_connect_timeout 5s;
+    proxy_send_timeout    60s;
+    proxy_read_timeout    60s;
+}
+
+location ^~ /geohot/api/mcp {
+    proxy_pass http://127.0.0.1:3000/geohot/api/mcp;
+    proxy_http_version 1.1;
+    proxy_set_header Connection        "";
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade           $http_upgrade;
+    proxy_buffering    off;
+    proxy_cache        off;
+    proxy_read_timeout 1h;
+    proxy_send_timeout 1h;
+    chunked_transfer_encoding on;
+    client_max_body_size 1m;
+}
+
 }

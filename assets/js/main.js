@@ -85,9 +85,33 @@ let scene = null;
   }
 })();
 
-function fieldEnergy(v) {
-  if (scene && typeof scene.setEnergy === 'function') { try { scene.setEnergy(v); } catch (e) { } }
-}
+
+/* ---------- 场强跟随滚动：滑得越快纸屑越活跃，停下后回落到基准 ---------- */
+const FIELD_BASE = .34;
+(function fieldDrive() {
+  let cur = FIELD_BASE, target = FIELD_BASE, raf = 0, idle = 0;
+  let lastY = window.scrollY, lastT = performance.now();
+
+  function push(v) {
+    if (scene && typeof scene.setEnergy === 'function') { try { scene.setEnergy(v); } catch (e) { } }
+  }
+  function ease() {
+    cur += (target - cur) * .12;
+    push(cur);
+    if (Math.abs(target - cur) < .004) { cur = target; raf = 0; return; }
+    raf = requestAnimationFrame(ease);
+  }
+  window.addEventListener('scroll', () => {
+    const now = performance.now(), dt = Math.max(8, now - lastT);
+    const speed = Math.abs(window.scrollY - lastY) / dt;   /* px/ms */
+    lastY = window.scrollY; lastT = now;
+    target = Math.min(1, FIELD_BASE + speed * .62);
+    clearTimeout(idle);
+    idle = setTimeout(() => { target = FIELD_BASE; if (!raf) raf = requestAnimationFrame(ease); }, 90);
+    if (!raf) raf = requestAnimationFrame(ease);
+  }, { passive: true });
+})();
+
 
 /* ---------- 弹性跟随（磁吸与卡片倾斜共用一个写入器） ---------- */
 const springs = [];
@@ -115,24 +139,29 @@ updaters.push(() => {
   }
 });
 
+/* 磁吸：只写 --mx/--my（px），交给 CSS 的独立 translate 属性去用，
+   这样卡片的 transform 倾斜可以各自占着自己的通道、互不覆盖。 */
 if (HOVER && !RM) $$('[data-magnetic]').forEach((el) => spring(el, (ev, r) => [
   clamp((ev.clientX - r.left - r.width / 2) / (r.width / 2 || 1), -1, 1) * 6,   /* 位移上限 6px */
   clamp((ev.clientY - r.top - r.height / 2) / (r.height / 2 || 1), -1, 1) * 6
 ], (node, x, y) => {
-  node.style.transform = x || y ? 'translate3d(' + x.toFixed(2) + 'px,' + y.toFixed(2) + 'px,0)' : '';
+  node.style.setProperty('--mx', x.toFixed(2) + 'px');
+  node.style.setProperty('--my', y.toFixed(2) + 'px');
 }));
 
 /* 触屏与 reduced-motion 一律不绑定倾斜；nx/ny∈[-.5,.5]，×10 后正好落在 ±5deg */
 if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev, r) => {
   const nx = clamp((ev.clientX - r.left) / (r.width || 1) - .5, -.5, .5);
   const ny = clamp((ev.clientY - r.top) / (r.height || 1) - .5, -.5, .5);
-  card.style.setProperty('--mx', ((nx + .5) * 100).toFixed(1) + '%');  /* 发丝高光跟随 */
-  card.style.setProperty('--my', ((ny + .5) * 100).toFixed(1) + '%');
+  /* 高光的跟随量用独立变量名：早先这里写的是 --mx/--my（百分比），
+     而同名变量会被卡内的按钮继承去当 translate 用，指针移开后按钮就跑位。 */
+  card.style.setProperty('--hl-x', ((nx + .5) * 100).toFixed(1) + '%');
+  card.style.setProperty('--hl-y', ((ny + .5) * 100).toFixed(1) + '%');
   return [-ny * 10, nx * 10];
 }, (node, a, b) => {
   node.style.transform = a || b
     ? 'perspective(720px) rotateX(' + a.toFixed(2) + 'deg) rotateY(' + b.toFixed(2) + 'deg)' : '';
-  node.style.setProperty('--mx', '50%'); node.style.setProperty('--my', '50%');
+  node.style.setProperty('--hl-x', '50%'); node.style.setProperty('--hl-y', '50%');
 }));
 
 /* ---------- 语言菜单：menu/menuitem 语义（与纪念册一致）+ 记忆，但绝不自动跳转 ---------- */
@@ -200,7 +229,17 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     else if (ev.key === 'Enter' && isOpen()) {
       const o = optionOf(ev.target);
       if (o) { ev.preventDefault(); select(o); }
-    } else if (ev.key === 'Tab') close(false);
+    }
+
+  /* 关闭只由「焦点离开整个控件」触发。早先这里是 Tab 就 close()：
+     Tab 从按钮走进菜单后菜单立刻被隐藏、焦点掉回 <body>，
+     菜单项因此永远无法被键盘到达（WCAG 2.4.3 / 2.4.7）。 */
+  wrap.addEventListener('focusout', (ev) => {
+    if (!isOpen()) return;
+    const to = ev.relatedTarget;
+    if (to && (wrap.contains(to) || menu.contains(to))) return;
+    close(false);
+  });
   });
 
   function select(o) {
@@ -223,6 +262,7 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   if (!link || !link.href) return;
   const hint = document.createElement('div');
   hint.className = 'lang-hint';
+  hint.setAttribute('role', 'status');   /* 事后出现的横幅：播报给读屏，但不抢焦点 */
   hint.style.cssText = 'position:fixed;z-index:9;left:0;bottom:0;display:flex;gap:.6rem;align-items:center;' +
     'max-width:min(92vw,30rem);padding:.4rem .7rem;border:1px solid ' + tok('--line', '#E4DFD3') + ';' +
     'border-radius:2px;background:' + tok('--paper', '#FAF9F5') + ';color:' + tok('--muted', '#6E6A5E') + ';' +
@@ -237,7 +277,8 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   const off = document.createElement('button');
   off.type = 'button'; off.setAttribute('aria-label', LANG === 'en' ? 'Dismiss' : '关闭提示');
   off.textContent = '×';
-  off.style.cssText = 'border:0;background:none;color:inherit;font:14px/1 sans-serif;cursor:pointer';
+  off.style.cssText = 'border:0;background:none;color:inherit;font:16px/1 sans-serif;cursor:pointer;' +
+    'min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center';
   off.addEventListener('click', () => hint.remove());
   hint.appendChild(say); hint.appendChild(go); hint.appendChild(off);
   document.body.appendChild(hint);
@@ -250,77 +291,6 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   });
 })();
 
-/* ---------- 环境音：默认关闭，点击才建 AudioContext（自动播放策略要求用户手势内创建） ---------- */
-(function ambient() {
-  const btn = $('.sound');
-  if (!btn) return;
-  btn.setAttribute('aria-pressed', 'false');
-  const LEVEL = .5, URLS = ['../audio/ambient.m4a', '../audio/ambient.ogg'].map(u => new URL(u, import.meta.url).href);
-  let k = -1, el = null, ac = null, gn = null, ms = null, playing = false, hold = 0, ramp = null;
-
-  const mimeOf = (u) => (/\.m4a$/i.test(u) ? 'audio/mp4; codecs="mp4a.40.2"' : 'audio/ogg; codecs="vorbis"');
-  function teardown() { try { if (ms) ms.disconnect(); if (gn) gn.disconnect(); } catch (e) { } ac = gn = ms = null; }
-  function build() {                       /* m4a 优先，失败/不支持则换 ogg */
-    const probe = new Audio();
-    while (k + 1 < URLS.length) {
-      k++;
-      if (!probe.canPlayType(mimeOf(URLS[k]))) continue;
-      const a = new Audio();
-      a.loop = true; a.preload = 'none'; a.volume = 0; a.src = URLS[k];
-      a.addEventListener('error', () => {
-        teardown(); el = null;
-        if (!build()) { btn.hidden = true; if (playing) { playing = false; btn.setAttribute('aria-pressed', 'false'); } }
-        else if (playing) start();
-      }, { once: true });
-      el = a; return true;
-    }
-    return false;
-  }
-  function wire() {                        /* 懒建 WebAudio，用 GainNode 做淡入淡出 */
-    if (gn) return true;
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC || !el) return false;
-    try {
-      ac = new AC(); ms = ac.createMediaElementSource(el); gn = ac.createGain();
-      gn.gain.value = 0; ms.connect(gn); gn.connect(ac.destination);
-      el.volume = 1; return true;
-    } catch (e) { teardown(); return false; }
-  }
-  function fade(to, dur, after) {
-    if (!el) return;
-    if (wire()) {
-      const now = ac.currentTime, g = gn.gain;
-      try { g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(to, now + dur); }
-      catch (e) { g.value = to; }
-      if (ac.state === 'suspended' && ac.resume) ac.resume();
-    } else {                              /* 没有 WebAudio：退化为 volume 斜坡（同一条 rAF 链） */
-      if (to > 0) { try { el.volume = 0; } catch (e) { } }
-      ramp = { from: to > 0 ? 0 : clamp(el.volume, 0, 1), to, ms: dur * 1000, t0: 0 };
-    }
-    if (after) { clearTimeout(hold); hold = setTimeout(after, dur * 1000 + 60); }
-  }
-  function start() {
-    if (!el && !build()) { btn.hidden = true; return; }
-    playing = true; btn.setAttribute('aria-pressed', 'true');
-    fade(LEVEL, 1.2);                      /* 淡入 1.2s */
-    fieldEnergy(.9);
-    el.play().catch(() => { playing = false; btn.setAttribute('aria-pressed', 'false'); });
-  }
-  function stop() {
-    playing = false; btn.setAttribute('aria-pressed', 'false');
-    fade(0, .6, () => { if (!playing && el) el.pause(); });   /* 淡出 0.6s 后暂停 */
-    fieldEnergy(.4);
-  }
-  btn.addEventListener('click', () => { playing ? stop() : start(); });
-  updaters.push(() => {
-    if (!ramp || !el) return;
-    if (!ramp.t0) ramp.t0 = (window.performance && performance.now) ? performance.now() : Date.now();
-    const now = (window.performance && performance.now) ? performance.now() : Date.now();
-    const p = Math.min(1, (now - ramp.t0) / ramp.ms);
-    try { el.volume = clamp(ramp.from + (ramp.to - ramp.from) * p, 0, 1); } catch (e) { }
-    if (p < 1) keep(); else ramp = null;
-  });
-})();
 
 /* ---------- 当前节高亮 ---------- */
 (function activeNav() {

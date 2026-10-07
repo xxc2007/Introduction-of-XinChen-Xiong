@@ -4,7 +4,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 
 const ROOT = resolve(process.cwd());
 const message = process.argv[2] || `deploy ${new Date().toISOString().slice(0, 10)}`;
