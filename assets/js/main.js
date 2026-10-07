@@ -78,8 +78,7 @@ let scene = null;
   try {
     const mod = await import('./scene.js');
     if (typeof mod.initField !== 'function') throw new TypeError('scene.js 未导出 initField');
-    mod.initField(canvas);
-    scene = mod;
+    scene = mod.initField(canvas);   /* setEnergy 在返回的句柄上，不在模块命名空间上 */
   } catch (e) {
     const hero = $('.hero');
     if (hero) hero.dataset.field = 'off';   /* CSS 据 data-field=off 退回静态发丝底纹 */
@@ -87,7 +86,7 @@ let scene = null;
 })();
 
 function fieldEnergy(v) {
-  if (scene && typeof scene.setFieldEnergy === 'function') { try { scene.setFieldEnergy(v); } catch (e) { } }
+  if (scene && typeof scene.setEnergy === 'function') { try { scene.setEnergy(v); } catch (e) { } }
 }
 
 /* ---------- 弹性跟随（磁吸与卡片倾斜共用一个写入器） ---------- */
