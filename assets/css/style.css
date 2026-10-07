@@ -478,7 +478,7 @@ main>section,.sec{
   margin-top:clamp(30px,4vw,44px);
 }
 .social li{display:flex}
-/* 40×40 发丝图标卡：与母本页脚 .f-social 同一套尺寸与 hover 语言 */
+/* 44×44 发丝图标卡：与母本页脚 .f-social 同一套尺寸、边框与 hover 语言（母本实测 44×44） */
 .social a,.social button{
   position:relative;
   width:44px;height:44px;
