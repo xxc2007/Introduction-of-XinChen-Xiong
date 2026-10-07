@@ -94,9 +94,18 @@ rm -f /tmp/xxc.orig
 echo "    ✓ 已重载"
 
 echo "[5] 线上验证"
-for u in / /en/ /nc15/ /nc15/en/ /nc15/promo/ /geohot/ /robots.txt /sitemap.xml; do
-  printf "    %-18s HTTP %s\n" "$u" "$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: xxc2007.me' "http://127.0.0.1$u")"
-done
+# reload 是优雅的：老 worker 可能还在服务旧配置，所以每条 URL 重试到 200 或超时
+probe() {
+  local u="$1" want="$2" code=""
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Host: xxc2007.me' "http://127.0.0.1$u")
+    [ "$code" = "$want" ] && break
+    sleep 1
+  done
+  printf "    %-18s HTTP %s\n" "$u" "$code"
+}
+probe / 200; probe /en/ 200; probe /nc15/ 200; probe /nc15/en/ 200
+probe /nc15/promo/ 200; probe /geohot/ 200; probe /robots.txt 200; probe /sitemap.xml 200
 echo "    备份留在 $BAK"
 REMOTE
 echo "完成（模式：${MODE}）"
