@@ -23,7 +23,11 @@ const count = (h, re) => (h.match(re) || []).length;
 console.log("── 结构数量");
 for (const [k, h] of Object.entries(pages)) {
   const n = {
-    "h2.sec-title": count(h, /<h2 class="sec-title/g),
+    "sec-head": count(h, /<div class="sec-head/g),
+    h2: count(h, /<h2>/g),
+    "sec-index": count(h, /<span class="sec-index">/g),
+    "sec-rule": count(h, /<hr class="sec-rule/g),
+    p: count(h, /<p[\s>]/g),
     section: count(h, /<section/g),
     "nav 链接": count(h, /<nav id="nav"[\s\S]*?<\/nav>/g) ? (h.match(/<nav id="nav"[\s\S]*?<\/nav>/)[0].match(/href="#/g) || []).length : 0,
     "work-card": count(h, /class="work-card/g),
@@ -33,6 +37,8 @@ for (const [k, h] of Object.entries(pages)) {
     "dl.facts 行": (h.match(/<dl class="facts[\s\S]*?<\/dl>/) || [""])[0].match(/<div>/g)?.length ?? 0,
     "ol.steps 项": (h.match(/<ol class="steps[\s\S]*?<\/ol>/) || [""])[0].match(/<li>/g)?.length ?? 0,
     reveal: count(h, /class="[^"]*\breveal\b/g),
+    "live region": count(h, /aria-live=/g),
+    "menu/menuitem": count(h, /role="menu(item)?"/g),
   };
   pages[`${k}_n`] = n;
   console.log(`  ${k}: ${Object.entries(n).map(([a, b]) => `${a}=${b}`).join(" ")}`);

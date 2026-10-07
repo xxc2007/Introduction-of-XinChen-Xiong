@@ -135,7 +135,7 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   node.style.setProperty('--mx', '50%'); node.style.setProperty('--my', '50%');
 }));
 
-/* ---------- 语言菜单：listbox 语义 + 记忆，但绝不自动跳转 ---------- */
+/* ---------- 语言菜单：menu/menuitem 语义（与纪念册一致）+ 记忆，但绝不自动跳转 ---------- */
 (function langMenu() {
   const box = $('.lang');
   let btn = (box && $('[aria-haspopup]', box)) || $('[aria-haspopup="listbox"]') || $('.lang-btn');
@@ -143,13 +143,13 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   if (btn && !menu && btn.nextElementSibling) menu = btn.nextElementSibling;
   if (!btn || !menu) return;
   const wrap = box || btn.parentElement || document.body;
-  let items = $$('[role="option"]', menu);
+  let items = $$('[role="menuitem"], [role="option"]', menu);
   if (!items.length) items = $$('.lang-item, a[href]', menu);
   if (!items.length) return;
 
   const optionOf = (node) => {
     if (!node || !node.closest) return null;
-    return node.matches('[role="option"]') ? node : node.closest('[role="option"]');
+    return node.matches('[role="menuitem"], [role="option"]') ? node : node.closest('[role="menuitem"], [role="option"]');
   };
   const anchorOf = (o) => (o.matches && o.matches('a[href]')) ? o : $('a[href]', o);
   const isOpen = () => !menu.hidden;
@@ -177,7 +177,7 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     return /(^|[/#.])en([/.#]|$)/i.test(href) ? 'en' : 'zh';
   };
 
-  items.forEach((o) => { if (o.setAttribute) o.setAttribute('aria-selected', codeOf(o) === LANG ? 'true' : 'false'); });
+  items.forEach((o) => { if (!o.setAttribute) return; const on = codeOf(o) === LANG; o.setAttribute('aria-current', on ? 'true' : 'false'); o.classList.toggle('is-current', on); });
 
   btn.addEventListener('click', () => { isOpen() ? close(false) : open(); });
   items.forEach((o) => {
@@ -390,7 +390,7 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     'pointer-events:none;z-index:8;opacity:0;background:' + tok('--terra', '#D97757');
   document.body.appendChild(dot);
   let tx = 0, ty = 0, cx = 0, cy = 0, s = 1, ts = 1, live = false;
-  const HOT = 'a,button,input,summary,label,[role="option"],[data-magnetic],.work-card';
+  const HOT = 'a,button,input,summary,label,[role="menuitem"],[role="option"],[data-magnetic],.work-card';
   window.addEventListener('pointermove', (ev) => {
     if (ev.pointerType === 'touch' || ev.pointerType === 'pen') return;
     tx = ev.clientX; ty = ev.clientY;

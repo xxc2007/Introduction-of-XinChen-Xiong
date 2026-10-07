@@ -16,6 +16,21 @@ KH="${DEPLOY_KNOWN_HOSTS:-$HOME/.ssh/known_hosts}"
 SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=accept-new -i $SSH_KEY -o UserKnownHostsFile=$KH"
 ssh_run() { ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" "$@"; }
 
+echo "== 0/5 资源指纹（?v=）自动跟随 HEAD =="
+# CSS/JS 走的是 max-age=1 年 + immutable，只有 ?v= 变了浏览器才会重新取。
+# 手工改容易漏，这里在跑闸门之前先按 HEAD 统一一次。
+V="$(git rev-parse --short=6 HEAD)"
+node - "$V" <<'NODE'
+const fs = require("fs");
+const v = process.argv[2];
+for (const p of ["index.html", "en/index.html"]) {
+  if (!fs.existsSync(p)) continue;
+  const t = fs.readFileSync(p, "utf8");
+  const n = t.replace(/\?v=[0-9a-z]{4,8}/g, "?v=" + v);
+  if (n !== t) { fs.writeFileSync(p, n); console.log(`  ${p} → ?v=${v}`); }
+}
+NODE
+
 echo "== 1/5 质量闸门 =="
 node scripts/check-parity.mjs
 node scripts/check-links.mjs

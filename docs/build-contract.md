@@ -52,7 +52,7 @@ body
    .progress（顶部 2px 滚动进度）
  main#main
    section#top.hero      ：canvas#field + .avatar(圆框) + h1 + p.motto + p.hero-sub + a.hero-cta(#about) + .scroll-cue
-   section#about         ：h2.sec-title（<span class=num>壹</span><span class=eyebrow>ABOUT</span><span class=zh>关于我</span>）
+   section#about         ：div.sec-head（<span class=sec-index>壹 · ABOUT</span><h2>关于我</h2>）+ hr.sec-rule
                            p×3 + dl.facts（4 组：身份 / 所在地 / 邮箱 / 现在在做）
    section#works         ：h2（贰 · WORKS 两个网站）+ svg.contours（背景等高线装饰）
                            article.work-card ×2，各含：h3、p.lede、img.shot、ul.facts(3 li)、a.btn-live、a.btn-repo
@@ -62,7 +62,7 @@ body
  footer.foot             ：p.foot-sign（署名行）+ p.foot-meta（年份 · MIT · 返回顶部 a#top）
 ```
 
-**数量断言（parity 脚本会钉死）**：`h2.sec-title` = 5；`section` = 6；`nav a` = 5；
+**数量断言（parity 脚本会钉死）**：`h2.sec-title` = 5、 = 5、 = 5；`section` = 6；`nav a` = 5；
 `.work-card` = 2；`.social li` = 7；`<img>` = 3（avatar + shot-nc15 + shot-geohot）；
 `blockquote` = 3；`dl.facts div` = 4；`ol.steps li` = 4。
 
@@ -101,7 +101,7 @@ body
 
 ## 6. 无障碍硬指标
 
-- 语言菜单：`button[aria-haspopup=listbox][aria-expanded]` + `ul[role=listbox]` + `li[role=option][aria-selected]`；Esc 关闭并把焦点还给按钮；无 JS 时 `.lang-menu` 里两个 `<a>` 仍可点。
+- 语言菜单：`button[aria-haspopup=menu][aria-expanded]` + `ul[role=menu]` + `li > a[role=menuitem]`（选中项标 `aria-current=true`，与纪念册同一套语义）；Esc 关闭并把焦点还给按钮；无 JS 时 `.lang-menu` 里两个 `<a>` 仍可点。
 - 声音按钮：`aria-pressed`，默认 `false`（不自动播放）；点击才 `audio.play()`，淡入 1.2 s / 淡出 0.6 s。
 - `canvas#field`：`role="img"` + `aria-label`（中文页写装饰性说明，英文页对应翻译）。
 - 焦点：`:focus-visible{outline:2px solid var(--terra-ink);outline-offset:3px}`。

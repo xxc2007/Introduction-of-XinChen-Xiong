@@ -24,8 +24,8 @@
 <link rel="icon" href="../assets/images/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="../assets/images/favicon-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon" sizes="32x32">
-<link rel="stylesheet" href="../assets/fonts/noto-serif-sc/wght.css?v=a1b2">
-<link rel="stylesheet" href="../assets/css/style.css?v=a1b2">
+<link rel="stylesheet" href="../assets/fonts/noto-serif-sc/wght.css?v=ec4efd">
+<link rel="stylesheet" href="../assets/css/style.css?v=ec4efd">
 <noscript>
 <style>
 /* Without JavaScript: show everything the scripts would reveal, and lay the two
@@ -42,6 +42,7 @@
   "@context": "https://schema.org",
   "@type": "Person",
   "name": "Xiong Xinchen",
+  "alternateName": "熊鑫晨",
   "url": "https://xxc2007.me/",
   "email": "xxc200707@gmail.com",
   "image": "https://xxc2007.me/assets/images/avatar.webp",
@@ -63,28 +64,28 @@
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="topbar">
-  <div class="brand">Xiong Xinchen</div>
+  <div class="brand"><b>Xiong Xinchen</b><span>Introduction</span></div>
 
   <nav id="nav" aria-label="Sections">
-    <a href="#about">About</a>
-    <a href="#works">Works</a>
-    <a href="#how">How</a>
-    <a href="#beliefs">Beliefs</a>
-    <a href="#contact">Contact</a>
+    <a href="#about">About me</a>
+    <a href="#works">Two sites</a>
+    <a href="#how">How I work</a>
+    <a href="#beliefs">What I believe</a>
+    <a href="#contact">Find me</a>
   </nav>
 
   <div class="controls">
     <!-- Language switcher: kept notranslate so translation extensions cannot expand it.
          Without JS the two links inside .lang-menu stay clickable (see noscript styles). -->
     <div class="lang notranslate" translate="no">
-      <button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Change language. Current language: English">
+      <button type="button" class="lang-btn" aria-haspopup="menu" aria-expanded="false" aria-label="Change language. Current language: English">
         <svg class="lang-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3c2.6 2.6 3.9 5.7 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.7-3.9-9S9.4 5.6 12 3z"/></svg>
         <span class="lang-current" translate="no" aria-hidden="true">English</span>
         <svg class="lang-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </button>
-      <ul class="lang-menu" role="listbox" aria-label="Language" hidden>
-        <li role="option" aria-selected="true" lang="en"><a href="./" hreflang="en" aria-current="true" translate="no">English<svg class="lang-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></a></li>
-        <li role="option" aria-selected="false" lang="zh-Hans"><a href="../" hreflang="zh-Hans" translate="no">中文</a></li>
+      <ul class="lang-menu" role="menu" aria-label="Language" hidden>
+        <li><a role="menuitem" href="./" hreflang="en" lang="en" translate="no" aria-current="true">English<svg class="lang-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 13 4.5 4.5L19 7"/></svg></a></li>
+        <li><a role="menuitem" href="../" hreflang="zh-Hans" lang="zh-Hans" translate="no">中文</a></li>
       </ul>
     </div>
 
@@ -111,8 +112,9 @@
 
   <!-- ============ I · ABOUT ============ -->
   <section id="about">
-    <h2 class="sec-title reveal"><span class="num">I</span><span class="eyebrow">ABOUT</span><span class="zh">About</span></h2>
-    <p class="reveal">My name is Xiong Xinchen. The site you are reading is the second one I have put online; the first one is a memorial for my school.</p>
+    <div class="sec-head reveal"><span class="sec-index">I · ABOUT</span><h2>About</h2></div>
+    <hr class="sec-rule reveal">
+    <p class="reveal">My name is Xiong Xinchen. The site you are reading is the second one I have put online; the first one is a private memorial page for my school.</p>
     <p class="reveal">Twenty-five photographs of that campus were taken by me. Its map carries Chinese place labels. Its message wall needs no login, and the whole thing reads in ten languages.</p>
     <p class="reveal">I'm in China. Mail is how you reach me.</p>
     <dl class="facts reveal">
@@ -125,7 +127,8 @@
 
   <!-- ============ II · WORKS ============ -->
   <section id="works">
-    <h2 class="sec-title reveal"><span class="num">II</span><span class="eyebrow">WORKS</span><span class="zh">Two sites</span></h2>
+    <div class="sec-head reveal"><span class="sec-index">II · WORKS</span><h2>Two sites</h2></div>
+    <hr class="sec-rule reveal">
     <svg class="contours" viewBox="0 0 1200 420" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
       <path d="M-20 300c120-70 240 30 360-30s240-140 380-90 260 150 400 110 120-120 120-120"/>
       <path d="M-20 340c140-60 260 40 400-20s260-130 400-80 250 150 380 120"/>
@@ -138,7 +141,7 @@
       <p class="lede">My old school, made into an address you can visit.</p>
       <img class="shot" src="../assets/images/shot-nc15.webp" alt="The memorial site's opening screen: cream paper, serif headline and campus photographs" width="1200" height="750" loading="lazy">
       <ul class="facts">
-        <li>Pure HTML / CSS / vanilla JS. Structure, style and behaviour are kept apart.</li>
+        <li>Pure HTML / CSS / vanilla JS. Structure, style and behaviour are kept apart, and there is no build step.</li>
         <li>25 campus photographs, all taken by me, and a tour through time at 8 camera positions.</li>
         <li>A map with Chinese place labels, a self-hosted message wall that needs no login, and 10 languages.</li>
       </ul>
@@ -153,7 +156,7 @@
       <ul class="facts">
         <li>Built on the open-source framework AIHOT. The whole geography layer lives in one directory, <code>industry/</code>.</li>
         <li>Sources are collected, pre-filtered, then scored twice on their own; a spatial-salience gate sets the bar.</li>
-        <li>Framework-free front end, separate back end.</li>
+        <li>React Router 8 renders the front end on the server; the back end, the collector and the analyser run as separate services.</li>
       </ul>
       <a class="btn-live" href="https://xxc2007.me/geohot/" target="_blank" rel="noopener noreferrer">Live site</a>
       <a class="btn-repo" href="https://github.com/xxc2007/GeoHot" target="_blank" rel="noopener noreferrer">Open repository</a>
@@ -162,19 +165,21 @@
 
   <!-- ============ III · HOW ============ -->
   <section id="how">
-    <h2 class="sec-title reveal"><span class="num">III</span><span class="eyebrow">HOW</span><span class="zh">How I work</span></h2>
+    <div class="sec-head reveal"><span class="sec-index">III · HOW</span><h2>How I work</h2></div>
+    <hr class="sec-rule reveal">
     <ol class="steps reveal">
       <li><b>Decide what it is for.</b> Before any drawing, I write down what a person should be able to do on the page.</li>
       <li><b>Design and build.</b> Layout, type, front end — structure, style and behaviour in separate files.</li>
-      <li><b>Draw the maps.</b> Where the story needs place, I make the map myself.</li>
-      <li><b>Ship it and run it.</b> I deploy it and keep it up; then I use it and fix what breaks.</li>
+      <li><b>Build the map layer.</b> The basemap is AutoNavi tiles; the Chinese labels, the eight camera positions and the locator map are mine.</li>
+      <li><b>Ship it and run it.</b> I deploy it and keep it running; where it breaks, I fix it.</li>
     </ol>
-    <p class="closing reveal">Design, front end, GIS mapping, deployment and operations — all of it done with AI as a collaborator. My job is to be clear about what to make.</p>
+    <p class="closing reveal">Design, front end, GIS mapping, deployment and operations — all of it done with AI. My job is to be clear about what to commemorate.</p>
   </section>
 
   <!-- ============ IV · BELIEFS ============ -->
   <section id="beliefs">
-    <h2 class="sec-title reveal"><span class="num">IV</span><span class="eyebrow">BELIEFS</span><span class="zh">What I believe</span></h2>
+    <div class="sec-head reveal"><span class="sec-index">IV · BELIEFS</span><h2>What I believe</h2></div>
+    <hr class="sec-rule reveal">
     <blockquote class="reveal">
       <p>Geography is more than knowledge. It is a way of seeing the world.</p>
       <cite>Xiong Xinchen · 熊鑫晨</cite>
@@ -191,10 +196,12 @@
 
   <!-- ============ V · CONTACT ============ -->
   <section id="contact">
-    <h2 class="sec-title reveal"><span class="num">V</span><span class="eyebrow">CONTACT</span><span class="zh">Find me</span></h2>
+    <div class="sec-head reveal"><span class="sec-index">V · CONTACT</span><h2>Find me</h2></div>
+    <hr class="sec-rule reveal">
     <p class="reveal">Mail is the surest way. The rest are places I put things out.</p>
     <a class="mail" href="mailto:xxc200707@gmail.com">xxc200707@gmail.com</a>
     <button type="button" class="copy-mail" aria-label="Copy the mail address to the clipboard">Copy</button>
+    <p class="copy-hint" role="status" aria-live="polite"></p>
 
     <ul class="social reveal">
       <li><a href="https://xxc2007.me/" target="_blank" rel="noopener noreferrer" aria-label="Personal website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3c2.6 2.6 3.9 5.7 3.9 9s-1.3 6.4-3.9 9c-2.6-2.6-3.9-5.7-3.9-9S9.4 5.6 12 3z"/></svg><span>Site</span></a></li>
@@ -214,6 +221,6 @@
   <p class="foot-meta">2026 · MIT License · <a href="#top">Back to top ↑</a></p>
 </footer>
 
-<script type="module" src="../assets/js/main.js?v=a1b2"></script>
+<script type="module" src="../assets/js/main.js?v=ec4efd"></script>
 </body>
 </html>
