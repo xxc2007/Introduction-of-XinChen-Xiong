@@ -25,6 +25,9 @@ const SECRET = [
 const RESEARCH = [/论文|期刊|开题|毕业论文|文献|课题|青藏高原|气候变化研究|thesis|dissertation|journal|peer-review/i];
 /* .deploy.env 不在仓库里：换机器跑时 sshUserRe 会是 null，不过滤掉会让规则循环抛 TypeError */
 const SECRET_RULES = SECRET.filter((r) => r[0]);
+/* 但"过滤掉"不能让这条规则静默消失——那样绿灯会被读成"三条红线都查过"。
+   干净克隆里没有登录名可泄（.deploy.env 不随仓库走），所以这里只报状态、不判失败。 */
+if (!sshUser) console.log("  ! 未读到 .deploy.env：SSH 登录名这条红线本次未生效（其余规则照常）。部署机上有这个文件，所以在真正会推上线的那次运行里它是生效的。");
 
 let fail = 0;
 const bad = (f, msg) => { console.log(`  ✗ ${f}: ${msg}`); fail = 1; };

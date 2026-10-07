@@ -68,7 +68,37 @@ for f in index.html en/index.html; do
   else echo "  ✗ $u 公网与仓库不一致（CDN 命中旧副本）"; FAIL=1; fi
 done
 
-echo "── E. 邻站未受影响"
+echo "── E. 公网逐个取回「浏览器真正会去取的那些资源 URL」"
+# 这一段是补出来的洞：原来 D 只比两份 HTML，assets 一条都不查，于是 favicon 少了 ?v=
+# 时脚本全绿、标签页图标却还是旧字节（公网 3,290 B / 仓库 895 B）。
+# 判据必须是 HTML 里写的那条 URL 本身（含 ?v=）——Cloudflare 按 path+query 分缓存键，
+# 拿裸路径去比会命中指纹方案之前的孤儿副本，比出假红。
+ASSETS="$(node -e '
+const fs = require("fs");
+const out = new Set();
+for (const p of ["index.html", "en/index.html"]) {
+  const t = fs.readFileSync(p, "utf8");
+  for (const m of t.matchAll(/(?:href|src)="(\.\.?\/(assets\/[^"?]+)(\?v=[0-9a-z]+)?)"/g)) {
+    out.add("/" + m[2] + (m[3] || ""));
+  }
+}
+for (const v of ["three.module.min.js", "three.core.min.js"]) out.add("/assets/vendor/" + v);
+process.stdout.write([...out].sort().join("\n"));
+')"
+NA=$(printf '%s\n' "$ASSETS" | grep -c .)
+BADASSET=0
+while IFS= read -r u; do
+  [ -n "$u" ] || continue
+  lp="${u%%\?*}"; lp=".${lp#/}"
+  [ -f "$lp" ] || { echo "  ! $u 在仓库里没有对应文件"; BADASSET=1; continue; }
+  l="$(sha256sum "$lp" | cut -d' ' -f1)"
+  r="$(curl -sL -A "$UA" "https://$DEPLOY_SITE$u" | sha256sum | cut -d' ' -f1)"
+  if [ "$l" = "$r" ]; then printf '  ✓ %-52s 字节一致\n' "$u"
+  else printf '  ✗ %-52s 公网与仓库不一致（边缘命中旧副本）\n' "$u"; BADASSET=1; fi
+done <<< "$ASSETS"
+[ "$BADASSET" = 0 ] && echo "  ✓ $NA 条资源引用逐个对上" || FAIL=1
+
+echo "── F. 邻站未受影响"
 for u in "/nc15/" "/geohot/"; do
   code=$(curl -sL -o /dev/null -w '%{http_code}' -A "$UA" "https://$DEPLOY_SITE$u")
   [ "$code" = 200 ] && echo "  ✓ $u HTTP 200" || { echo "  ✗ $u HTTP $code"; FAIL=1; }

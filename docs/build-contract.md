@@ -15,6 +15,9 @@
 <link rel="stylesheet" href="./assets/css/style.css?v=INTRO_VER">
 <script type="module" src="./assets/js/main.js?v=INTRO_VER"></script>
 <img src="./assets/images/avatar.jpg?v=INTRO_VER" ...>
+<!-- 标签页图标同样算「被 HTML 引用、内容可能原地更新」，四条都要带指纹 -->
+<link rel="icon" href="./assets/images/favicon.ico?v=INTRO_VER" type="image/x-icon">
+<link rel="apple-touch-icon" href="./assets/images/apple-touch-icon.png?v=INTRO_VER">
 ```
 ```js
 // assets/js/main.js 内：动态 import 也要带上同一个指纹
@@ -23,6 +26,12 @@ await import('./scene.js?v=' + VER);
 // assets/js/scene.js 内
 import * as THREE from "../vendor/three.module.min.js";
 ```
+**唯一的例外是 `assets/vendor/three.core.min.js`**：它由 `three.module.min.js` 用裸相对名 import，
+查询串不会从外层模块传导过去，所以带不上 `?v=`。它的指纹就是**文件名本身**——
+升级 Three.js 必须换成新文件名（并同步改 `three.module.min.js` 里那一处 import），
+不要原地覆盖，否则边缘会按扩展名把旧字节钉一年。
+`scripts/verify-sync.sh` 的 E 段逐个取回「HTML 里写着的那条 URL」比哈希，把这条例外也列进去了，
+所以无论是漏加指纹还是原地覆盖了 vendor，都会红。
 只有 `canonical` / `hreflang` / `og:url` / `og:image` / JSON-LD 里的站址用绝对地址 `https://xxc2007.me/…`，
 并且**不带** `?v=`——分享卡与结构化数据要的是规范地址。
 `INTRO_VER` 是构建版本串（跟着 HEAD 走，`deploy.sh` 每次部署重算），
