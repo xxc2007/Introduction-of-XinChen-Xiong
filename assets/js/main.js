@@ -64,6 +64,8 @@ checkOverflow();
 })();
 
 /* ---------- 首屏粒子场：失败只降级，不影响本文件其余部分 ---------- */
+/* 资源指纹跟着 HTML 里 main.js 的 ?v= 走：import.meta.url 就是本文件被取回时的地址。 */
+const VER = (import.meta.url.match(/[?&]v=([0-9a-z]{4,8})/) || [])[1] || 'dev';
 let scene = null;
 (async function bootField() {
   const canvas = $('#field');
@@ -76,7 +78,7 @@ let scene = null;
     return;
   }
   try {
-    const mod = await import('./scene.js');
+    const mod = await import('./scene.js?v=' + VER);
     if (typeof mod.initField !== 'function') throw new TypeError('scene.js 未导出 initField');
     scene = mod.initField(canvas);   /* setEnergy 在返回的句柄上，不在模块命名空间上 */
   } catch (e) {
@@ -350,40 +352,6 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
       }
     } catch (e) { }
     flash(legacy(MAIL));
-  });
-})();
-
-/* ---------- 桌面光标墨点（不另起循环，插值走主链） ---------- */
-(function inkDot() {
-  if (!FINE || RM) return;
-  const dot = document.createElement('div');
-  dot.className = 'cursor-dot';
-  dot.setAttribute('aria-hidden', 'true');
-  dot.style.cssText = 'position:fixed;left:0;top:0;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;' +
-    'pointer-events:none;z-index:8;opacity:0;background:' + tok('--terra', '#D97757');
-  document.body.appendChild(dot);
-  let tx = 0, ty = 0, cx = 0, cy = 0, s = 1, ts = 1, live = false;
-  const HOT = 'a,button,input,summary,label,[role="menuitem"],[role="option"],[data-magnetic],.work-card';
-  window.addEventListener('pointermove', (ev) => {
-    if (ev.pointerType === 'touch' || ev.pointerType === 'pen') return;
-    tx = ev.clientX; ty = ev.clientY;
-    if (!live) { cx = tx; cy = ty; }
-    live = true; dot.style.opacity = '.85'; schedule();
-  }, { passive: true });
-  document.addEventListener('pointerover', (ev) => {
-    const t = ev.target;
-    ts = (t && t.closest && t.closest(HOT)) ? 2.6 : 1;
-    schedule();
-  }, { passive: true });
-  document.addEventListener('pointerout', (ev) => { if (!ev.relatedTarget) { dot.style.opacity = '0'; ts = 1; } }, { passive: true });
-  updaters.push(() => {
-    if (!live) return;
-    const dx = tx - cx, dy = ty - cy, ds = ts - s;
-    if (Math.abs(dx) + Math.abs(dy) + Math.abs(ds) > .12) {
-      cx += dx * .22; cy += dy * .22; s += ds * .18;
-      dot.style.transform = 'translate3d(' + cx.toFixed(2) + 'px,' + cy.toFixed(2) + 'px,0) scale(' + s.toFixed(3) + ')';
-      keep();
-    } else { cx = tx; cy = ty; s = ts; dot.style.transform = 'translate3d(' + cx.toFixed(2) + 'px,' + cy.toFixed(2) + 'px,0) scale(' + s.toFixed(3) + ')'; }
   });
 })();
 
