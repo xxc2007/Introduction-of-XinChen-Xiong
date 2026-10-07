@@ -4,9 +4,10 @@
 > 前者抄不走（它是取舍），后者必须每次改完重新核。凡本文写的比值、字节、毫秒、粒子数，
 > 都来自实际跑过的命令，复算式记在仓库外的 `readme-numbers.md`（同目录 `raw.txt` 是原始输出）。
 
-核对时刻：**2026-10-07 09:35–09:40（+0800）**，`main` 分支，`git ls-files | wc -l` = **138**。
-站点仍在构建：`assets/images/` 与 `assets/js/` 在这几分钟里被改写过数次，所以**字节类数字都是那一刻的快照**，
-唯一还没过的闸门是图片预算（`node scripts/check-bytes.mjs` 里「头像 + 两张作品截图」92.1 KB / 87.9 KB → `BUDGET FAILED`）。
+核对时刻：**2026-10-07 09:35–09:53（+0800）**，`main` 分支，`git ls-files | wc -l` = **144**（09:35 时是 138）。
+站点仍在构建：`assets/images/` 与 `assets/js/` 在这十几分钟里被改写过数次，所以**字节类数字都是那一刻的快照**，
+唯一一次闸门翻脸也照实记：09:35 `node scripts/check-bytes.mjs` 报 `BUDGET FAILED`（「头像 + 两张作品截图」92.1 KB / 87.9 KB），
+09:53 同一行变成 **64.8 KB → `BUDGET OK`**——图片被重压过，不是数字写错了。
 
 ---
 
@@ -168,7 +169,7 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 | 纸屑粒子场 | `scene.js`：`Points` + `ShaderMaterial`（顶点算漂移与闪烁，片元用 `gl_PointCoord` 现算软圆盘，无贴图） | 文件 raw **13,884 B** / gzip **5,990 B**；外加 `three.module.min.js` gzip **79,328 B** + `three.core.min.js` gzip **101,305 B**（vendor 合计 gzip **180,633 B**） | `initField` 只 `render()` **一帧**，永不启动 RAF（`scene.js` 第 311 行） | `getContext("webgl2")` 探不到就 `throw new Error("no-webgl")`，`main.js` 在 `.hero` 上写 `data-field="off"` → 画布撤出布局，只留两圈同心发丝环 | `bootField` 是动态 `import`，脚本被拦时 canvas 空白、hero 照常排版 |
 | 粒子性能护栏 | 上限 **1200 / 700 / 400** 三档（`(pointer:coarse)` 或宽 <768 → 400；<1200 → 700；其余 1200），下限 `Math.max(64,…)`；DPR 钉 **1.75**；`camera.position.z` 由 `6.6 + progress × 1.9` 推进；指针视差最大 **0.35** 世界单位，仅 `(hover:hover) and (pointer:fine)` | 单向降级：跳过热身 10 帧后取 **60 帧均值**，> **22 ms** 就 `setDrawRange(0, count >> 1)` 且只减一次 | 同上一行：不动 | — | resize 合并 **120 ms** 后才 `setSize`，绝不逐帧重建 |
 | hero 出视口即停 | `IntersectionObserver` 观察 hero + `visibilitychange` | 零额外字节 | `sync()` 直接返回，不启动 | 不相关 | 观察器不存在时 `io=null` 静默跳过 |
-| 等高线（贰 节背景） | HTML 内联 4 条 `<path>` + `.is-in` 触发 `contourDraw 2.6s`；scene 侧另有 10 环 × 96 段 `LineSegments`，`rotation.z += dt × 0.0055`（≈19 分钟一圈） | 内联 SVG 在 HTML 里（页面 gzip 合计 19.6 KB 之内） | 动画关掉，`stroke-dasharray:none` 直接显示完整线 | 只剩 HTML 那 4 条，静态可读 | 静止态即终态 |
+| 等高线（贰 节背景） | HTML 内联 4 条 `<path>` + `.is-in` 触发 `contourDraw 2.6s`；scene 侧另有 10 环 × 96 段 `LineSegments`，`rotation.z += dt × 0.0055`（≈19 分钟一圈） | 内联 SVG 记在页面自己的字节里（`index.html` raw **20,170 B** / gzip **约 7.8 KB**，`wc -c` + `zlib.gzipSync` 实测） | 动画关掉，`stroke-dasharray:none` 直接显示完整线 | 只剩 HTML 那 4 条，静态可读 | 静止态即终态 |
 | 逐节揭示 | `IntersectionObserver`（`threshold:.12`、`rootMargin:'0px 0px -4% 0px'`）加 `.is-in`；CSS `--dur:.52s`（**520 ms**）、`--lift:14px`、错峰 `min(同级序号, 8) × 60ms` | 每元素 1 次 class 写；无逐帧成本 | `RM` 时一次给所有 `.reveal` 加 `.is-in`，等于直接呈现 | 不受影响 | `.reveal{opacity:0}` 由 `html.no-js` 与 `@media (scripting:none)` 两条兜底改回可见（第 548、556 行），内容不缺字 |
 | 滚动进度条 | `.progress`（`height:2px`、`background:var(--terra)`）宽度每帧由 `window.scrollY / (scrollHeight - innerHeight)` 写百分比，先读后写 | 每帧 1 次 style 写 | `transition` 无，跟手；`scroll-behavior` 变 `auto` | 不相关 | CSS 里 `html.no-js .progress{display:none}` |
 | 当前节高亮 | scrollspy：`IntersectionObserver` `rootMargin:'-45% 0px -50% 0px'`，命中项写 `aria-current="true"`，CSS 用 `--terra-ink` + `rgba(217,119,87,.13)` 底 | 观察 5 个 section | 与动效无关，照常工作 | 不相关 | 无 JS 时导航仍是 5 个可点锚点 |
@@ -214,7 +215,7 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 
 ## 陆 · 双语与 SEO 的视觉后果
 
-- 两页各 **19.6 KB**（`20,083` / `20,107` B 那一刻的快照，复算记录里有命令），`check-parity.mjs` 断言 **10** 项结构数量与 **5** 组集合两页相等；
+- 两页各 **19.7 KB**（`20,170` / `20,195` B，2026-10-07 09:53 快照，复算记录里有命令），`check-parity.mjs` 断言 **10** 项结构数量与 **5** 组集合两页相等；
   互链（`./en/` 与 `../`）按设计就不同，所以比较一律取 basename。
 - 版本串：四个资源引用 `?v=` 必须是同一个 4 位十六进制值（当前 `a1b2`），`check-parity.mjs` 用
   `new Set(grab(h, /\?v=([0-9a-z]+)"/g)).size === 1` 钉死——nginx 那边 30 天/1 年长缓存的合法性全靠这个指纹。
@@ -229,4 +230,5 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 - 正文对比度实测 **14.328:1**（ink / cream），远高于 7:1 的红线；辅助文字下限字号 14px 与 `--muted` 绑在一起。
 - 缓存与安全头由 nginx 提供（`X-Content-Type-Options` / `Referrer-Policy` / `X-Frame-Options`、HTML `no-cache`、
   带 `?v=` 的资源 30 天、`/assets/fonts/` 一年），见 `deploy/nginx.conf.example`。
-- 想新增效果之前先量字节：`node scripts/check-bytes.mjs` 的七行预算就是闸门本身，它现在**是红的**（图片行）。
+- 想新增效果之前先量字节：`node scripts/check-bytes.mjs` 的七行预算就是闸门本身。2026-10-07 09:53 全绿，
+  但 09:35 那次图片行是红的——**闸门随构建变动，别把一次绿当成永久的**。

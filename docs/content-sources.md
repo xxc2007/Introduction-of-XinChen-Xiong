@@ -25,7 +25,7 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 | `熊鑫晨` / `Xiong Xinchen`（`h1` 与 `en` 页 `h1`） | profile README 第 1 行标题 `# 熊鑫晨 · Xiong Xinchen` | `gh api users/xxc2007 --jq .name` + profile README 第 1 行 | 2026-10-07 |
 | `我还没写出改变世界的代码。` | profile README **第 3 行**，逐字 | `grep -n '改变世界' profile-README.md` | 2026-10-07 |
 | `但我和 AI 做出了自己的第一个网站——把母校装进一个可以随时回去的网页。` | 改写自 profile README 第 5 行；**一处人称/介词改动：原文「但用 AI 做出了」，页面写「但我和 AI 做出了」** | 同一行对照；build-contract §3 记的是「但用 AI 做出了…」原句 | 2026-10-07 <!-- 待核对：这处「用 → 和」的改写需本人认可，否则按原句回改 --> |
-| 头像 `avatar.jpg`（300×300） | 站长本人提供的原图（`docs/build-contract.md` §0），不是网络图、不是 AI 生成 | `ls -la assets/images/`；规格明确禁止"生成/使用不存在的人物照片" | 2026-10-07 |
+| 头像 `avatar.webp`（HTML 声明 `width="300" height="300"`，实测 5,282 B） | 站长本人提供的原图（`docs/build-contract.md` §0 记的是 `avatar.jpg` 9,814 B + `avatar.webp` 5,282 B；2026-10-07 09:46 页面上只留 webp 一份） | `wc -c assets/images/avatar.webp`；`grep -o 'avatar[a-z.]*' index.html`；规格明确禁止"生成/使用不存在的人物照片" | 2026-10-07 |
 | `canvas#field` 的 `aria-label`（"装饰用的一片浅色纸屑…不承载任何信息"） | 本站自己的实现说明（`docs/build-contract.md` §6 硬指标） | `grep -n 'role="img"' index.html` | 2026-10-07 |
 
 ### 壹 · ABOUT `#about`
@@ -41,6 +41,11 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 | `dl.facts` 第一行 姓名 `熊鑫晨 · Xiong Xinchen` | profile README 第 1 行 | 同上 | 2026-10-07 |
 | `dl.facts` 第二行 所在地 `中国` | profile API `.location`；页面写"中国/China"，**不写城市** | 同上；见「三 · 不写什么」第 2 条为什么不能写城市 | 2026-10-07 |
 | `dl.facts` 第三行 邮箱 `xxc200707@gmail.com` | **GitHub profile API 的 `.email` 元数据**，以及三个仓库 commit 的作者邮箱（作者名 熊鑫晨 / XinChen Xiong） | `gh api users/xxc2007 --jq .email`；`gh api repos/xxc2007/GeoHot/commits --jq '.[0].commit.author.email'` | 2026-10-07 <!-- 待核对：这是它第一次出现在可见文案里，见「二 · 必须先问本人」 --> |
+
+> 线上形态提醒：Cloudflare 开着 Email Address Obfuscation，公网取回的 HTML 里这一行 `mailto:` 会被换成
+> `/cdn-cgi/l/email-protection#…` 的受保护链接，并注入一个 `email-decode.min.js`。
+> 仓库里的字节仍是明文——`scripts/verify-sync.sh` 的 D 段与 `tools/normalize-cf.mjs` 就是因为这件事，
+> 才把两边先归一化成同一个 `MAILTO` 记号再比哈希。**别把这种差异当成"邮箱被改了"去回滚。**
 | `dl.facts` 第四行 正在做「两个已经上线的网站」 | profile README 第 17–46 行两段"我在做的事"，各自带线上地址 | `curl -o /dev/null -w '%{http_code}' https://xxc2007.me/geohot/` → 2026-10-07 实测 200 | 2026-10-07 |
 
 ### 贰 · WORKS `#works`
@@ -58,7 +63,7 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 | 卡二事实条①「建在开源框架 AIHOT 之上，地理这一层全部收在 `industry/` 一个目录里」 | profile README 第 40 行「它建在开源框架 AIHOT 之上…全在 `industry/` 一个文件夹里」 | `gh api repos/xxc2007/GeoHot/contents/industry --jq '.[].name'` | 2026-10-07 |
 | 卡二事实条②「采集 → 预筛 → 两次独立打分 → 门槛由空间显著性决定」 | profile README 第 40 行与 GeoHot README 管线段 | `grep -n '空间显著性' research/geohot-README.md` | 2026-10-07 |
 | 卡二事实条③「前端不用框架，后端独立部署」 | GeoHot README 技术栈段 | 同上 | 2026-10-07 |
-| 两张作品截图 `shot-nc15.*` / `shot-geohot.*` | **真实浏览器实拍线上站点**（Playwright 驱动本机 Chrome，1280×800 视口，裁成 1200×750）；取证过程写在 `assets/images/README.md` | 该清单记录：响应头 `Server: cloudflare` + `CF-RAY` + `Last-Modified` 三者齐全才算取自线上；未用本地副本兜底 | 2026-10-07 |
+| 两张作品截图 `shot-nc15.webp`（28,624 B）/ `shot-geohot.webp`（32,500 B），HTML 声明 1200×750 | **真实浏览器实拍线上站点**（Playwright 驱动本机 Chrome，1280×800 视口，裁成 1200×750）；取证过程写在 `assets/images/README.md` | 该清单记录：响应头 `Server: cloudflare` + `CF-RAY` + `Last-Modified` 三者齐全才算取自线上；未用本地副本兜底。字节用 `wc -c assets/images/shot-*.webp` 复算 | 2026-10-07 |
 | 两个 `开源仓库` 链接 | `github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School`、`github.com/xxc2007/GeoHot` | `gh api repos/xxc2007/<repo> --jq .html_url` | 2026-10-07 |
 
 ### 叁 · HOW `#how`
@@ -93,9 +98,9 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 |---|---|---|
 | `canonical` / `hreflang` / `og:url` = `https://xxc2007.me/` 与 `/en/` | `docs/site-spec.md` §5 | `grep -n 'canonical' index.html` |
 | JSON-LD `Person`：`name` `alternateName` `url` `email` `image` `address.addressCountry: China` `sameAs` ×7 | 上面各行 | `sed -n '38,58p' index.html` |
-| `og:image` 当前指向 `assets/images/avatar.jpg`（300×300），而 `assets/images/og-card.png`（实测 PNG 头 IHDR **1200×630**）已经生成 | 规格要求分享卡是 1200×630 | `node -e "…readUInt32BE(16/20)…"` 实测 |
+| `og:image` = `https://xxc2007.me/assets/images/og-card.png`，配 `og:image:alt` 一句中文说明 | 分享卡由 `og-card.svg` 在 Chrome 里 1:1 栅格化（过程记在 `assets/images/README.md`） | `grep -n 'og:image' index.html`；`node -e "…readUInt32BE(16/20)…"` 实测 IHDR **1200×630**，PNG **74,866 B** | 2026-10-07 |
 
-<!-- 待核对：og:image 尚未接 og-card.png，属构建接线项，归另一位负责人；本节只记录"当前声称的分享图是 300×300 头像"。 -->
+<!-- 已核对：09:35 那次 og:image 还指着 300×300 头像，09:53 复查已接到 1200×630 的 og-card.png——这条曾列在待核对里，现已闭合。 -->
 
 ---
 

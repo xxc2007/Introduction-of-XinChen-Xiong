@@ -67,7 +67,7 @@ for f in index.html en/index.html; do
   else echo "  ✗ $u 公网与仓库不一致（CDN 命中旧副本）"; FAIL=1; fi
 done
 
-echo "── D. 邻站未受影响"
+echo "── E. 邻站未受影响"
 for u in "/nc15/" "/geohot/"; do
   code=$(curl -sL -o /dev/null -w '%{http_code}' -A "$UA" "https://$DEPLOY_SITE$u")
   [ "$code" = 200 ] && echo "  ✓ $u HTTP 200" || { echo "  ✗ $u HTTP $code"; FAIL=1; }

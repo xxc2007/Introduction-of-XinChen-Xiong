@@ -132,7 +132,10 @@ bash scripts/switch-routes.sh --rollback   # 还原最近一份 .bak-nc15-* 备�
 `/var/www/nc15` 不存在就 `cp -a /var/www/nanchang15 /var/www/nc15`（**旧根不删**）；
 用 `awk` 把 `root /var/www/nanchang15;` 改成 `root /var/www/intro;`，并在第一个 `location / {` 前插入 `/nc15/` 块；
 打印四条计数自检（指向介绍站的 `root` 处数、`/nc15/` 块数、`/comment/` 仍在根、`/geohot` 仍在根）；
-`nginx -t` **不通过就自动还原并重载**，宁可不上；通过后对 8 个前缀回状态码。
+`nginx -t` **不通过就自动还原并重载**，宁可不上；通过后逐条探测 8 个前缀
+（`/ /en/ /nc15/ /nc15/en/ /nc15/promo/ /geohot/ /robots.txt /sitemap.xml`）。
+探测是**带重试的**：`systemctl reload nginx` 是优雅重载，老 worker 可能还在服务旧配置，
+所以每条 URL 重试到 200 或超时——一次性采样会把"重载竞态"误报成"切换失败"。
 
 截至 **2026-10-07** 这一步**还没执行**——线上实测 `/` 返回 200 但标题仍是纪念册，`/nc15/` 返回 **404**。
 所以新机器接手时，"部署内容"和"切换路由"是两件事，必须分开做、分开验。
@@ -140,18 +143,23 @@ bash scripts/switch-routes.sh --rollback   # 还原最近一份 .bak-nc15-* 备�
 
 ---
 
-## 六 · 字节一致性怎么证明（四方逐字节）
+## 六 · 字节一致性怎么证明（四方来源，分五段跑）
 
-`bash scripts/verify-sync.sh`（单独跑也行，它只读不写）证明四件事同时成立：
+`bash scripts/verify-sync.sh`（单独跑也行，它只读不写）证明**四个来源在同一段字节上对得上**：
 
 | 段 | 比的双方 | 判据 |
 |---|---|---|
-| A | **本地 HEAD ↔ 服务器** | 部署集内每个文件两侧各算 `sha256sum`，`sort -k2` 后**整串相等**；不等就 `diff` 出前 20 行 |
+| A | **本地 HEAD ↔ 服务器文件** | 部署集内每个文件两侧各算 `sha256sum`，`sort -k2` 后**整串相等**；不等就 `diff` 出前 20 行 |
 | B | **本地 HEAD ↔ GitHub 仓库树** | 先比 `git rev-parse HEAD^{tree}` 与远端 tree sha；不同则逐个部署集文件比 git blob sha（与 GitHub blob sha 同源，可直接对） |
-| C | **本地 ↔ 公网（经 Cloudflare）** | 抓 `/`、`/en/`、`assets/css/style.css`、`assets/js/main.js` 四条流的 `sha256` 与本地比——**CDN 命中旧副本会在这里被抓出来** |
-| D | **邻站未受影响** | `/nc15/` 与 `/geohot/` 必须仍是 200 |
+| C | **本地 ↔ 源站（绕过 CDN）** | 在服务器本机 `curl -H 'Host: …' http://127.0.0.1…` 取回 `/`、`/en/`、`assets/css/style.css`、`assets/js/main.js` 四条流再算 `sha256`——**这条不经过任何缓存**，问的是"部署到底落没落" |
+| D | **本地 ↔ 公网（经 Cloudflare）** | 只抓 `/` 与 `/en/`，**比对前先归一化 Cloudflare 的邮箱混淆**（`mailto:` 会被换成受保护链接并注入 `email-decode.min.js`；那是站点级功能，不是缓存陈旧），去掉换行后算 `sha256` |
+| E | **邻站未受影响** | `/nc15/` 与 `/geohot/` 必须仍是 200 |
 
-四段全过才打印 `ALL CHECKS PASSED`（退出码 0），任何一段失败是 `FAILED` + 退出码 1。
+C 与 D 分开跑是刻意的：合成一条就会被 Cloudflare 的改写制造假性差异。
+归一化口径存在两份且必须一致——D 段里的 `sed`，以及独立脚本 `node tools/normalize-cf.mjs <文件>`
+（它把仓库里真实的 `mailto:` 也归一化成同一个 `MAILTO` 记号）。
+
+五段全过才打印 `ALL CHECKS PASSED`（退出码 0），任何一段失败是 `FAILED` + 退出码 1。
 非部署文件（README、`docs/`）不参与 A/B 的文件清单——这点 B 段末行注释里写明了"README/docs 等非部署文件不计"。
 
 **为什么坚持走 `git archive HEAD` 而不是 `scp` 工作区**：`.gitattributes` 写着 `* text=auto eol=lf`。
@@ -187,7 +195,7 @@ node scripts/check-bytes.mjs      # 七行字节预算（当前图片行仍在�
 - [ ] `node tools/serve.mjs` 在本机起来，`/` `/en/` 两条 200，取回字节与磁盘一致
 - [ ] `node scripts/check-parity.mjs` → `PARITY OK`（中英两页对齐）
 - [ ] `node scripts/check-links.mjs` → `LINKS OK`（无死链、无主机信息）
-- [ ] `node scripts/check-bytes.mjs` → `BUDGET OK`（**2026-10-07 实测仍差图片行：92.1 KB / 87.9 KB，构建中**）
+- [ ] `node scripts/check-bytes.mjs` → `BUDGET OK`（2026-10-07 09:53 实测全绿；同一命令在 09:35 时图片行还是 92.1 KB 红的——图片被重压过，闸门随构建变动）
 - [ ] `bash scripts/deploy.sh "…"` 五步全绿，末尾打印 9 个前缀的 HTTP 码
 - [ ] `bash scripts/verify-sync.sh` → `ALL CHECKS PASSED`
 - [ ] `bash scripts/switch-routes.sh --dry-run` 的四条计数符合预期，再 `apply`

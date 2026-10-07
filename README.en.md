@@ -43,11 +43,11 @@ Pure HTML / CSS / vanilla JS with structure, style and behavior separated (`inde
 [![Pages](https://img.shields.io/badge/Pages-2-1F1E1D)](#3--state)
 [![Sections](https://img.shields.io/badge/Sections-5-1F1E1D)](#3--state)
 [![Live work](https://img.shields.io/badge/Live_projects-2-D97757)](#2--pages)
-[![Tracked files](https://img.shields.io/badge/Tracked_files-138-1F1E1D)](#3--state)
+[![Tracked files](https://img.shields.io/badge/Tracked_files-144-1F1E1D)](#3--state)
 [![Font slices](https://img.shields.io/badge/Self--hosted_font_slices-101-1F1E1D)](#iii--stack)
 [![Hero JS](https://img.shields.io/badge/Hero_JS_gzip-189.9_KB-1F1E1D)](#3--state)
 
-<sub>Measured locally 2026-10-07 09:35 (+0800) · the site is still being built and the images are still being compressed · xxc2007.me is the source of truth</sub>
+<sub>Measured locally 2026-10-07 09:35–09:53 (+0800) · the site is still being built, so file and byte counts move · xxc2007.me is the source of truth</sub>
 
 </div>
 
@@ -83,19 +83,19 @@ The full effect → byte cost → fallback inventory lives in [docs/design.md](d
 
 | Item | Current value | How it was verified |
 |---|---|---|
-| Tracked files | **138** | `git ls-files \| wc -l` |
+| Tracked files | **144** | `git ls-files \| wc -l` (it was 138 at 09:35; favicons, the og-card and an asset manifest landed in between) |
 | Pages | **3** HTML files (zh / en / 404) | `git ls-files '*.html' \| wc -l` |
 | Sections | **5** (`h2.sec-title`), **6** `<section>` elements | `node scripts/check-parity.mjs` |
 | Live projects | **2**: the memorial at `/nc15/`, GEOHOT at `/geohot/` | Both entry points are on the page; routing table in [II](#ii--site-map) |
 | Contact entry points | **7** (site / GitHub / Douyin / Xiaohongshu / Bilibili / X / YouTube) | Same command, `social li=7` |
-| HTML size | **19.6 KB** per page (`20,027` / `20,076` bytes) | `node scripts/check-bytes.mjs` · `wc -c index.html en/index.html` |
+| HTML size | **19.7 KB** per page (`20,170` / `20,195` bytes) | `node scripts/check-bytes.mjs` · `wc -c index.html en/index.html` |
 | Site CSS | **32.3 KB** (`33,056` bytes) | `wc -c assets/css/style.css` |
 | Hero JS | gzip **189.9 KB** against a 195.3 KB budget | `node scripts/check-bytes.mjs` |
 | Self-hosted Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B; `three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c` + `node -e` with `zlib.gzipSync` |
 | Self-hosted serif | **101** woff2 slices, **6,027,992** B in total | `find assets/fonts -name '*.woff2' \| wc -l` |
 | External CDN requests | **0** | `grep -c 'src="https://' index.html en/index.html` → `0` on both pages |
 | Build steps | **0** (no manifest in the repository) | `git ls-files '*.json' \| wc -l` → `0` |
-| Above-the-fold images | **92.1 KB** against an 87.9 KB limit, so `check-bytes` currently **fails** | `node scripts/check-bytes.mjs` — **still building**, the images are being compressed |
+| Above-the-fold images | `avatar.webp` 5,282 + `shot-nc15.webp` 28,624 + `shot-geohot.webp` 32,500 B = **64.8 KB** against an 87.9 KB limit → `BUDGET OK` | `node scripts/check-bytes.mjs` (the same line read **92.1 KB** and failed at 09:35; the shots were re-compressed inside those twenty minutes — treat no cell here as permanent truth) |
 | Domain root | Target `/` = this site; **measured 2026-10-07** `/` still serves the memorial and `/nc15/` returns **404** | `curl -o /dev/null -w '%{http_code}' https://xxc2007.me/nc15/` · the switch command is `bash scripts/switch-routes.sh`, see [V](#v--deploy-and-sync) |
 
 <!-- To be confirmed: the actual moment the root switch is executed, and the status codes after it. -->
@@ -115,7 +115,7 @@ Introduction-of-XinChen-Xiong/
 │   ├── js/scene.js         # Three.js confetti field, exports initField(canvas) and throws so main.js can cover for it
 │   ├── vendor/             # Two self-hosted Three.js files, no CDN, license header intact
 │   ├── fonts/noto-serif-sc/# Self-hosted variable serif: wght.css (101 @font-face) + 101 slices fetched by unicode-range
-│   ├── images/             # Avatar (jpg + webp), two project shots, banner.svg, og-card, two favicons
+│   ├── images/             # Avatar (webp), two project shots (webp), banner.svg, og-card (svg + 1200×630 png), three favicons, plus a measured asset manifest
 │   └── audio/              # 12-second seamless ambient loop (m4a + ogg), off by default
 ├── scripts/                # check-parity · check-links · check-bytes · deploy.sh · verify-sync.sh · switch-routes.sh
 ├── tools/                  # serve.mjs local preview (mounts the memorial at /nc15/) · gh-publish.mjs fallback publisher
@@ -151,6 +151,8 @@ The nginx blocks are written out in [`deploy/nginx.conf.example`](deploy/nginx.c
 
 ## IV · RUN LOCALLY
 
+### 1 · NO BUILD
+
 **There is no build step** — the files in the repository are the files the browser loads. No bundler, no transpiler, no dependency install. And do not copy the usual `python -m http.server` line: nothing here assumes Python exists, and on the machine these instructions were verified neither `python` nor `python3` resolves at all (both report "Python was not found"). The documented local server is Node:
 
 ```bash
@@ -158,6 +160,8 @@ git clone https://github.com/xxc2007/Introduction-of-XinChen-Xiong.git
 cd Introduction-of-XinChen-Xiong
 node tools/serve.mjs            # port 8899 by default, binds only to 127.0.0.1
 ```
+
+### 2 · FREE PORTS
 
 If that port is taken, pick a free one instead of killing somebody else's process:
 
@@ -168,9 +172,13 @@ node tools/serve.mjs 8907                                 # use a free port
 
 Measured on 2026-10-07 with Node `v24.19.0`: `/`, `/en/`, `/assets/css/style.css`, `/assets/js/main.js`, `/assets/vendor/three.module.min.js` and `/assets/fonts/noto-serif-sc/wght.css` all returned **HTTP 200**; `/nc15/` returned **200** (the previewer mounts the memorial repository there, and answers 404 honestly when it is absent); a nonexistent `/nope.html` returned **404**; and the bytes fetched from `/` equalled `index.html` on disk. Afterwards the process was stopped with `taskkill //PID <pid> //F //T` and the port was confirmed FREE.
 
+### 3 · FILE PROTOCOL
+
 > Opening `index.html` directly over `file://` shows all content and styling, but `<script type="module">` is blocked by the local cross-origin rules: no motion, no language menu, no ambient audio, and the confetti field falls back to static hairline rings. **That is not a broken site** — the content stays readable, and script is only an enhancement. The message wall lives at `/comment/`; this site never calls it, so an offline preview has nothing to wait for.
 
 ## V · DEPLOY AND SYNC
+
+### 1 · FIVE STAGES
 
 One command, five stages:
 
@@ -185,18 +193,29 @@ bash scripts/deploy.sh "revised the hero motto"
 4. **Four-way byte verification** — `bash scripts/verify-sync.sh`.
 5. **Reachability** — from the server itself, each prefix is curled over `http://127.0.0.1` with a `Host` header and the status codes are printed.
 
-`verify-sync.sh` proves **four things at once**, which is more than "I saw the page load":
+### 2 · PARITY
+
+`verify-sync.sh` proves that **four sources agree on the same bytes** (it runs as five stages), which is more than "I saw the page load":
 
 | Stage | Compares | Method |
 |---|---|---|
 | A | Local HEAD ↔ server files | `sha256` of every file in the deploy set on both sides, sorted, and the whole list must be identical |
-| B | Local HEAD ↔ GitHub tree | Tree hash first; if it differs, blob-by-blob comparison (git blob SHAs and GitHub blob SHAs come from the same source) |
-| C | Local ↔ public internet through Cloudflare | `sha256` of `/`, `/en/`, the CSS and the JS streams against the local files — **this is where a stale CDN copy gets caught** |
-| D | Neighbouring sites untouched | `/nc15/` and `/geohot/` must still be 200 |
+| B | Local HEAD ↔ GitHub tree | Tree hash first; if it differs, blob-by-blob comparison (git blob SHAs and GitHub blob SHAs come from the same source); README/docs and other non-deployed files are excluded |
+| C | Local ↔ **origin**, bypassing the CDN | On the server itself, `curl -H 'Host: …' http://127.0.0.1/…`, hashed again — **byte for byte**, no cache excuses |
+| D | Local ↔ public internet through Cloudflare | Fetch `/` and `/en/`, normalize Cloudflare's email obfuscation first (it swaps `mailto:` for a protected link and injects `email-decode.min.js` — a site-level feature, not a stale cache), then hash |
+| E | Neighbouring sites untouched | `/nc15/` and `/geohot/` must still be 200 |
+
+Splitting C from D is deliberate: **C asks "did the deploy land", D asks "is the CDN serving an old copy"**; merging them produces false diffs because of Cloudflare's rewrite. The normalization rules live in `tools/normalize-cf.mjs` and mirror the `sed` expressions in stage D.
+
+### 3 · FALLBACK
 
 **Fallback publisher**: `git push` over HTTPS on this machine fails now and then on proxy TLS jitter, so `deploy.sh` hands over to `node tools/gh-publish.mjs "message"`. It pushes the local HEAD tree as **one atomic commit** through the GitHub Git Data API (create each blob → create the tree → create the commit → `refs/heads/main` moved with `force: false`). A failed push can never leave half a commit behind.
 
-**The repository never contains host information.** The origin IP, the SSH login name and the private key path exist only in the gitignored `.deploy.env` (line 10 of `.gitignore`); every example uses `<server-ip>` / `<ssh-user>` placeholders. This is not a matter of discipline — `check-links.mjs` scans every line of every tracked file and **fails the build** on a real IP, an `ssh` key-flag command, a key filename or a login name.
+### 4 · NO HOST INFO
+
+**The repository never contains host information.** The origin IP, the SSH login name and the private key path exist only in the gitignored `.deploy.env` (line 10 of `.gitignore`); every example uses `<server-ip>` / `<ssh-user>` placeholders. This is not a matter of discipline — `check-links.mjs` scans every line of every tracked file and **fails the build** on a real IP, a private-key flag, a key filename or a login name.
+
+### 5 · ROUTE SWITCH
 
 Switching the domain root is a separate command, because it edits nginx rather than files:
 

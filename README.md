@@ -42,11 +42,11 @@
 [![语言](https://img.shields.io/badge/语言-2_页-1F1E1D)](#其三--state-现状与边界)
 [![章节](https://img.shields.io/badge/章节-5_节-1F1E1D)](#其三--state-现状与边界)
 [![作品](https://img.shields.io/badge/已上线作品-2-D97757)](#其二--pages-中英两页)
-[![仓库文件](https://img.shields.io/badge/仓库文件-138_个-1F1E1D)](#其三--state-现状与边界)
+[![仓库文件](https://img.shields.io/badge/仓库文件-144_个-1F1E1D)](#其三--state-现状与边界)
 [![字体切片](https://img.shields.io/badge/自托管字体切片-101_片-1F1E1D)](#叁--stack-技术栈)
 [![首屏JS](https://img.shields.io/badge/首屏_JS_gzip-189.9_KB-1F1E1D)](#其三--state-现状与边界)
 
-<sub>2026-10-07 09:35（+0800）本地构建核对 · 站点仍在构建，图片仍在压字节 · 线上一切以 xxc2007.me 为准</sub>
+<sub>2026-10-07 09:35–09:53（+0800）本地构建核对 · 站点仍在构建，字节与文件数随构建变动 · 线上一切以 xxc2007.me 为准</sub>
 
 </div>
 
@@ -82,19 +82,19 @@
 
 | 项 | 现值 | 口径（怎么核实的） |
 |---|---|---|
-| 仓库跟踪文件 | **138** 个 | `git ls-files \| wc -l` |
+| 仓库跟踪文件 | **144** 个 | `git ls-files \| wc -l`（09:35 时是 138，18 分钟内多了 favicon、og-card、资产清单等 6 个） |
 | 页面 | **3** 个 HTML（zh / en / 404） | `git ls-files '*.html' \| wc -l` |
 | 章节 | **5** 节（ABOUT / WORKS / HOW / BELIEFS / CONTACT），`<section>` **6** 个 | `node scripts/check-parity.mjs` 打印的 `h2.sec-title=5 section=6` |
 | 已上线作品 | **2** 个：纪念册 `/nc15/`、GEOHOT `/geohot/` | 两个地址都在页面上有入口；路由见 [贰](#贰--site-map-站点结构) |
 | 社媒入口 | **7** 个（个人站 / GitHub / 抖音 / 小红书 / B站 / X / YouTube） | 同一命令的 `social li=7` |
-| 中英两页字节 | **19.6 KB** 每页（`20,027` / `20,076` B） | `node scripts/check-bytes.mjs` · `wc -c index.html en/index.html` |
+| 中英两页字节 | **19.7 KB** 每页（`20,170` / `20,195` B） | `node scripts/check-bytes.mjs` · `wc -c index.html en/index.html` |
 | 全站 CSS | **32.3 KB** | `wc -c assets/css/style.css` = `33,056` B |
 | 首屏 JS（含 Three.js） | gzip **189.9 KB** / 上限 195.3 KB | `node scripts/check-bytes.mjs` |
 | 自托管 Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B；`three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c assets/vendor/three.module.min.js` · `node -e` 里 `zlib.gzipSync` |
 | 自托管衬线切片 | **101** 片 woff2，合计 **6,027,992** B | `find assets/fonts -name '*.woff2' \| wc -l` |
 | 外部 CDN 请求 | **0** | `grep -c 'src="https://' index.html en/index.html` → 两页都是 `0` |
 | 构建步骤 | **0**（仓库里没有构建清单） | `git ls-files '*.json' \| wc -l` → `0` |
-| 图片字节 | 首屏三张（头像 + 两张作品截图）当前 **92.1 KB**，超 87.9 KB 上限 → `check-bytes` 现在失败 | `node scripts/check-bytes.mjs` —— **构建中**，图片仍在压；本行随那张表一起改 |
+| 图片字节 | 首屏三张（`avatar.webp` 5,282 + `shot-nc15.webp` 28,624 + `shot-geohot.webp` 32,500 B）= **64.8 KB** / 上限 87.9 KB → `BUDGET OK` | `node scripts/check-bytes.mjs`（09:35 这一行还是 **92.1 KB** 红的，图片在这十几分钟里被重压过——闸门会随构建变动，别把任何一格当永久事实） |
 | 域名根归属 | 目标 `/` = 本站；**2026-10-07 实测** `/` 仍是纪念册、`/nc15/` 仍 **404** | `curl -o /dev/null -w '%{http_code}' https://xxc2007.me/nc15/` —— 切换命令是 `bash scripts/switch-routes.sh`，见 [伍](#伍--deploy-部署与同步) |
 
 <!-- 待核对：根切换的实际执行时刻与执行后的状态码，需站长跑完 switch-routes.sh 后回填这一行。 -->
@@ -114,7 +114,7 @@ Introduction-of-XinChen-Xiong/
 │   ├── js/scene.js         # Three.js 纸屑场（导出 initField(canvas)），建不出来就抛错让 main.js 兜底
 │   ├── vendor/             # 自托管 Three.js 两个文件，零 CDN，文件头 license 注释保留
 │   ├── fonts/noto-serif-sc/# 自托管可变衬线：wght.css（101 条 @font-face）+ files/ 101 片，按 unicode-range 惰性拉
-│   ├── images/             # 头像（jpg + webp）、两张作品截图、banner.svg、og-card、favicon 两枚
+│   ├── images/             # 头像 webp、两张作品截图 webp、banner.svg、og-card（svg + png 1200×630）、favicon 三枚；另有实测清单 README.md
 │   └── audio/              # 环境音 12 秒无缝循环（m4a + ogg 两份，默认不开）
 ├── scripts/                # check-parity · check-links · check-bytes · deploy.sh · verify-sync.sh · switch-routes.sh
 ├── tools/                  # serve.mjs 本地预览（把纪念册挂到 /nc15/）· gh-publish.mjs 备用发布通道
@@ -150,7 +150,11 @@ nginx 的完整写法见 [`deploy/nginx.conf.example`](deploy/nginx.conf.example
 
 ## 肆 · LOCAL 本地运行
 
-**没有构建步骤**——仓库里的文件就是浏览器要加载的文件，没有打包、没有转译、没有依赖安装。也不要 `python -m http.server`：本站的文档从不在本机假设有 Python（实测这台机器 `python` 与 `python3` 都直接报 "Python was not found"），可用的本地服务只有一条：
+### 其一 · NO BUILD 没有构建步骤
+
+**没有构建步骤**——仓库里的文件就是浏览器要加载的文件，没有打包、没有转译、没有依赖安装，
+`git ls-files '*.json' | wc -l` 数出来是 **0**。也不要 `python -m http.server`：本站的文档从不在本机假设有 Python
+（实测这台机器 `python` 与 `python3` 都直接报 "Python was not found"），可用的本地服务只有一条：
 
 ```bash
 git clone https://github.com/xxc2007/Introduction-of-XinChen-Xiong.git
@@ -158,7 +162,9 @@ cd Introduction-of-XinChen-Xiong
 node tools/serve.mjs            # 默认端口 8899，只监听 127.0.0.1
 ```
 
-端口被占用就换一个写死的空闲端口（别 `kill` 别人的进程）：
+### 其二 · PORTS 端口被占了怎么办
+
+换一个写死的空闲端口（别 `kill` 别人的进程）：
 
 ```bash
 netstat -ano | grep LISTENING | grep -E ':89[0-9][0-9]'   # 先看谁在听
@@ -167,9 +173,13 @@ node tools/serve.mjs 8907                                 # 用没被占的端�
 
 2026-10-07 实测跑通（Node `v24.19.0`）：`/` `/en/` `/assets/css/style.css` `/assets/js/main.js` `/assets/vendor/three.module.min.js` `/assets/fonts/noto-serif-sc/wght.css` 全部 **HTTP 200**，`/nc15/` **200**（预览器把纪念册仓库挂在这个前缀上，找不到就诚实 404），不存在的 `/nope.html` 是 **404**；`curl` 取回的 `/` 与磁盘上的 `index.html` 逐字节相等。验证完用 `taskkill //PID <pid> //F //T` 关掉，再确认端口回到 FREE。
 
+### 其三 · FILE 直接双击能到什么程度
+
 > 直接双击 `index.html`（`file://`）能读到全部文案与样式，但 `<script type="module">` 会被本地跨源策略拦掉——动效、语言菜单、环境音都不跑，粒子场拿不到，退成静态发丝底纹。**这不是坏掉的站点**：内容一直可读，脚本只是增强。留言墙在 `/comment/`，本站不调它，离线预览也因此跟它无关。
 
 ## 伍 · DEPLOY 部署与同步
+
+### 其一 · ONE COMMAND 一条命令，五步走完
 
 一条命令，五步走完：
 
@@ -184,20 +194,30 @@ bash scripts/deploy.sh "改了首屏那行 motto"
 4. **四方逐字节核验**——`bash scripts/verify-sync.sh`。
 5. **线上可达性**——从服务器本机带 `Host` 头打 `http://127.0.0.1`，逐个前缀回状态码。
 
-`verify-sync.sh` 证明的是**四件事同时成立**，不是"我看到页面能开"：
+### 其二 · PARITY 四方逐字节核验
+
+`verify-sync.sh` 证明的是**四个来源的字节同时成立**（分五段跑），不是"我看到页面能开"：
 
 | 段 | 比的是 | 怎么比 |
 |---|---|---|
-| A | 本地 HEAD ↔ 服务器 | 部署集内每个文件两侧各算 `sha256`，排序后整串相等才算过 |
-| B | 本地 HEAD ↔ GitHub 仓库树 | 先比 tree hash；不同就逐个 blob 比（git blob sha 与 GitHub blob sha 同源可直接对） |
-| C | 本地 ↔ 公网（经 Cloudflare） | 抓 `/`、`/en/`、CSS、JS 四条流的 `sha256` 与本地比——**CDN 命中旧副本会在这里被抓出来** |
-| D | 邻站未受影响 | `/nc15/` 与 `/geohot/` 必须仍是 200 |
+| A | 本地 HEAD ↔ 服务器文件 | 部署集内每个文件两侧各算 `sha256`，排序后整串相等才算过 |
+| B | 本地 HEAD ↔ GitHub 仓库树 | 先比 tree hash；不同就逐个 blob 比（git blob sha 与 GitHub blob sha 同源可直接对）；README/docs 等非部署文件不计 |
+| C | 本地 ↔ **源站**（绕过 CDN） | 在服务器上 `curl -H 'Host: …' http://127.0.0.1/…` 取回再算 `sha256`——**这一条是逐字节的**，不给缓存任何借口 |
+| D | 本地 ↔ 公网（经 Cloudflare） | 抓 `/` 与 `/en/` 两条流，比对前先归一化掉 Cloudflare 的邮箱混淆（它会把 `mailto:` 换成受保护链接并注入 `email-decode.min.js`——那是站点级功能，不是缓存陈旧），再算 `sha256` |
+| E | 邻站未受影响 | `/nc15/` 与 `/geohot/` 必须仍是 200 |
+
+C 与 D 分开是刻意的：**C 抓的是"部署对不对"，D 抓的是"CDN 有没有喂旧副本"**；
+合成一条就会被 Cloudflare 的改写搞出假性差异。归一化规则写在 `tools/normalize-cf.mjs`，与 D 段里的 `sed` 一一对应。
+
+### 其三 · FALLBACK 备用发布通道
 
 **备用发布通道**：本机 `git push` 走 HTTPS 常因代理 TLS 抖动失败，这时 `deploy.sh` 自动改跑 `node tools/gh-publish.mjs "说明"`——它用 GitHub Git Data API 把本地 HEAD 那棵树当**一个原子提交**推上去（逐文件建 blob → 建 tree → 建 commit → `refs/heads/main` 以 `force: false` 前移）。推送失败绝不能留下半个提交。
 
-**仓库里永远没有主机信息**。源站 IP、SSH 登录名、私钥路径只存在于 gitignore 的 `.deploy.env`（`.gitignore` 第 10 行），示例一律只出现 `<server-ip>` / `<ssh-user>` 占位符；这条不靠自觉——`check-links.mjs` 会扫全部跟踪文件的每一行，命中真实 IP、`ssh -i`、私钥文件名或登录名就**让构建失败**。
+### 其四 · SECRETS 仓库里永远没有主机信息
 
-域名根切换是另一条命令，因为它改的是 nginx 而不是文件：
+源站 IP、SSH 登录名、私钥路径只存在于 gitignore 的 `.deploy.env`（`.gitignore` 第 10 行），示例一律只出现 `<server-ip>` / `<ssh-user>` 占位符；这条不靠自觉——`check-links.mjs` 会扫全部跟踪文件的每一行，命中真实 IP、SSH 私钥参数、私钥文件名或登录名就**让构建失败**。
+
+### 其五 · ROUTES 域名根切换是另一条命令
 
 ```bash
 bash scripts/switch-routes.sh --dry-run   # 只读：打印 diff，不写任何东西
