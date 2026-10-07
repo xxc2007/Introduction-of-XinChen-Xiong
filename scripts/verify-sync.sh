@@ -89,7 +89,7 @@ NA=$(printf '%s\n' "$ASSETS" | grep -c .)
 BADASSET=0
 while IFS= read -r u; do
   [ -n "$u" ] || continue
-  lp="${u%%\?*}"; lp=".${lp#/}"
+  lp="${u%%\?*}"; lp="${lp#/}"
   [ -f "$lp" ] || { echo "  ! $u 在仓库里没有对应文件"; BADASSET=1; continue; }
   l="$(sha256sum "$lp" | cut -d' ' -f1)"
   r="$(curl -sL -A "$UA" "https://$DEPLOY_SITE$u" | sha256sum | cut -d' ' -f1)"
