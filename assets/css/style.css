@@ -590,7 +590,7 @@ html.no-js .lang-menu a{padding:8px 10px}
   .lang-menu{min-width:158px}
   .hero-cta,.btn-live,.btn-repo,.copy-mail{padding:12px 18px;font-size:15px;min-height:44px}
   /* 7 个图标卡钉死 4 + 3 两行（390px 上靠自然换行会挤成 5+2 或出现横向溢出） */
-  .social{display:grid;grid-template-columns:repeat(4,40px);gap:10px;justify-content:start}
+  .social{display:grid;grid-template-columns:repeat(4,44px);gap:10px;justify-content:start}
   .mail{font-size:22px;word-break:break-all}
   .facts dd,.work-card ul.facts li{font-size:15px}
   .shot{aspect-ratio:4/3}

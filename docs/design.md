@@ -216,10 +216,13 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 
 - 两页各 **19.7 KB**（`20,170` / `20,195` B，2026-10-07 09:53 快照，复算记录里有命令），`check-parity.mjs` 断言 **10** 项结构数量与 **5** 组集合两页相等；
   互链（`./en/` 与 `../`）按设计就不同，所以比较一律取 basename。
-- 版本串：四个资源引用 `?v=` 必须是同一个 4 位十六进制值（当前 `a1b2`），`check-parity.mjs` 用
-  `new Set(grab(h, /\?v=([0-9a-z]+)"/g)).size === 1` 钉死——nginx 那边 30 天/1 年长缓存的合法性全靠这个指纹。
-- 顶栏高度是双语共用的预算：英文页品牌行要写 `Xiong Xinchen`，≤420px 时 `.brand` 被限成
-  `max-width:calc(100% - 196px)`，两枚 pill 的宽度是算过的，所以英文页不会把语言菜单挤出 390px 边界。
+- 版本串：四个资源引用 `?v=` 必须是同一个 4 位十六进制值（它跟着 HEAD 走，`deploy.sh` 每次部署重算，所以别在文档里
+  写死具体值），`check-parity.mjs` 用 `new Set(grab(h, /\?v=([0-9a-z]+)"/g)).size === 1` 钉死。
+  nginx 的长缓存是按**扩展名**命中的、跟查询串无关，所以 `?v=` 是唯一的换版本手段：内容变了不换串，
+  浏览器与 CDN 就继续端旧字节（实测：不带 `?v=` 的 `/assets/css/style.css` 至今仍回旧副本）。
+- 顶栏是双语共用的预算：英文页品牌行写 `Xiong Xinchen`，语言按钮在 ≤420px 收成只剩地球图标（母本站同一手法），
+  `.brand` 不再按中文胶囊的宽度做 `calc()` 预算——之前那么写时，英文页实测 213.8px 会把语言菜单挤出 390px 边界，
+  且定高让品牌名被裁到视口上方。现在是 `min-height` + 允许换行。
 - `html[lang^="en"] .motto{font-style:italic}` 是唯一按语言分叉的视觉（原因见「贰」）。
 
 ## 柒 · 支持矩阵与红线
@@ -227,7 +230,10 @@ DOM 结构三件套，中英两页同一形状，只有节号字符不同：
 - 面向现代常青浏览器（Chrome / Edge / Firefox / Safari 近两年版本），**明确不支持 IE 与 Legacy Edge，全站无 polyfill**；
   `min-height:min(calc(100svh - var(--bar)),880px)` 外面还包了一条 `@supports not (min-height:100svh)` 兜底。
 - 正文对比度实测 **14.328:1**（ink / cream），远高于 7:1 的红线；辅助文字下限字号 14px 与 `--muted` 绑在一起。
-- 缓存与安全头由 nginx 提供（`X-Content-Type-Options` / `Referrer-Policy` / `X-Frame-Options`、HTML `no-cache`、
-  带 `?v=` 的资源 30 天、`/assets/fonts/` 一年），见 `deploy/nginx.conf.example`。
+- 缓存与安全头由 nginx 提供，以 `deploy/nginx.conf.example` 为准：**HTML 一律 `no-cache`**（`/index.html`、`/en/index.html`、
+  `/404.html`、`/nc15/` 与其 `robots.txt`/`sitemap.xml`），**按扩展名匹配的静态资源 `public, max-age=31536000, immutable`**
+  （含 `woff2/ttf/otf/mp4`），`X-Content-Type-Options: nosniff` 与 `Referrer-Policy` 在每个声明了 add_header 的
+  location 里重抄一遍——nginx 的 `add_header` 不会被子 location 继承，漏抄就等于子层丢头。
+  线上**没有** `X-Frame-Options`，也没有 CSP；`/assets/fonts/` 不再有独立的 1 年规则，它由扩展名正则统一覆盖。
 - 想新增效果之前先量字节：`node scripts/check-bytes.mjs` 的逐类预算行就是闸门本身。2026-10-07 09:53 全绿，
   但 09:35 那次图片行是红的——**闸门随构建变动，别把一次绿当成永久的**。

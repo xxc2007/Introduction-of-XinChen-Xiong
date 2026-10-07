@@ -106,7 +106,7 @@ cp .deploy.env.example .deploy.env      # .gitignore 第 10 行排除它，绝�
 | location | 干什么 | 不能动的理由 |
 |---|---|---|
 | `location / { try_files $uri $uri/ =404; error_page 404 /404.html; }` | 本站两页 + 无扩展名路径 | `location = /404.html { internal; }` 让 404 页不被直接索引 |
-| `location = /nc15 { return 301 https://$host/nc15/; }` + `location ^~ /nc15/ { alias /var/www/nc15/; … error_page 404 = /nc15/404.html; }` | 纪念册 | `alias` 而不是 `root`；404 用**它自己的**页面，因为它的站内链接已经带 `/nc15` 前缀 |
+| `location = /nc15 { return 308 https://$host/nc15/; }` + `location ^~ /nc15/ { alias /var/www/nc15/; … error_page 404 =404 /nc15/404.html; }` | 纪念册 | `alias` 而不是 `root`；404 用**它自己的**页面，因为它的站内链接已经带 `/nc15` 前缀。**`=` 号必须有**：`error_page 404 = /nc15/404.html`（没有 `404`）会把任意错拼路径变成 200 的软 404，Cloudflare 还会按扩展名把这份 200 的 HTML 缓存成 css/ico，污染边缘节点。 |
 | `location ^~ /geohot { proxy_pass http://127.0.0.1:3000; … }` | GEOHOT | 它有后端；`^~` 保住前缀优先级，别让正则 location 抢走 |
 | `location ^~ /comment/ { proxy_pass http://127.0.0.1:23366; … }` | Artalk 留言墙后端 | **必须留在域名根。** 纪念册的 `wall.js` 用根绝对路径调它；跟着搬进 `/nc15/comment/` 会让留言墙整块失效 |
 
@@ -114,9 +114,17 @@ cp .deploy.env.example .deploy.env      # .gitignore 第 10 行排除它，绝�
 `robots.txt` 里也留了同一段注释说明这一条既不 Disallow 也不挪走，`sitemap.xml` 与
 `/nc15/sitemap.xml` 各管各的（`robots.txt` 里那 **2** 行 `Sitemap:` 就是这两个地址）。
 
-缓存与压缩同样分三层：带 `?v=` 指纹的静态资源 30 天 `immutable`；`/assets/fonts/` 一年（切片文件名按内容编号）；
-**HTML 一律 `no-cache`**，保证发布即时可见——`verify-sync.sh` 的 C 段正是靠这条才不会长期误报。
+缓存分两层，且**由扩展名决定，不由查询串决定**：任何 `.css/.js/.woff2/.ttf/.otf/.png/…` 请求——**包括不带 `?v=` 的那次**
+——都会拿到 `public, max-age=31536000, immutable`；**HTML（`/`、`/en/`、`/404.html`、`/nc15/` 及其
+`robots.txt`/`sitemap.xml`）一律 `no-cache`**，保证发布即时可见——`verify-sync.sh` 的 C 段正是靠这条才不会长期误报。
+`?v=` 指纹因此不是缓存生效的前提，而是**换版本的唯一手段**：内容变了就必须换串，否则浏览器与 CDN 会继续端旧字节
+（这条规则的副作用实测过：不带 `?v=` 的 `/assets/css/style.css` 至今仍从 Cloudflare 的 immutable 缓存里回旧内容）。
 gzip 覆盖 `text/css`、`application/javascript`、`image/svg+xml`、JSON 与 XML，`gzip_min_length 1024`。
+
+纪念册在域名根时代的老地址（`/zh-Hant/`、`/ja/`、`/ko/`、`/ru/`、`/es/`、`/fr/`、`/pt/`、`/ar/`、`/promo/`、
+`/images/`、`/maplibre/`、`/data`）用一条 `rewrite … permanent` 做 **301** 收敛到 `/nc15/` 下。
+两个 server 块都要有这一条（`:443` 那原先漏了）；`/en/` 与 `/assets/` **不能**进名单，它们已经归本站。
+写成内部改写（`last`）而不是 301 是错的：同一页面会在两个 URL 上都返回 200，重复内容且不指向规范链接。
 
 ---
 
