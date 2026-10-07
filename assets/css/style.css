@@ -1,0 +1,544 @@
+/* ==========================================================================
+   xxc2007.me · 个人介绍站全站样式
+   Claude / Anthropic 视觉语言：米白纸感 + 单一赤陶橙 + 衬线标题 + 发丝分层
+   语言与骨架继承纪念册母本（D:\nanchang15-website\site\assets\style.css），
+   令牌与类名以 docs/build-contract.md §1 §2 为准，不得自创第二套。
+
+   目录
+   00 设计令牌            08 壹 · about（dl.facts）
+   01 复位与基线          09 贰 · works（work-card / contours）
+   02 排版尺度            10 叁 · how（ol.steps）
+   03 组件基元            11 肆 · beliefs（blockquote）
+   04 无障碍              12 伍 · contact（mail / social）
+   05 顶栏 topbar         13 页脚 foot
+   06 首屏 hero           14 滚动揭示 reveal + 无 JS 降级
+   07 区块骨架 sec-title  15 响应式 ≥1200 / ≤1024 / ≤768 / ≤420
+                         16 prefers-reduced-motion
+   ========================================================================== */
+
+/* ── 00 · 设计令牌（契约 §1 逐字照抄，值未改动） ── */
+:root{
+  --cream:#F0EEE6; --paper:#FAF9F5; --ink:#1F1E1D; --muted:#6E6A5E;
+  --terra:#D97757; --terra-deep:#C15F3C; --terra-ink:#A8492A; --line:#E4DFD3;
+  --dark:#1F1E1D;
+  --serif:'Noto Serif SC Variable','Noto Serif SC',Georgia,"Times New Roman","Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --ease:cubic-bezier(.16,.84,.28,1);
+}
+/* 派生尺度：只为排版与栅格服务，不新增颜色 */
+:root{
+  --maxw:1200px;                        /* 内容最大宽度 */
+  --gut:clamp(18px,4.4vw,44px);         /* 左右安全边距（窄屏不留挤压） */
+  --bar:64px;                           /* 顶栏高度；窄屏变两行时在 §15 里改值，
+                                            scroll-padding / hero 顶部留白都跟着走 */
+  --dur:.52s;                           /* §3-2 揭示：时长 520ms */
+  --lift:14px;                          /* §3-2 揭示：位移 ≤14px */
+}
+
+/* ── 01 · 复位与基线 ── */
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}        /* 组件自带 display 会盖掉 UA 的 [hidden]，兜底 */
+html{
+  scroll-behavior:smooth;
+  scroll-padding-top:calc(var(--bar) + 24px);   /* 锚点跳转不被 sticky 顶栏压住 */
+  scrollbar-gutter:stable;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body{
+  font-family:var(--sans);
+  font-size:clamp(15.5px,.55vw + 14px,17px);
+  line-height:1.95;
+  color:var(--ink);
+  background:var(--cream);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  /* 390px 不得横向溢出。用 clip 而不是 hidden：hidden 会把 body 变成滚动容器，
+     从而破坏 .topbar 的 position:sticky；clip 不建滚动容器。 */
+  overflow-x:clip;
+}
+img,svg,canvas{display:block;max-width:100%}
+img{height:auto}
+svg{overflow:visible}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+a{
+  color:var(--terra-ink);
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;
+  transition:color .25s var(--ease),background-color .25s var(--ease),border-color .25s var(--ease);
+}
+a:hover{text-decoration-thickness:1px}
+p{text-wrap:pretty}
+h1,h2,h3{text-wrap:balance}
+audio,video{display:none}                /* 环境音只作媒体源，不露原生控件 */
+::selection{background:var(--terra);color:var(--paper)}
+
+/* ── 02 · 排版尺度（衬线做标题、无衬线做标签） ── */
+.sr-only{
+  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
+  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;
+}
+.eyebrow{
+  font-family:var(--sans);font-size:14px;font-weight:600;
+  letter-spacing:.3em;text-transform:uppercase;
+  color:var(--muted);
+}
+/* --muted 只允许出现在 ≥14px 的辅助文字上（对 cream 只有 5.0:1，
+   低于 14px 会掉出 WCAG AA；再小的字必须换 --ink）。 */
+.hero h1{
+  font-family:var(--serif);font-weight:900;
+  font-size:clamp(40px,7.4vw,86px);line-height:1.14;letter-spacing:.02em;
+}
+.motto{
+  font-family:var(--serif);font-weight:700;
+  font-size:clamp(23px,3.5vw,42px);line-height:1.62;letter-spacing:.03em;
+  color:var(--ink);max-width:26em;
+}
+/* 中文没有真正的斜体字面，font-style:italic 只会得到机器伪斜、笔画发糊；
+   所以「斜体感」只给拉丁页，中文页靠衬线与字号拉开层次。 */
+html[lang^="en"] .motto{font-style:italic}
+.hero-sub{font-size:clamp(16px,1.1vw + 14px,19px);color:var(--muted);max-width:42em}
+.sec-title .zh{font-family:var(--serif);font-weight:900;letter-spacing:.03em}
+.work-card h3,.steps li strong,.mail{font-family:var(--serif)}
+
+/* ── 03 · 组件基元（发丝线是唯一分层手段：无投影、无渐变、圆角 ≤2px） ── */
+.hero-cta,.btn-live,.btn-repo,.copy-mail,.lang-btn,.sound{
+  border-radius:2px;                      /* 全站唯一圆角值 */
+}
+.hero-cta,.btn-live,.btn-repo,.copy-mail,.lang-btn,.sound{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  white-space:nowrap;text-decoration:none;
+  font-family:var(--sans);font-size:15px;font-weight:600;letter-spacing:.04em;
+  padding:9px 18px;border:1px solid var(--line);background:transparent;
+  transition:color .25s var(--ease),background-color .25s var(--ease),
+             border-color .25s var(--ease),translate .25s var(--ease),opacity .25s;
+  touch-action:manipulation;
+}
+/* 磁吸（§3-3）：main.js 写 --mx/--my，位移 ≤6px。
+   刻意用独立的 translate 属性、把 transform 留给卡片倾斜，两者互不打架。 */
+.hero-cta,.btn-live,.btn-repo,.copy-mail{translate:var(--mx,0px) var(--my,0px)}
+.hero-cta,.btn-live{color:var(--terra-ink);border-color:rgba(217,119,87,.55)}
+.hero-cta:hover,.hero-cta:focus-visible,.btn-live:hover,.btn-live:focus-visible{
+  color:var(--terra-ink);background:rgba(217,119,87,.12);border-color:var(--terra-deep);
+}
+.btn-repo,.copy-mail{color:var(--ink);border-color:var(--line)}
+.btn-repo:hover,.btn-repo:focus-visible,.copy-mail:hover,.copy-mail:focus-visible{
+  color:var(--terra-ink);border-color:var(--terra);background:rgba(217,119,87,.07);
+}
+.copy-mail.is-copied,.copy-mail[data-copied="true"]{color:var(--terra-ink);border-color:var(--terra)}
+/* 链接下划线扫过：单条 1px 实线 scaleX，不用渐变遮罩 */
+.mail{position:relative;text-decoration:none;display:inline-block}
+.mail::after{
+  content:"";position:absolute;left:0;right:0;bottom:-.06em;height:1px;background:currentColor;
+  transform:scaleX(0);transform-origin:0 50%;transition:transform .5s var(--ease);
+}
+.mail:hover::after,.mail:focus-visible::after{transform:scaleX(1)}
+
+/* ── 04 · 无障碍 ── */
+/* 焦点环用 --terra-ink（4.95:1 on cream），亮 --terra 只有 2.69:1 不足以被低视力看见 */
+:focus-visible{outline:2px solid var(--terra-ink);outline-offset:3px;border-radius:2px}
+.skip{
+  position:absolute;left:var(--gut);top:-100px;z-index:200;
+  background:var(--ink);color:var(--paper);
+  padding:11px 20px;border-radius:2px;
+  font-size:15px;letter-spacing:.06em;text-decoration:none;
+  transition:top .22s var(--ease);
+}
+.skip:focus{top:12px;color:var(--paper)}
+
+/* ── 05 · 顶栏 topbar ── */
+.topbar{
+  position:sticky;top:0;z-index:80;
+  display:flex;align-items:center;gap:clamp(10px,2.6vw,30px);
+  height:var(--bar);
+  padding-inline:var(--gut);
+  max-width:calc(var(--maxw) + var(--gut) * 2);margin-inline:auto;
+  background:var(--cream);
+  border-bottom:1px solid var(--line);
+}
+.brand{
+  display:flex;align-items:baseline;gap:9px;flex:none;min-width:0;
+  font-family:var(--serif);text-decoration:none;color:var(--ink);
+}
+.brand b{font-size:19px;font-weight:900;letter-spacing:.05em}
+.brand span{
+  font-family:var(--sans);font-size:14px;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--muted);
+}
+.brand:hover{color:var(--ink)}
+.brand:hover span{color:var(--terra-ink)}
+#nav{
+  display:flex;align-items:center;gap:2px;
+  flex:1 1 auto;min-width:0;justify-content:center;
+}
+#nav a{
+  font-size:15px;letter-spacing:.08em;text-decoration:none;color:var(--muted);
+  padding:8px 13px;border-radius:2px;white-space:nowrap;
+  transition:color .25s var(--ease),background-color .25s var(--ease);
+}
+#nav a:hover{color:var(--ink);background:rgba(217,119,87,.10)}
+#nav a.active,#nav a[aria-current="true"]{color:var(--terra-ink);background:rgba(217,119,87,.13)}
+.controls{display:flex;align-items:center;gap:9px;flex:none;margin-left:auto}
+.controls>*{position:relative}         /* .lang-menu 相对各自的包裹层定位 */
+
+/* ---------- 语言 pill + 下拉菜单（复刻母本 AMD 式样） ---------- */
+.lang-btn{
+  font-size:14px;color:var(--terra-ink);
+  border-color:rgba(217,119,87,.5);padding:8px 12px;
+}
+.lang-btn:hover{background:rgba(217,119,87,.12)}
+.lang-btn[aria-expanded="true"]{background:rgba(217,119,87,.14);border-color:var(--terra-deep)}
+.lang-btn svg,.sound svg{width:15px;height:15px;flex:none}
+.lang-chev{transition:transform .25s var(--ease)}
+.lang-btn[aria-expanded="true"] .lang-chev{transform:rotate(180deg)}
+.lang-menu{
+  position:absolute;top:calc(100% + 10px);right:0;z-index:90;
+  min-width:178px;padding:6px;list-style:none;
+  background:var(--paper);border:1px solid var(--line);border-radius:2px;
+  display:flex;flex-direction:column;gap:2px;
+  animation:langIn .18s var(--ease) both;
+}
+@keyframes langIn{from{opacity:0;translate:0 -6px}to{opacity:1;translate:none}}
+.lang-menu li{display:block}
+.lang-menu a{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:9px 12px;border-radius:2px;
+  font-size:15px;color:var(--ink);text-decoration:none;
+  transition:background-color .2s var(--ease),color .2s var(--ease);
+}
+.lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink)}
+/* ✓ 由 CSS 生成：HTML 只标 aria-selected，两页结构因此完全一致（parity 好核对） */
+.lang-menu [aria-selected="true"]>a,.lang-menu a[aria-selected="true"],
+.lang-menu [aria-current="true"]>a,.lang-menu a[aria-current="true"]{
+  color:var(--terra-ink);font-weight:600;background:rgba(217,119,87,.09);
+}
+.lang-menu [aria-selected="true"]>a::after,.lang-menu a[aria-selected="true"]::after,
+.lang-menu [aria-current="true"]>a::after,.lang-menu a[aria-current="true"]::after{
+  content:"✓";font-family:var(--sans);font-size:14px;line-height:1;
+}
+
+/* ---------- 声音 pill（无 JS 时不出现，见 §14） ---------- */
+.sound{
+  font-size:14px;color:var(--muted);border-color:var(--line);padding:8px 12px;
+  letter-spacing:.1em;
+}
+.sound:hover{color:var(--terra-ink);border-color:var(--terra);background:rgba(217,119,87,.07)}
+.sound[aria-pressed="true"]{color:var(--terra-ink);border-color:rgba(217,119,87,.6);background:rgba(217,119,87,.12)}
+
+/* ---------- 顶部 2px 滚动进度（贴在顶栏下沿） ---------- */
+.progress{
+  position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:var(--terra);
+  transform:scaleX(var(--p,var(--scroll,0)));transform-origin:0 50%;
+  pointer-events:none;
+}
+
+/* ── 06 · 首屏 hero ── */
+.hero{
+  position:relative;
+  display:flex;flex-direction:column;justify-content:center;
+  min-height:min(calc(100svh - var(--bar)),880px);
+  max-width:var(--maxw);margin-inline:auto;
+  padding:clamp(56px,9vw,104px) var(--gut) clamp(72px,10vw,120px);
+}
+@supports not (min-height:100svh){.hero{min-height:calc(100vh - var(--bar))}}
+.hero>*{position:relative;z-index:1}
+/* Three.js 纸屑场：整块铺在内容之后，不接指针事件（视差靠 main.js 监听 window） */
+#field{
+  position:absolute;inset:0;z-index:0;width:100%;height:100%;
+  pointer-events:none;opacity:.9;
+}
+.hero .avatar{
+  width:clamp(112px,13vw,152px);flex:none;
+  border:1px solid var(--line);border-radius:50%;background:var(--paper);
+  outline:1px solid var(--line);outline-offset:7px;   /* 细环：outline 会跟随圆形边框 */
+  animation:rise .9s var(--ease) both;
+}
+@keyframes rise{from{opacity:0;translate:0 20px}to{opacity:1;translate:none}}
+.hero-body{display:flex;flex-direction:column;align-items:flex-start;gap:0;max-width:66ch}
+.hero .eyebrow{display:flex;align-items:center;gap:14px;margin-bottom:18px;animation:rise .9s .06s var(--ease) both}
+.hero .eyebrow::before{content:"";width:44px;height:1px;background:var(--terra)}
+.hero h1{margin-bottom:clamp(14px,2vw,22px);animation:rise .95s .12s var(--ease) both}
+.hero .motto{margin-bottom:18px;animation:rise .95s .2s var(--ease) both}
+.hero .hero-sub{animation:rise .95s .28s var(--ease) both}
+.hero-cta{margin-top:clamp(28px,4vw,40px);padding:13px 26px;animation:rise .95s .36s var(--ease) both}
+/* 下滑提示：一根往下生长的发丝线，不用箭头图形 */
+.scroll-cue{
+  position:absolute;left:var(--gut);bottom:26px;z-index:1;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+  font-family:var(--sans);font-size:14px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;
+  animation:rise 1s .6s var(--ease) both;
+}
+.scroll-cue:hover{color:var(--terra-ink)}
+.scroll-cue::after{
+  content:"";width:1px;height:46px;background:var(--terra);
+  transform-origin:0 0;animation:cue 2.4s var(--ease) infinite;
+}
+@keyframes cue{0%{transform:scaleY(0);opacity:0}35%{transform:scaleY(1);opacity:1}
+  75%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
+
+/* ── 07 · 区块骨架与节标题 ── */
+main>section,.sec{
+  position:relative;
+  max-width:var(--maxw);margin-inline:auto;
+  padding:clamp(70px,10vw,116px) var(--gut) 0;
+}
+.sec-title{
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 18px;
+  margin-bottom:clamp(28px,4vw,44px);
+}
+.sec-title .num{
+  font-family:var(--serif);font-size:clamp(15px,1.1vw + 12px,19px);font-weight:700;
+  color:var(--terra-ink);letter-spacing:.2em;white-space:nowrap;
+}
+.sec-title .zh{font-size:clamp(27px,3.6vw,44px);line-height:1.28;min-width:0;overflow-wrap:anywhere}
+.sec-title .eyebrow{letter-spacing:.34em}
+/* 发丝线画入：静止态是「已画完」，所以 JS 缺席时内容一样完整可读 */
+.sec-title::after{
+  content:"";flex:1 1 90px;height:1px;background:var(--line);
+  transform-origin:0 50%;min-width:40px;
+}
+.is-in .sec-title::after,.sec-title.is-in::after{animation:ruleIn 1.1s .1s var(--ease) both}
+@keyframes ruleIn{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.sec-lede{color:var(--muted);max-width:46em;margin-bottom:clamp(26px,3.4vw,40px)}
+
+/* ── 08 · 壹 · ABOUT（dl.facts 四行发丝分隔） ── */
+#about p{margin-bottom:1.5em;max-width:44em}
+#about p:last-of-type{margin-bottom:0}
+.facts{margin-top:clamp(30px,4vw,46px)}
+.facts>div{
+  display:grid;grid-template-columns:minmax(0,132px) minmax(0,1fr);
+  gap:4px 22px;align-items:baseline;
+  padding:17px 0;border-top:1px solid var(--line);
+}
+.facts>div:last-child{border-bottom:1px solid var(--line)}
+.facts dt{font-size:14px;font-weight:600;letter-spacing:.2em;color:var(--muted)}
+.facts dd{font-size:clamp(16px,.6vw + 15px,18px);color:var(--ink);overflow-wrap:anywhere}
+.facts dd a{color:var(--terra-ink);word-break:break-all}
+
+/* ── 09 · 贰 · WORKS（work-card ×2 + 等高线背景） ── */
+#works{padding-bottom:clamp(20px,4vw,40px)}
+.contours{
+  position:absolute;inset:0;width:100%;height:100%;z-index:0;
+  color:var(--line);fill:none;pointer-events:none;
+}
+.contours path{stroke:currentColor;stroke-width:1;stroke-linecap:round}
+/* stroke-dasharray 揭示（§3-8）：静止态=完整描出，JS 进场时才回放到起点 */
+.is-in .contours path{animation:contourDraw 2.6s var(--ease) both}
+@keyframes contourDraw{from{stroke-dasharray:2600;stroke-dashoffset:2600}to{stroke-dasharray:2600;stroke-dashoffset:0}}
+.works-stack{position:relative;z-index:1;display:flex;flex-direction:column;gap:clamp(26px,3.6vw,42px)}
+.work-card{
+  position:relative;z-index:1;
+  background:var(--paper);border:1px solid var(--line);
+  padding:clamp(22px,3vw,40px) clamp(20px,3vw,42px) clamp(24px,3vw,40px);
+  /* 3D 倾斜（§3-4）：main.js 写 --rx/--ry，幅度 ≤5deg；perspective 挂在 #works 上，
+     这样卡片自身的 transform 不被祖先裁切，也不与 .reveal 的 translate 抢属性 */
+  transform:perspective(1200px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transition:transform .5s var(--ease),border-color .35s var(--ease);
+  will-change:transform;
+}
+.work-card+.work-card{margin-top:clamp(26px,3.6vw,42px)}
+/* 卡内元素间距兜底：契约里 h3 / .lede / .shot / ul.facts / 两枚按钮是平级子元素，
+   任何一层没被下面显式 margin 覆盖的（或多套了一层 wrapper）都靠这条撑开 */
+.work-card>*+*{margin-top:clamp(18px,2.4vw,26px)}
+#works{perspective:1200px}
+.work-card:hover{border-color:#DCD5C6}
+.work-card h3{
+  font-size:clamp(21px,2.3vw,30px);font-weight:900;letter-spacing:.03em;line-height:1.42;
+}
+.work-card .lede{
+  font-size:clamp(16.5px,.7vw + 15px,19px);line-height:1.9;color:var(--ink);max-width:52em;
+  padding-left:16px;border-left:2px solid var(--terra);   /* 他本人的原话，用赤陶橙作标记色 */
+}
+.shot{
+  width:100%;aspect-ratio:16/8;object-fit:cover;
+  margin:clamp(22px,2.8vw,30px) 0 0;
+  background:var(--cream);border:1px solid var(--line);
+  transition:border-color .35s var(--ease);
+}
+.work-card:hover .shot{border-color:rgba(217,119,87,.5)}
+/* 卡内事实条 ul.facts：三列发丝排（与 §08 的 dl.facts 同名不同形，需分开定义） */
+.work-card ul.facts{
+  list-style:none;margin:clamp(20px,2.6vw,28px) 0 0;
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:32px;
+  border-top:1px solid var(--line);
+}
+.work-card ul.facts li{
+  position:relative;padding:15px 0 15px 16px;
+  font-size:15px;line-height:1.75;color:var(--muted);border-bottom:1px solid var(--line);
+}
+.work-card ul.facts li::before{
+  content:"";position:absolute;left:0;top:23px;width:6px;height:1px;background:var(--terra);
+}
+.work-card .btn-row,.card-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(22px,2.8vw,30px)}
+.btn-live,.btn-repo{padding:11px 22px}
+
+/* ── 10 · 叁 · HOW（ol.steps 四步） ── */
+.steps{list-style:none;counter-reset:step;display:grid;gap:0}
+.steps li{
+  counter-increment:step;position:relative;
+  padding:clamp(22px,3vw,32px) clamp(16px,2.4vw,34px) clamp(22px,3vw,32px) 0;
+  border-top:1px solid var(--line);
+}
+.steps li:last-child{border-bottom:1px solid var(--line)}
+.steps li::before{
+  content:counter(step,decimal-leading-zero);
+  font-family:var(--serif);font-size:clamp(22px,2.4vw,30px);font-weight:900;
+  color:var(--terra-ink);letter-spacing:.06em;
+  display:block;margin-bottom:10px;
+}
+.steps li strong,.steps li b,.steps li h3{
+  display:block;font-family:var(--serif);font-size:clamp(18px,1.6vw,23px);font-weight:700;
+  letter-spacing:.03em;line-height:1.6;margin-bottom:8px;
+}
+.steps li p{color:var(--muted);font-size:clamp(15.5px,.55vw + 14px,17px);max-width:44em}
+.closing{
+  margin-top:clamp(34px,4.4vw,52px);padding-top:clamp(24px,3vw,34px);border-top:1px solid var(--line);
+  font-family:var(--serif);font-size:clamp(19px,2vw,27px);line-height:1.85;letter-spacing:.02em;max-width:38em;
+}
+
+/* ── 11 · 肆 · BELIEFS（blockquote ×3，逐字引用） ── */
+#beliefs blockquote{
+  padding:clamp(22px,3vw,32px) 0 clamp(22px,3vw,32px) clamp(18px,2.6vw,30px);
+  border-top:1px solid var(--line);border-left:2px solid var(--terra);
+}
+#beliefs blockquote:last-of-type{border-bottom:1px solid var(--line)}
+#beliefs blockquote p{
+  font-family:var(--serif);font-weight:700;
+  font-size:clamp(21px,2.6vw,32px);line-height:1.85;letter-spacing:.03em;color:var(--ink);
+}
+#beliefs cite{
+  display:block;margin-top:12px;font-style:normal;
+  font-size:14px;font-weight:600;letter-spacing:.2em;color:var(--muted);
+}
+
+/* ── 12 · 伍 · CONTACT（mail / copy / 7 张发丝图标卡） ── */
+.contact-line{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin-top:clamp(8px,1.6vw,18px)}
+.mail{font-size:clamp(24px,4vw,44px);font-weight:900;letter-spacing:.02em;line-height:1.5}
+.contact-note{color:var(--muted);max-width:44em;margin-bottom:clamp(24px,3.2vw,36px)}
+.social{
+  list-style:none;display:flex;flex-wrap:wrap;gap:10px;
+  margin-top:clamp(30px,4vw,44px);
+}
+.social li{display:flex}
+/* 40×40 发丝图标卡：与母本页脚 .f-social 同一套尺寸与 hover 语言 */
+.social a,.social button{
+  width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--line);border-radius:2px;color:var(--muted);background:transparent;
+  transition:border-color .3s var(--ease),color .3s var(--ease),translate .3s var(--ease);
+}
+.social svg{width:18px;height:18px}
+.social a:hover,.social button:hover{
+  border-color:var(--terra);color:var(--terra-ink);translate:0 -2px;
+}
+.social a{text-decoration:none}
+
+/* ── 13 · 页脚 foot ── */
+.foot{
+  border-top:1px solid var(--line);
+  margin-top:clamp(72px,10vw,124px);
+  max-width:calc(var(--maxw) + var(--gut) * 2);margin-inline:auto;
+  padding:clamp(34px,4.4vw,50px) var(--gut) clamp(44px,5vw,64px);
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px 28px;
+  font-size:14px;color:var(--muted);
+}
+.foot-sign{font-family:var(--serif);font-size:16px;letter-spacing:.06em;color:var(--ink)}
+.foot-meta{letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.foot a{color:var(--muted);text-decoration:none}
+.foot a:hover{color:var(--terra-ink);text-decoration-thickness:1px}
+
+/* ── 14 · 滚动揭示 reveal（§3-2：位移 ≤14px / 520ms / 错峰 60ms） ── */
+.reveal{
+  opacity:0;translate:0 var(--lift);
+  transition:opacity var(--dur) var(--ease),translate var(--dur) var(--ease);
+  transition-delay:calc(var(--i,0) * 60ms);
+}
+.reveal.is-in,.reveal.visible,.is-in .reveal{opacity:1;translate:none}
+/* 无 JS 降级：所有内容可读可点（粒子与动效只是增强，不是内容） */
+html.no-js .reveal,html.no-js .sec-title::after{opacity:1;translate:none;transition:none}
+html.no-js .sound,html.no-js .progress{display:none}
+html.no-js .lang-btn{display:none}
+html.no-js .lang-menu,html.no-js .lang-menu[hidden]{
+  display:flex;position:static;min-width:0;padding:0;border:0;background:transparent;animation:none;
+}
+html.no-js .lang-menu a{padding:8px 10px}
+/* 兜底第二条：支持 scripting 媒体特性的浏览器即使漏写 .no-js 也能直接呈现 */
+@media (scripting:none){.reveal{opacity:1;translate:none;transition:none}}
+
+/* ── 15 · 响应式分档 ── */
+/* ≥1200：宽屏才把 ABOUT 做成「正文 / 事实表」双栏，Steps 排 2×2 */
+@media (min-width:1200px){
+  #about{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);column-gap:clamp(48px,6vw,88px)}
+  #about>.sec-title{grid-column:1/-1}
+  #about p{grid-column:1}
+  #about .facts{grid-column:2;grid-row:2/span 4;align-self:start;margin-top:0}
+  .facts>div{grid-template-columns:minmax(0,1fr);gap:6px;padding:19px 0}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(34px,4vw,64px)}
+  .steps li:nth-child(2n){padding-right:0;padding-left:clamp(16px,2.4vw,34px)}
+  .hero .hero-sub{font-size:19px}
+}
+@media (max-width:1024px){
+  #nav a{padding:8px 9px;font-size:14.5px;letter-spacing:.05em}
+  .work-card ul.facts{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:26px}
+  .work-card ul.facts li:last-child{grid-column:1/-1}
+  .brand span{display:none}
+}
+@media (max-width:768px){
+  :root{--bar:104px}                    /* 顶栏两行，锚点留白与 hero 高度同步 */
+  .topbar{flex-wrap:wrap;height:var(--bar);align-content:center;row-gap:2px;padding-top:6px}
+  .brand{order:1;flex:1 1 auto;min-width:0;max-width:calc(100% - 150px);white-space:normal}
+  .brand b{font-size:17px;overflow-wrap:anywhere}
+  .controls{order:2;margin-left:auto}
+  /* 导航整行铺开：5 项均分、可横向滚动兜底（母本实测：藏滚动条的窄 nav 会让
+     末位入口彻底消失在屏幕外，这里用 flex 均分保证「看得见 + 键得到」） */
+  #nav{order:3;flex:1 1 100%;justify-content:space-between;gap:0;
+       overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;padding-bottom:6px}
+  #nav::-webkit-scrollbar{display:none}
+  #nav a{flex:1 0 auto;text-align:center;padding:11px 6px;min-height:40px}
+  .lang-menu{right:auto;left:0}
+  .hero{min-height:0;padding-top:clamp(40px,7vw,64px);text-align:left}
+  .scroll-cue{position:static;margin-top:clamp(38px,6vw,56px);align-self:flex-start}
+  .scroll-cue::after{height:34px}
+  .work-card ul.facts,.steps{grid-template-columns:1fr}
+  .steps li:nth-child(2n){padding-left:0}
+  .facts>div{grid-template-columns:1fr;gap:2px;padding:15px 0}
+  main>section{padding-top:clamp(58px,9vw,84px)}
+}
+@media (max-width:420px){
+  :root{--gut:18px;--bar:112px}
+  body{font-size:16px;line-height:1.9}
+  .hero .avatar{width:96px;outline-offset:6px}
+  .hero h1{font-size:clamp(32px,10.5vw,44px);letter-spacing:.01em}
+  .motto{font-size:21px;line-height:1.72}
+  .sec-title{gap:4px 12px}
+  .sec-title .eyebrow{letter-spacing:.24em}
+  .sec-title .zh{font-size:25px}
+  .lang-btn{padding:8px 10px;font-size:14px}
+  .lang-menu{min-width:158px}
+  .hero-cta,.btn-live,.btn-repo,.copy-mail{padding:12px 18px;font-size:15px;min-height:44px}
+  /* 7 个图标卡钉死 4 + 3 两行（390px 上靠自然换行会挤成 5+2 或出现横向溢出） */
+  .social{display:grid;grid-template-columns:repeat(4,40px);gap:10px;justify-content:start}
+  .mail{font-size:22px;word-break:break-all}
+  .facts dd,.work-card ul.facts li{font-size:15px}
+  .shot{aspect-ratio:4/3}
+}
+
+/* ── 16 · prefers-reduced-motion：一律不动，静止即最终态 ── */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.001ms!important;animation-iteration-count:1!important;
+    transition-duration:.001ms!important;scroll-behavior:auto!important;
+  }
+  .reveal,.reveal.is-in{opacity:1;translate:none;transition:none}
+  .hero .avatar,.hero .eyebrow,.hero h1,.hero .motto,.hero .hero-sub,.hero-cta,.scroll-cue{animation:none}
+  .scroll-cue::after{animation:none;transform:none;opacity:1}
+  .sec-title::after,.is-in .sec-title::after{animation:none;transform:none}
+  .work-card{transform:none}
+  .social a:hover,.social button:hover{translate:none}
+  .hero-cta:hover,.btn-live:hover,.btn-repo:hover,.copy-mail:hover{translate:none}
+  .mail::after{transition:none;transform:scaleX(1)}
+  .contours path,.is-in .contours path{animation:none;stroke-dasharray:none;stroke-dashoffset:0}
+  .lang-menu{animation:none}
+}

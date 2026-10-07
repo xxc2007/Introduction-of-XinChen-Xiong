@@ -1,0 +1,96 @@
+# xxc2007.me — 域名根放个人介绍站，纪念册迁到 /nc15/
+# 这是**示例配置**（占位符路径），真实生效文件在服务器 /etc/nginx/sites-available/xxc2007.me
+# 迁移步骤与回滚见 docs/migration.md。
+#
+# 三条不能动的约束：
+#   1) /comment/ 是 Artalk 反代，必须留在**域名根**（纪念册的 wall.js 用根绝对路径调它，
+#      跟着搬到 /nc15/comment/ 会让留言墙整块失效）。
+#   2) /geohot/ 是反代到 127.0.0.1:3000 的 Node 服务，前缀与优先级都要保持 ^~。
+#   3) Cloudflare 回源是明文 80，任何 Location 都必须写死 https://$host，
+#      相对跳转会被拼成 http:// 把访客送去明文。
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name xxc2007.me;
+
+    # 证书续签路径不重定向
+    location ^~ /.well-known/acme-challenge/ { root /var/www/certbot; }
+    location / { return 301 https://$host$request_uri; }
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name xxc2007.me;
+
+    ssl_certificate     /etc/letsencrypt/live/xxc2007.me/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/xxc2007.me/privkey.pem;
+
+    # ── 个人介绍站 = 域名根 ──────────────────────────────────────────
+    root /var/www/intro;
+    index index.html;
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+
+    gzip on;
+    gzip_types text/css application/javascript image/svg+xml application/json text/xml application/xml;
+    gzip_min_length 1024;
+
+    # 带 ?v= 指纹的静态资源：长缓存（HTML 里的版本串一变就自然失效）
+    location ~* \.(css|js|woff2?|webp|jpg|jpeg|png|svg|ico|m4a|ogg)$ {
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        try_files $uri =404;
+    }
+    # 字体切片单独放宽（文件名已按内容编号，不会变）
+    location ^~ /assets/fonts/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+    # HTML 不缓存，保证发布即时可见
+    location ~* \.html$ { add_header Cache-Control "no-cache"; }
+
+    # 无扩展名路径 → 目录首页（/ 与 /en/）
+    location / {
+        try_files $uri $uri/ =404;
+        error_page 404 /404.html;
+    }
+    location = /404.html { internal; }
+
+    # ── 纪念册 → /nc15/ ────────────────────────────────────────────
+    location = /nc15 { return 301 https://$host/nc15/; }
+    location ^~ /nc15/ {
+        alias /var/www/nc15/;
+        index index.html;
+        try_files $uri $uri/ =404;
+        # 404 用纪念册自己的页面（它的链接已带 /nc15 前缀）
+        error_page 404 = /nc15/404.html;
+    }
+    location ^~ /nc15/promo/ {
+        alias /var/www/nc15/promo/;
+        index index.html;
+    }
+
+    # ── 邻站：保持原样 ─────────────────────────────────────────────
+    location ^~ /geohot {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+    location ^~ /comment/ {
+        proxy_pass http://127.0.0.1:23366;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
