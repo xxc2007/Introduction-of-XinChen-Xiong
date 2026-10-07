@@ -40,6 +40,10 @@ for (const f of files) {
   lines.forEach((line, i) => {
     // 占位符行（含尖括号形式的占位符）与 .example 模板文件本身就该带占位符，不参与泄露判定
     if (/[^\s"']<[^>]+>/.test(line) || f.endsWith(".example")) return;
+    /* certbot 的标准证书路径不是泄密：那行证书指令指向的是服务器上的证书目录，
+       任何人装完 certbot 都会写下同样的一行，路径本身不含密钥内容。
+       要防的是把访客身份绑进仓库——登录命令带着自己的密钥文件名那种。 */
+    if (/\/etc\/letsencrypt\//.test(line)) return;
     // 本脚本自己写着这些正则，扫自己必然命中
     for (const [re, why] of SECRET_RULES) {
       if (re.test(line) && !/DEPLOY_HOST=<server-ip>/.test(line)) {

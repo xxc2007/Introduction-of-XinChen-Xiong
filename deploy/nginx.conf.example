@@ -1,51 +1,17 @@
 # =============================================================================
-# xxc2007.me · 个人介绍站 · nginx 站点配置示例（按 2026-10-07 线上结构照抄）
-# 目标位置：新服务器 /etc/nginx/sites-available/xxc2007.me，再软链到 sites-enabled
-# 这份只是示例：线上以服务器上的文件为准，改配置先改线上，再回抄这里。
-# 迁移步骤与回滚见 docs/migration.md。
+# 迁移到新服务器时用的站点配置参照（2026-10-07 12:12 与线上逐字节一致的快照）
+# 用法：拷成 /etc/nginx/sites-available/xxc2007.me → 软链进 sites-enabled → nginx -t → reload
+# 需要你自己填的：证书路径（certbot 出来的那份）、GEOHOT 与 Artalk 的端口、以及 webroot 归属。
 #
-# ── 路径归属：一个域名根挂着三个站，动手前先认清哪块是谁的 ──────────────────
-#   介绍站（本仓库，root /var/www/intro）拥有：
-#       /              首页（简体中文）
-#       /en/           英文版
-#       /assets/       css / js / fonts / images / audio
-#       /404.html      介绍站自己的 404（internal，只允许 error_page 内部命中）
-#       /index.html、/robots.txt、/sitemap.xml、/giscus-theme.css
-#   邻站（不在本仓库，它们的前缀和优先级都别碰）：
-#       /nc15/         纪念册，alias /var/www/nc15/，由它自己的仓库独立部署
-#       /geohot        反代 127.0.0.1:3000 的 Node 服务
-#       /comment/      反代 127.0.0.1:23366 的 Artalk 留言服务
+# 归属：介绍站拿 / 、/en/ 、/assets/ 、/404.html 、/favicon.ico ；
+#       /nc15/ 是纪念册（alias /var/www/nc15/），/geohot 反代 :3000，/comment/ 反代 :23366。
+# /comment/ 为什么必须在域名根：纪念册的 wall.js 用根绝对路径请求 Artalk API，
+#   而既有留言的 page_key 是 /guestbook——那是数据库里的键、不是网址，搬走等于把留言墙清空。
 #
-# ── /comment/ 为什么不能跟着纪念册搬进 /nc15/ ───────────────────────────────
-#   1) 纪念册的 assets/wall.js 里写的是 var API = '/comment/api/v2'，根绝对路径，
-#      浏览器拼出来永远是 https://xxc2007.me/comment/api/v2。把反代挪到
-#      /nc15/comment/ 之后，它照旧打域名根，留言墙整块失效。
-#   2) 库里已有的留言按 page_key 存，wall.js 用的是 var PAGE = '/guestbook'。
-#      这个 /guestbook 是 Artalk 的 page_key，不是 URL —— 域名根下并没有这条路径，
-#      所以它不参与「纪念册搬家」，改前改后都必须一字不变，动一下就是让全部老留言失联。
-#   → 结论：/comment/ 与 /geohot 刻意留在域名根，^~ 前缀也必须保持。
-#
-# ── 换新机器要你自己补的东西（示例给不了）──────────────────────────────────
-#   * DNS：xxc2007.me 与 www.xxc2007.me 的 A 记录指向 <server-ip>（Cloudflare 橙云代理）
-#   * 上传：站包传到 <ssh-user>@<server-ip>:/var/www/intro。源站 IP 与登录名都不进仓库，
-#     只从本地 .deploy.env 读；仓库和文档里一律写 <server-ip> / <ssh-user>。
-#   * 证书：先 certbot --nginx -d xxc2007.me -d www.xxc2007.me，才会有下面两个
-#     /etc/letsencrypt/live/xxc2007.me/ 路径
-#   * 两个上游要在新机上装好并带数据过去：Artalk(127.0.0.1:23366)、geohot(127.0.0.1:3000)
-#   * /var/www/nc15 归纪念册仓库，介绍站迁移不产出它；新机缺这个目录 /nc15/ 就是 404
-#
-# ── 四条不能动的约束 ───────────────────────────────────────────────────────
-#   1) /comment/ 的 ^~ 必须保留：否则静态资源正则会截胡 /comment/static/images/*.jpg 头像。
-#   2) 80 端口直接服务内容、不做 http→https 跳转：Cloudflare Flexible 是明文回源，
-#      一跳就重定向循环。访客侧强制 https 请在 Cloudflare 开「Always Use HTTPS」。
-#   3) 所有 Location 写死 https://$host：相对跳转按连接协议拼，会被拼成 http://。
-#   4) add_header 不被子 location 继承（本层一出现 add_header 就不再继承上层），
-#      所以每个自带 add_header 的 location 都得把安全头整套重抄一遍。
-#   另：80 与 443 两块的差异是线上原样（只有 443 发 HSTS；= /geohot 补斜杠那条只写在 80），
-#      照抄即可，不是笔误。
+# 三条实测过的规则：add_header 不被子 location 继承；error_page 404 必须写 =404；
+#   Cloudflare 明文回源所以要 absolute_redirect off，访客侧强制 https 交给 CF 的 Always Use HTTPS。
 # =============================================================================
 
-# ---- www 归一：无论 http/https 一律 301 到裸域 ----
 server {
     listen 80;
     listen [::]:80;
@@ -83,6 +49,11 @@ server {
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
     error_page 404 /404.html;
+    # /index.html 直接访问收口到 /：canonical 与 sitemap 都只写 /，两个 URL 都回 200 就是重复内容。
+    # 用 $request_uri 判原始请求，不能用 location = /index.html { return 301 /; }——
+    # index 模块会把 / 内部重定向到 /index.html，而内部重定向同样重新匹配 location，那样就成了循环。
+    if ($request_uri = /index.html) { return 301 /; }
+    if ($request_uri = /en/index.html) { return 301 /en/; }
 
     # HTML/robots/sitemap 永远回源校验（配 ETag 命中 304）——杜绝浏览器启发式缓存吃掉新版页面/脚本
     location = /index.html {
@@ -132,6 +103,24 @@ server {
     }
 
     # 纪念册迁到 /nc15/：站内绝对路径已带 /nc15 前缀；/comment/ 与 /geohot/ 留在域名根
+
+    # 仓库内部文件类型不对公网开放（曾经 assets/images/README.md 随 assets 一起发布过）。
+    # 这里只影响介绍站：^~ 前缀的 /nc15/、/geohot、/comment/ 优先级比正则高，不会被这条抓到。
+    location ~* \.(md|markdown|sh|conf|bak|example|env)$ {
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        return 404;
+    }
+
+    # 浏览器与各种机器人默认打的是根上的 /favicon.ico，而本站的图标在 assets/images/ 下。
+    location = /favicon.ico {
+        alias /var/www/intro/assets/images/favicon.ico;
+        add_header Cache-Control "public, max-age=86400" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+    if ($request_uri = /nc15/index.html) { return 301 /nc15/; }
     # —— 纪念册迁到 /nc15/ ——
     # 站内绝对路径已带 /nc15 前缀；/comment/（Artalk）与 /geohot/ 刻意留在域名根。
     # 旧路径（域名根时代）用 301 收敛到 /nc15/：内部改写会让同一页面在两个 URL 上都是 200，
@@ -148,7 +137,7 @@ server {
     }
     location = /404.html {
         internal;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control "no-store" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
@@ -187,7 +176,7 @@ server {
     location = /nc15/404.html {
         internal;
         alias /var/www/nc15/404.html;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control "no-store" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
@@ -266,6 +255,11 @@ server {
     add_header Strict-Transport-Security "max-age=31536000" always;
 
     error_page 404 /404.html;
+    # /index.html 直接访问收口到 /：canonical 与 sitemap 都只写 /，两个 URL 都回 200 就是重复内容。
+    # 用 $request_uri 判原始请求，不能用 location = /index.html { return 301 /; }——
+    # index 模块会把 / 内部重定向到 /index.html，而内部重定向同样重新匹配 location，那样就成了循环。
+    if ($request_uri = /index.html) { return 301 /; }
+    if ($request_uri = /en/index.html) { return 301 /en/; }
 
     # HTML/robots/sitemap 永远回源校验（配 ETag 命中 304）——杜绝浏览器启发式缓存吃掉新版页面/脚本
     location = /index.html {
@@ -320,6 +314,26 @@ server {
     }
 
     # 纪念册迁到 /nc15/：站内绝对路径已带 /nc15 前缀；/comment/ 与 /geohot/ 留在域名根
+
+    # 仓库内部文件类型不对公网开放（曾经 assets/images/README.md 随 assets 一起发布过）。
+    # 这里只影响介绍站：^~ 前缀的 /nc15/、/geohot、/comment/ 优先级比正则高，不会被这条抓到。
+    location ~* \.(md|markdown|sh|conf|bak|example|env)$ {
+        add_header Cache-Control "no-store" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+        return 404;
+    }
+
+    # 浏览器与各种机器人默认打的是根上的 /favicon.ico，而本站的图标在 assets/images/ 下。
+    location = /favicon.ico {
+        alias /var/www/intro/assets/images/favicon.ico;
+        add_header Cache-Control "public, max-age=86400" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+    }
+    if ($request_uri = /nc15/index.html) { return 301 /nc15/; }
     # —— 纪念册迁到 /nc15/ ——
     # 站内绝对路径已带 /nc15 前缀；/comment/（Artalk）与 /geohot/ 刻意留在域名根。
     # 旧路径（域名根时代）用 301 收敛到 /nc15/：内部改写会让同一页面在两个 URL 上都是 200，
@@ -337,7 +351,7 @@ server {
     }
     location = /404.html {
         internal;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control "no-store" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         add_header Strict-Transport-Security "max-age=31536000" always;
@@ -381,7 +395,7 @@ server {
     location = /nc15/404.html {
         internal;
         alias /var/www/nc15/404.html;
-        add_header Cache-Control "no-cache" always;
+        add_header Cache-Control "no-store" always;
         add_header X-Content-Type-Options "nosniff" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
         add_header Strict-Transport-Security "max-age=31536000" always;
