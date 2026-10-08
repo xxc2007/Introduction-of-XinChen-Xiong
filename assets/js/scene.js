@@ -29,7 +29,10 @@ const FIELD_W = 12.5, FIELD_H = 7.4;
 const BASE_Z = 6.6, DOLLY_Z = 1.9;
 const TAU = Math.PI * 2;
 
-export function prefersReducedMotion() {
+/* 模块内部用：main.js 总是显式传 opts.reducedMotion，这里的探测只是
+   initField 被直接调用（opts 缺省）时的默认。刻意不 export——
+   全站只有一个读 reduced-motion 的地方，多一个导出口就多一份「谁该负责判断」的歧义。 */
+function prefersReducedMotion() {
   try {
     return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   } catch (e) {

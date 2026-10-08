@@ -5,7 +5,7 @@
 | 资产 | 路径 | 事实 |
 | --- | --- | --- |
 | 头像 | `assets/images/avatar.jpg`（26,762 B，唯一一份；`avatar.webp` 已删，站长要求原图直出） | 300×300，站长本人提供的原图，不转码、不裁切、不加圆框 |
-| Three.js | `assets/vendor/three.module.min.js` | r0.180.0，338,908 B（gzip 79,147 B），MIT，文件头 license 注释保留 |
+| Three.js | `assets/vendor/three.module.min.js` | r0.180.0，338,908 B（gzip 数值不在此抄写：**字节与预算的唯一出处是 `node scripts/check-bytes.mjs` 与 `wc -c assets/vendor/*.js`**），MIT，文件头 license 注释保留 |
 | 衬线字体 | `assets/fonts/noto-serif-sc/wght.css` + `files/`（101 个 woff2 切片） | 与纪念册同一份，按 `unicode-range` 惰性加载 |
 
 引用写法一律**相对路径**（这样站点放在域名根或任何子路径都能跑）：
@@ -58,6 +58,9 @@ import * as THREE from "../vendor/three.module.min.js";
 }
 ```
 配色纪律：文字用赤陶橙**必须** `--terra-ink`；`--terra`/`--terra-deep` 只作填充、描边、装饰。
+但这条有**两条不可协商的下修例外**（比值都由 `tests/quality.test.mjs` 从 CSS 反推核对，别在文档里抄数）：
+1. **凡把底色染上赤陶橙（`background:rgba(217,119,87,.NN)`）的规则，文字一律降到 `--terra-ink-2`**——染色底会吃掉约 0.3–0.6 档对比，`--terra-ink` 在 12% 染色的 cream 上只剩 4.443:1，掉出 AA。命中处：导航当前项、语言 pill 的 hover/展开态、hero CTA / btn-live / btn-repo / copy-mail 的 hover。
+2. **任何赤陶橙文字都不许直接压在 WebGL 粒子场上**——一颗 12% 墨色纸屑落到字下，`--terra-ink` 掉到 3.916、`--terra-ink-2` 也只有 4.495，都够不着 4.5。所以：压在场上的 `hero-sub`、`scroll-cue` 用 `--ink`；`.hero-cta` 自带一张不透光的 `--paper` 底把文字与画布解耦；`.scroll-cue:hover` 因此**改用下划线而不是变色**（`text-decoration` 用 `--terra`，不是把文字染成赤陶橙）。
 分层只靠 `1px solid var(--line)` 发丝线，**不用 box-shadow、不用渐变、不用圆角大于 2px**。
 
 ### §1 之后新增的两个令牌，与一条圆角例外（2026-10-08 补记）
@@ -66,7 +69,7 @@ import * as THREE from "../vendor/three.module.min.js";
 
 | 令牌 | 值 | 为什么必须有 |
 |---|---|---|
-| `--terra-ink-2` | `#9A4226` | 赤陶橙文字**落在被赤陶橙染过的底上**时（导航当前项、语言 pill 的 hover/展开态、hero CTA hover），`--terra-ink` 只剩 4.437:1，14px 的字不够 AA。这一档实测 5.682:1。 |
+| `--terra-ink-2` | `#9A4226` | 赤陶橙文字**落在被赤陶橙染过的底上**时（导航当前项、语言 pill 的 hover/展开态、hero CTA hover），`--terra-ink` 只剩 4.443:1，14px 的字不够 AA。这一档实测 5.682:1。**具体比值一律以 `tests/quality.test.mjs` 为准，本表只说明为什么需要这一档。** |
 | `--line-strong` | `#DCD5C6` | 悬停时重一档的发丝线。它此前是一个直接写在 `.work-card:hover` 里的裸十六进制——等于偷偷存在第二种"线"的颜色。 |
 
 **圆角的唯一例外是 `border-radius:50%`**，只出现在 WebGL 失败时 hero 的那两圈同心发丝环上。
@@ -96,7 +99,8 @@ body
  footer.foot             ：p.foot-sign（署名行）+ p.foot-meta（年份 · MIT · 返回顶部 a#top）
 ```
 
-**数量断言（parity 脚本会钉死）**：`h2.sec-title` = 5、 = 5、 = 5；`section` = 6；`nav a` = 5；
+**数量断言（`check-parity.mjs` 会钉死，中英两页相等且都非零）**：章节标题的真实结构是 `.sec-head` 里放 `.sec-index`（眉标串）+ `<h2>`（标题本体），**没有 `.sec-title` 这个类**——它只活在 `404.html` 自带的 `<style>` 里，两页正文一处都不用它。
+`.sec-head` = 5、`.sec-index` = 5、`.sec-rule` = 5、`<h2>` = 5；`section` = 6；`nav a` = 5；
 `.work-card` = 2；`.social li` = 7；`<img>` = 3（avatar + shot-nc15 + shot-geohot）；
 `blockquote` = 3；`dl.facts div` = 4；`ol.steps li` = 4。
 

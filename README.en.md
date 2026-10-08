@@ -13,7 +13,7 @@
 [![3D](https://img.shields.io/badge/Hero-Self--hosted_Three.js-blueviolet)](#1--field)
 [![Build](https://img.shields.io/badge/Build-No_step-1F1E1D)](#iv--run-locally)
 [![Languages](https://img.shields.io/badge/Languages-English_·_中文-D97757)](#2--pages)
-[![External requests](https://img.shields.io/badge/External_CDN_requests-0-1F1E1D)](#3--state)
+[![External refs](https://img.shields.io/badge/Repo_external_refs-0-1F1E1D)](#3--state)
 [![Douyin](https://img.shields.io/badge/Douyin-抖音-1F1E1D)](https://www.douyin.com/user/MS4wLjABAAAA-AYW1RCpFjwJmoMTnZy1vKmOQopmBOUjPLN9phlDpjI)
 [![Xiaohongshu](https://img.shields.io/badge/Xiaohongshu-小红书-D97757)](https://www.xiaohongshu.com/user/profile/63bac6500000000026006c47)
 [![Bilibili](https://img.shields.io/badge/Bilibili-哔哩哔哩-1F1E1D)](https://space.bilibili.com/31961476)
@@ -28,7 +28,7 @@
 
 This is the personal introduction site of Xiong Xinchen (熊鑫晨): **two complete static pages** (Chinese and English), **five sections**, **two sites that are already live**, and one page of public contact details. The confetti field behind the hero is decoration, not content — its only input is how fast you scroll; without WebGL it falls back to two hairline rings and no text is lost.
 
-Pure HTML / CSS / vanilla JS with structure, style and behavior separated (`index.html` + `assets/`), zero frameworks and **no build step**. Three.js and the serif font are self-hosted; neither page issues **a single external request**. Clone it, run `node tools/serve.mjs`, open it.
+Pure HTML / CSS / vanilla JS with structure, style and behavior separated (`index.html` + `assets/`), zero frameworks and **no build step**. Three.js and the serif font are self-hosted; **the two pages in the repository reference no external resource at all** (the live edge is a different story — see the note under "3 · STATE"). Clone it, run `node tools/serve.mjs`, open it.
 
 [Live site](https://xxc2007.me/) · [I Highlights](#i--highlights) · [II Site map](#ii--site-map) · [III Stack](#iii--stack) · [IV Run locally](#iv--run-locally) · [V Deploy and sync](#v--deploy-and-sync) · [VI Content rules](#vi--content-rules) · [VII License](#vii--license) · [VIII Star history](#viii--star-history) · [Design notes](docs/design.md) · [Migration guide](docs/migration.md) · [Content sources](docs/content-sources.md)
 
@@ -130,14 +130,16 @@ The full effect → byte cost → fallback inventory lives in [docs/design.md](d
 | Images (avatar + two project shots) | **85.8 KB** (`87,886` B) against an 87.9 KB limit → `BUDGET OK` | `wc -c assets/images/avatar.jpg assets/images/shot-nc15.webp assets/images/shot-geohot.webp` (`avatar.jpg` 26,762 + `shot-nc15.webp` 28,624 + `shot-geohot.webp` 32,500) |
 | First-paint transfer | **1,493.6 KB ≈ 1.46 MB** over **27** requests: text gzip **251.2 KB** + the **17** woff2 slices actually fetched **1,214.1 KB** + images **28.3 KB** | One local Chrome headless run recording the full CDP `Network` event stream; text counted with `zlib.gzipSync`, woff2 and images at their raw bytes (the same run that produced the three figures in the figure log) |
 | Social/share assets, not in the first paint | **78.7 KB** (`80,541` B) against a 195.3 KB limit | `wc -c assets/images/banner.svg assets/images/og-card.svg assets/images/og-card.png assets/images/favicon.ico assets/images/favicon-32.png` |
-| External CDN requests | **0** | `grep -c 'src="https://' index.html en/index.html` → `0` on both pages; `grep -oE 'https?://[a-z0-9.-]+' index.html \| sort -u` only lists the canonical host, `schema.org` inside JSON-LD and outbound link targets — nothing the browser requests |
+| Repo external resource refs | **0** | `grep -c 'src="https://' index.html en/index.html` → `0` on both pages; `grep -oE 'https?://[a-z0-9.-]+' index.html \| sort -u` only lists the canonical host, `schema.org` inside JSON-LD and outbound link targets — nothing the browser requests. **This counts the repository source; the live edge injects more, see the "external requests" note below** |
 | Build steps | **0** (no manifest in the repository) | `git ls-files '*.json' \| wc -l` → `0` |
 | Repository size | **7.93 MiB** working tree (excluding `.git/`) · `.git` **6.91 MiB** | `du -sb --exclude=.git .` = `8,314,693` · `du -sb .git` = `7,249,147` |
 | Domain root | Target `/` = this site; **switched**: `/` = this site, `/nc15/` = the memorial | Repository record: `bash scripts/switch-routes.sh` ran at 2026-10-07 09:44:51 (+0800). Re-measured at 10:30 with `curl -o /dev/null -w '%{http_code}'`: `/` 200, `/en/` 200, `/nc15/` 200, `/geohot/` 200, `/comment/` 302 (Artalk redirects to its own `/comment/sidebar/`) |
 
 <!-- Checked: every number above recomputed locally 2026-10-07 10:25–10:36 (+0800); the production status codes are from the 10:30 curl run. -->
 
-These bytes and counts move with the build: this table is one snapshot taken **2026-10-07 10:25–10:36 (+0800)**, and whoever changes the code reruns it.
+These bytes and counts move with the build: this table is one snapshot taken **2026-10-07 10:25–10:36 (+0800)**, and whoever changes the code reruns it. The **single source of truth for the budget numbers is `node scripts/check-bytes.mjs`**; this table is only a snapshot, so change the thresholds in the script, not here.
+
+> **The boundary of "zero external requests" (not optional)**: the cell above counts **the two pages in the repository** — `index.html` / `en/index.html` carry no third-party `src`/`link`, and Three.js and the serif font are all self-hosted. But the site runs behind Cloudflare, and **the edge injects things that are not in this source**: a public-internet `curl` of the homepage on 2026-10-08 returned `https://static.cloudflareinsights.com/beacon.min.js` (Cloudflare Web Analytics — visitor-side tracking) and `/cdn-cgi/scripts/*/email-decode.min.js` (email obfuscation). Neither is referenced by this repository nor controlled by it — **"no external requests / no tracking" is true of the repository, not of the live site.** Reaching true zero on the live site means turning Web Analytics and Email Obfuscation off at Cloudflare, which is edge configuration outside this repo.
 
 Academic and study-related content does not enter this site, nor this README — the boundary is in [VI · Content rules](#vi--content-rules).
 
@@ -150,7 +152,7 @@ Introduction-of-XinChen-Xiong/
 ├── 404.html                # Zero-script 404: shares the external stylesheet and font, plus one inline block covering only this page's two classes; four live entry points listed
 ├── assets/
 │   ├── css/style.css       # Tokens, components, 6 @media blocks (4 breakpoints + no-script + reduced motion)
-│   ├── js/main.js          # Reveal, progress, scrollspy, language menu, scroll-velocity energy for the confetti field, copy-mail, cursor dot — one shared rAF chain
+│   ├── js/main.js          # Reveal, progress, scrollspy, language menu, scroll-velocity energy for the confetti field, copy-mail, magnetic buttons and card tilt — one shared rAF chain
 │   ├── js/scene.js         # Three.js confetti field, exports initField(canvas) and hands uEnergy to main.js; throws so main.js can cover for it
 │   ├── vendor/             # Two self-hosted Three.js files, no CDN, license header intact
 │   ├── fonts/noto-serif-sc/# Self-hosted variable serif: wght.css (101 @font-face) + 101 slices fetched by unicode-range
@@ -225,7 +227,7 @@ bash scripts/deploy.sh "revised the hero motto"
 ```
 
 1. **Quality gates** — `check-parity.mjs` (zh/en alignment), `check-links.mjs` (link reachability plus the host-information red line), `check-bytes.mjs` (byte budgets), then `bash -n` on every `scripts/*.sh` and `node --check` on every `tools/*.mjs`. Nothing is committed if a gate fails.
-2. **Commit and push to GitHub** — `git add -A` plus a commit (a message without a conventional prefix is automatically prefixed with `update:`), then `git push` retried three times.
+2. **Commit and push to GitHub** — when the tree is dirty the script does **not** run `git add -A`; it runs `git add -u` plus an explicit per-path allow-list (`index.html en 404.html robots.txt sitemap.xml assets docs deploy scripts tools LICENSE README.md README.en.md .gitignore .gitattributes`). Anything untracked outside that list is reported but never committed. The reason: `git add -A` once swept a verification agent's leftover `wall2.json` in the repo root straight into the public repository — transient artifacts stay out of the tree instead of riding along on a commit. A message without a conventional prefix is automatically prefixed with `update:`, then `git push` is retried three times.
 3. **Ship to the server** — `git archive --format=tar HEAD` sends only `index.html en 404.html robots.txt sitemap.xml assets` as **repository blob bytes** into `~/deploy-intro`; each item is removed and recopied into `DEPLOY_ROOT`, then `chown -R www-data:www-data`. Blob bytes rather than working-tree bytes is what keeps line-ending differences out of the verification.
 4. **Four-way byte verification** — `bash scripts/verify-sync.sh`.
 5. **Reachability** — from the server itself, each prefix is curled over the loopback address with a `Host` header and the status codes are printed.

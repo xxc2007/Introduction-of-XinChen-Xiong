@@ -63,6 +63,10 @@ checkOverflow();
   });
 })();
 
+/* 场强基准：必须先声明再用——bootField 里那句 initField({energy: FIELD_BASE})
+   靠 await import() 的延迟侥幸躲过了暂时性死区，但读代码的人不该靠运气。 */
+const FIELD_BASE = .34;
+
 /* ---------- 首屏粒子场：失败只降级，不影响本文件其余部分 ---------- */
 /* 资源指纹跟着 HTML 里 main.js 的 ?v= 走：import.meta.url 就是本文件被取回时的地址。 */
 const VER = (import.meta.url.match(/[?&]v=([0-9a-z]{4,8})/) || [])[1] || 'dev';
@@ -89,7 +93,6 @@ let scene = null;
 
 
 /* ---------- 场强跟随滚动：滑得越快纸屑越活跃，停下后回落到基准 ---------- */
-const FIELD_BASE = .34;
 (function fieldDrive() {
   if (RM) return;                    /* 减弱动效：既不绑滚动，也不该被驱动——见 scene.js 的 setEnergy */
   let cur = FIELD_BASE, target = FIELD_BASE, idle = 0;

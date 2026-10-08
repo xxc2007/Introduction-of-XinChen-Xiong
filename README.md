@@ -13,7 +13,7 @@
 [![三维](https://img.shields.io/badge/首屏-Three.js_自托管-blueviolet)](#其一--field-首屏粒子场)
 [![构建](https://img.shields.io/badge/构建-零步骤-1F1E1D)](#肆--local-本地运行)
 [![双语](https://img.shields.io/badge/语言-中文_·_English-D97757)](#其二--pages-中英两页)
-[![外部请求](https://img.shields.io/badge/外部_CDN_请求-0-1F1E1D)](#其三--state-现状与边界)
+[![外部引用](https://img.shields.io/badge/仓库内_外部引用-0-1F1E1D)](#其三--state-现状与边界)
 [![抖音](https://img.shields.io/badge/抖音-Douyin-1F1E1D)](https://www.douyin.com/user/MS4wLjABAAAA-AYW1RCpFjwJmoMTnZy1vKmOQopmBOUjPLN9phlDpjI)
 [![小红书](https://img.shields.io/badge/小红书-Xiaohongshu-D97757)](https://www.xiaohongshu.com/user/profile/63bac6500000000026006c47)
 [![哔哩哔哩](https://img.shields.io/badge/哔哩哔哩-Bilibili-1F1E1D)](https://space.bilibili.com/31961476)
@@ -28,7 +28,7 @@
 
 这是熊鑫晨的个人介绍站：**中英两页完整静态文件**、**五个章节**、**两个已经上线的网站**、一页公开的联系方式。首屏那片纸屑粒子场是装饰，不是内容——它只跟着你滚动的快慢改变活跃度，拿不到 WebGL 时退成两圈发丝线，文字一块不少。
 
-纯 HTML / CSS / Vanilla JS，结构·样式·行为三分离（`index.html` + `assets/`），零框架、**没有构建步骤**；Three.js 与衬线字体全部自托管，两页**不发一个外部请求**。克隆下来，`node tools/serve.mjs` 起个静态服务器就能打开。
+纯 HTML / CSS / Vanilla JS，结构·样式·行为三分离（`index.html` + `assets/`），零框架、**没有构建步骤**；Three.js 与衬线字体全部自托管，**仓库里的两页不引用任何外部资源**（线上边缘节点另说，见「其三」那张表下面的注）。克隆下来，`node tools/serve.mjs` 起个静态服务器就能打开。
 
 [在线访问](https://xxc2007.me/) · [壹 特色](#壹--highlights-特色) · [贰 站点结构](#贰--site-map-站点结构) · [叁 技术栈](#叁--stack-技术栈) · [肆 本地运行](#肆--local-本地运行) · [伍 部署与同步](#伍--deploy-部署与同步) · [陆 内容标准](#陆--content-内容标准) · [柒 授权](#柒--license-授权) · [捌 星际历史](#捌--star-history-星际历史) · [设计笔记](docs/design.md) · [迁移手册](docs/migration.md) · [内容出处](docs/content-sources.md)
 
@@ -129,14 +129,17 @@
 | 图片（头像 + 两张作品截图） | **85.8 KB**（`87,886` B）/ 上限 87.9 KB → `BUDGET OK` | `wc -c assets/images/avatar.jpg assets/images/shot-nc15.webp assets/images/shot-geohot.webp`（`avatar.jpg` 26,762 + `shot-nc15.webp` 28,624 + `shot-geohot.webp` 32,500） |
 | 首屏总传输量 | **1,493.6 KB ≈ 1.46 MB**，**27** 个请求：文本 gzip **251.2 KB** + 首屏真正拉到的 **17** 片 woff2 **1,214.1 KB** + 图片 **28.3 KB** | 本机 Chrome headless 起一趟 CDP `Network` 事件流记全请求，文本按 `zlib.gzipSync`、woff2 与图片按原字节累加（与「图录」里那三张截图同一趟） |
 | 不进首屏的分享素材 | **78.7 KB**（`80,541` B）/ 上限 195.3 KB | `wc -c assets/images/banner.svg assets/images/og-card.svg assets/images/og-card.png assets/images/favicon.ico assets/images/favicon-32.png` |
-| 外部 CDN 请求 | **0** | `grep -c 'src="https://' index.html en/index.html` → 两页都是 `0`；`grep -oE 'https?://[a-z0-9.-]+' index.html \| sort -u` 里只有 canonical、JSON-LD 的 `schema.org` 与外链目标，没有一样是可请求资源 |
+| 仓库内外部资源引用 | **0** | `grep -c 'src="https://' index.html en/index.html` → 两页都是 `0`；`grep -oE 'https?://[a-z0-9.-]+' index.html \| sort -u` 里只有 canonical、JSON-LD 的 `schema.org` 与外链目标，没有一样是可请求资源。**这条数的是仓库源码；线上边缘会另注入，见下方「外部请求」边界注** |
 | 构建步骤 | **0**（仓库里没有构建清单） | `git ls-files '*.json' \| wc -l` → `0` |
 | 仓库体积 | 工作区 **7.93 MiB**（不含 `.git/`）· `.git` **6.91 MiB** | `du -sb --exclude=.git .` = `8,314,693` · `du -sb .git` = `7,249,147` |
 | 域名根归属 | 目标 `/` = 本站；**已切换**：`/` = 本站、`/nc15/` = 纪念册 | 仓库记录 `bash scripts/switch-routes.sh` 于 2026-10-07 09:44:51 (+0800) 执行；本次 10:30 复测 `curl -o /dev/null -w '%{http_code}'`：`/` 200、`/en/` 200、`/nc15/` 200、`/geohot/` 200、`/comment/` 302（Artalk 自己跳到 `/comment/sidebar/`） |
 
 <!-- 已核对：2026-10-07 10:25–10:36 (+0800) 本机重算全部数字；线上状态码是 10:30 那趟 curl 的实测。 -->
 
-字节与文件数会随构建变动：这张表是 **2026-10-07 10:25–10:36 (+0800)** 的一次快照，改代码的那位改完就得重跑一遍。
+字节与文件数会随构建变动：这张表是 **2026-10-07 10:25–10:36 (+0800)** 的一次快照，改代码的那位改完就得重跑一遍。预算类数字的**唯一出处是 `node scripts/check-bytes.mjs`**，本表只作快照，改阈值请改脚本而不是改这里。
+
+> **「外部请求 0」的边界（不可省略）**：上面那格数的是**仓库里的两页源码**——`index.html` / `en/index.html` 不写任何第三方 `src`/`link`，Three.js 与衬线字体全部自托管。但站点跑在 Cloudflare 之后，**边缘节点会往响应里注入本站源码之外的东西**：2026-10-08 从公网 `curl` 首页，返回体里带着 `https://static.cloudflareinsights.com/beacon.min.js`（Cloudflare Web Analytics 的取数脚本，属访客侧埋点）和 `/cdn-cgi/scripts/*/email-decode.min.js`（邮箱混淆）。这两样都不由本仓库引用、也不受本仓库控制——**「零外部请求 / 无埋点」只对仓库成立，对线上不成立**。要真正做到线上零第三方，得在 Cloudflare 侧关掉 Web Analytics 与 Email Obfuscation，那是边缘配置，不在这个仓库里。
+
 
 科研与学业细节不进这个站，也不进这份 README——边界写在 [陆 · 内容标准](#陆--content-内容标准)。
 
@@ -149,7 +152,7 @@ Introduction-of-XinChen-Xiong/
 ├── 404.html                # 零脚本 404：共用外链样式与字体，另有一段只服务本页两个类的内联兜底；四个已上线地址列成一排入口
 ├── assets/
 │   ├── css/style.css       # 全站样式：设计令牌 + 组件 + 6 条 @media（4 档断点 + 无脚本 + 减弱动效）
-│   ├── js/main.js          # 主交互：揭示/进度/scrollspy/语言菜单/纸屑场随滚动速度取能/复制邮箱/光标墨点，全站共用一条 rAF 链
+│   ├── js/main.js          # 主交互：揭示/进度/scrollspy/语言菜单/纸屑场随滚动速度取能/复制邮箱/磁吸与卡片倾斜，全站共用一条 rAF 链
 │   ├── js/scene.js         # Three.js 纸屑场（导出 initField(canvas)，把 uEnergy 交给 main.js），建不出来就抛错让 main.js 兜底
 │   ├── vendor/             # 自托管 Three.js 两个文件，零 CDN，文件头 license 注释保留
 │   ├── fonts/noto-serif-sc/# 自托管可变衬线：wght.css（101 条 @font-face）+ files/ 101 片，按 unicode-range 惰性拉
@@ -226,7 +229,7 @@ bash scripts/deploy.sh "改了首屏那行 motto"
 ```
 
 1. **质量闸门**——`check-parity.mjs`（中英对齐）、`check-links.mjs`（链接可达 + 主机信息红线）、`check-bytes.mjs`（字节预算），再对 `scripts/*.sh` 做 `bash -n`、对 `tools/*.mjs` 做 `node --check`。跑不过就不提交。
-2. **提交并推 GitHub**——工作区有改动就 `git add -A` 提交（说明没有 conventional 前缀时自动补 `update:`），`git push` 重试 3 次。
+2. **提交并推 GitHub**——工作区有改动时**不用 `git add -A`**，而是 `git add -u` 加上按目录白名单逐项 `git add`（`index.html en 404.html robots.txt sitemap.xml assets docs deploy scripts tools LICENSE README.md README.en.md .gitignore .gitattributes`）；任何落在这份清单之外的未跟踪文件会被列出来提醒、但不提交。之所以这么写：`git add -A` 曾把一个核查代理落在仓库根的临时产物 `wall2.json` 连着推进了公开仓库——临时产物就该留在仓库外，不靠"顺手一起提交"进主干。说明没有 conventional 前缀时自动补 `update:`，`git push` 重试 3 次。
 3. **上服务器**——`git archive --format=tar HEAD` 只把 `index.html en 404.html robots.txt sitemap.xml assets` 六项按 **仓库 blob 字节**打到 `~/deploy-intro`，逐项 `rm -rf` + `cp -r` 进 `DEPLOY_ROOT`，最后 `chown -R www-data:www-data`。走 blob 而不是工作区，是为了让 CRLF 之类的工作区差异不可能混进核验。
 4. **四方逐字节核验**——`bash scripts/verify-sync.sh`。
 5. **线上可达性**——从服务器本机带 `Host` 头请求回环地址，逐个前缀回状态码。

@@ -417,6 +417,18 @@ test("英文页的缩写用印刷体撇号（’），不用直撇号（'）", (
   assert.ok(curly.length >= 3, `只找到 ${curly.length} 处印刷体撇号，正则或页面大概脱节了`);
 });
 
+test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
+  /* prefersReducedMotion 曾经挂着 export 却没人 import：main.js 自己算 RM 再传进来。
+     两个模块各自读同一个媒体查询、还各留一个导出口，就会有「谁负责判断 reduced」的歧义。
+     main.js 走的是 await import("./scene.js?v=…")，没有静态 import 语句可解析，
+     所以这里判的是「导出名在 main.js 里有没有出现过」——两个文件的规模撑得起这个近似。 */
+  const exports = [...SCENE.matchAll(/export\s+(?:function|const|let|class)\s+([\w$]+)/g)].map(m => m[1]);
+  assert.ok(exports.length >= 1, "没解析出 scene.js 的 export，正则脱节了");
+  assert.ok(exports.includes("initField"), "scene.js 不再导出 initField？main.js 会静默退回静态底纹");
+  const dead = exports.filter(e => !new RegExp(`\\b${e}\\b`).test(MAIN));
+  assert.deepEqual(dead, [], `scene.js 导出了但 main.js 从没用过：${dead.join(", ")}`);
+});
+
 test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 会加上去）", () => {
   /* .sr-only 定义了却没有任何元素用它；.lang-menu 的 [aria-selected] 那一半也是死的——
      菜单只写 aria-current（main.js:233/344），从没写过 aria-selected。
