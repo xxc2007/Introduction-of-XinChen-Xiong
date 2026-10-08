@@ -323,10 +323,17 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   if (wrap.insertAdjacentElement) wrap.insertAdjacentElement('afterend', hint);
   else document.body.appendChild(hint);
   requestAnimationFrame(() => {
+    /* 纵向基准取整条 topbar 的下沿，不取语言按钮的下沿。
+       按钮在顶栏第一行，而 ≤768px 时导航折到第二行（order:3 / flex:1 1 100%），
+       按按钮定位就会把这块 fixed 横幅直接压在导航第一行上——
+       链接的 computed 仍是 visibility:visible、opacity:1，肉眼却完全看不见它们
+       （实测横幅 y 56-94 正盖住导航第一行 y 58-106）。
+       横幅只在「访客上次换过语言」时才出现，所以常规巡检路径碰不到它。 */
+    const bar = (wrap.closest('.topbar') || wrap).getBoundingClientRect();
     const r = btn.getBoundingClientRect();
     const w = hint.offsetWidth || 240;
     hint.style.left = clamp(r.left + w > window.innerWidth - 8 ? window.innerWidth - w - 8 : r.left, 8, window.innerWidth - w - 8) + 'px';
-    hint.style.top = (r.bottom + 6) + 'px';
+    hint.style.top = (bar.bottom + 6) + 'px';
     hint.style.bottom = 'auto';
   });
 })();

@@ -122,7 +122,7 @@ The full effect → byte cost → fallback inventory lives in [docs/design.md](d
 | Sections | **5** (`.sec-head h2`), **6** `<section>` elements | `node scripts/check-parity.mjs` prints `h2=5 section=6` |
 | Live projects | **2**: the memorial at `/nc15/`, GEOHOT at `/geohot/` | Both entry points are on the page; routing table in [II](#ii--site-map) |
 | Contact entry points | **7** (site / GitHub / Douyin / Xiaohongshu / Bilibili / X / YouTube) | Same command, `social li=7` |
-| HTML size | **20.1 KB / 20.6 KB** (`20,621` / `21,115` bytes) | `wc -c index.html en/index.html` |
+| HTML size | **20.1 KB / 20.6 KB** (`20,621` / `21,111` bytes) | `wc -c index.html en/index.html` |
 | Site CSS | **36.8 KB** (`37,658` bytes) · gzip **14.1 KB** | `wc -c assets/css/style.css` · `node -e` with `zlib.gzipSync` |
 | Hero JS | gzip **189.3 KB** against a 195.3 KB budget | `node scripts/check-bytes.mjs` (own JS gzip + `assets/vendor/` gzip) |
 | Self-hosted Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B; `three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c assets/vendor/*.js` · `node -e` with `zlib.gzipSync` |

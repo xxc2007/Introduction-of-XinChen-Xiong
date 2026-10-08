@@ -483,13 +483,24 @@ test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 
   assert.deepEqual(dead, [], `这些类在任何样式表里定义了，却没有任何元素使用：${dead.join(", ")}`);
 });
 
-test("英文页的缩写用印刷体撇号（’），不用直撇号（'）", () => {
-  /* 中文页全角标点本来就是对的；英文页早先混着直撇号（haven't / I'm / site's），
-     与整站的排版取向不一致。这条只盯英文页，不碰属性分隔用的引号。 */
-  const straight = [...HTML_EN.matchAll(/[A-Za-z]'[A-Za-z]/g)].map(m => m[0]);
-  assert.deepEqual(straight, [], `英文页还有 ${straight.length} 处直撇号：${straight.join(", ")}`);
+test("衬线斜体的 motto 里不许用印刷体撇号（实测会豁出 16.7px 的空洞）", () => {
+  /* 上一轮我把英文页的直撇号统一改成印刷体 ’，理由是「英文排版惯例」。
+     真机量下来这条理由是错的：motto 走 Noto Serif SC Variable 的斜体，
+     该字体的 U+2019 前后进距极大——measureText("haven't")=73.8px，
+     measureText("haven’t")=90.5px，一个字符多出 16.7px（字号才 21px），
+     渲染出来 "haven’ t" 中间像被塞了个空格。
+     同一枚字符在 .hero-sub 的系统无衬线里 delta = 0，完全无害。
+     所以规则不是「英文该用哪种撇号」，而是「这个字体这一档撑不撑得住」：
+     衬线斜体那一处退回直撇号，其余保留印刷体。 */
+  const motto = (html) => (html.match(/<p class="motto">([\s\S]*?)<\/p>/) || [])[1] || "";
+  const zh = motto(HTML_ZH), en = motto(HTML_EN);
+  assert.ok(zh.length > 0 && en.length > 0, "没抓到两页的 .motto，正则脱节了");
+  assert.ok(!/’|&#8217;|&rsquo;/i.test(en),
+    `英文 motto 里出现了印刷体撇号，会在斜体衬线中豁出约 16.7px 的空洞：${en}`);
+  assert.ok(/haven't/.test(en), `英文 motto 的缩写撇号应当是直撇号：${en}`);
+  // 其余英文正文仍用印刷体（那里字体正常），这条别整个退回去
   const curly = [...HTML_EN.matchAll(/[A-Za-z]’[A-Za-z]/g)].map(m => m[0]);
-  assert.ok(curly.length >= 3, `只找到 ${curly.length} 处印刷体撇号，正则或页面大概脱节了`);
+  assert.ok(curly.length >= 2, `英文页只剩 ${curly.length} 处印刷体撇号，改动可能被整体回退了`);
 });
 
 test("不挂脚本的页面必须带 html.no-js，否则 .reveal 会永久隐形", () => {

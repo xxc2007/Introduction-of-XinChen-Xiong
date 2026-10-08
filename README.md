@@ -121,7 +121,7 @@
 | 章节 | **5** 节（ABOUT / WORKS / HOW / BELIEFS / CONTACT），`<section>` **6** 个 | `node scripts/check-parity.mjs` 打印的 `h2=5 section=6` |
 | 已上线作品 | **2** 个：纪念册 `/nc15/`、GEOHOT `/geohot/` | 两个地址都在页面上有入口；路由见 [贰](#贰--site-map-站点结构) |
 | 社媒入口 | **7** 个（个人站 / GitHub / 抖音 / 小红书 / B站 / X / YouTube） | 同一命令的 `social li=7` |
-| 中英两页字节 | **20.1 KB / 20.6 KB**（`20,621` / `21,115` B） | `wc -c index.html en/index.html` |
+| 中英两页字节 | **20.1 KB / 20.6 KB**（`20,621` / `21,111` B） | `wc -c index.html en/index.html` |
 | 全站 CSS | **36.8 KB**（`37,658` B）· gzip **14.1 KB** | `wc -c assets/css/style.css` · `node -e` 里 `zlib.gzipSync` |
 | 首屏 JS（含 Three.js） | gzip **189.3 KB** / 上限 195.3 KB | `node scripts/check-bytes.mjs`（自有 JS gzip + `assets/vendor/` gzip） |
 | 自托管 Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B；`three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c assets/vendor/*.js` · `node -e` 里 `zlib.gzipSync` |
