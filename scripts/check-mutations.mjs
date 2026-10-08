@@ -15,6 +15,12 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CSS = "assets/css/style.css", ZH = "index.html", EN = "en/index.html";
 
 /* 每条：注入点 from（必须唯一命中）→ 替换成 to → 期望哪条断言报错。 */
+/* 这个脚本自带「攻击载荷」，而 check-links.mjs 会扫 scripts/*.mjs 的每一行——
+   于是它扫到自己写的假 IP 和假私钥名，报成泄密。和 check-links 自己一样，
+   把触发串拆成两段拼接：运行时的值仍然是完整的，源码里不含完整触发串。
+   拼接后的字面量必须仍然是「四段里少一段」的形状，否则这次拼接本身就绕过了红线规则。 */
+const FAKE_IP = "203.0.113." + "19";          // TEST-NET-3 文档地址段，不指向任何机器
+const FAKE_KEY = "aws-key." + "pem";
 const MUTS = [
   { name: "JS 不再写 --mx，CSS 里成了孤儿变量", file: "assets/js/main.js",
     from: `setProperty('--mx'`, to: `setProperty('--qx'`,
@@ -69,10 +75,15 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "reduced-motion 后面又追加普通规则（反压）", file: CSS, append: true,
     from: "", to: `\n.late-rule{color:var(--ink);animation:bogus 2s}\n`,
     expect: /盖掉它/ },
+  { name: "新增一条没人使用的 CSS 规则（死规则）", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`,
+    to: `.unused-orphan{color:var(--ink);border:1px solid var(--line)}\n`,
+    expect: /没有任何元素使用/ },
   { name: "写在块之前的普通规则不该误报", file: CSS,
     from: `@media (prefers-reduced-motion:reduce)`, insert: true,
-    to: `.early-rule{color:var(--ink);animation:bogus 2s}\n`,
+    to: `.skip{color:var(--ink);animation:bogus 2s}\n`,
     expect: null },   // 期望：仍然绿——块前的普通规则不该报警
+                      // 复用 .skip 而不是新造一个类名：新造的类没人挂，会先被「死规则」那条打掉
   { name: "404 页用相对路径", file: "404.html", from: `href="/`, to: `href="./`,
     expect: /相对路径/ },
   { name: "img 声明尺寸与真实不符", file: ZH,
@@ -91,13 +102,13 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   /* ── check-links 那道关：上一轮攻门测出「行里有尖括号就整行免检」，
       HTML 因此有 71/222 行根本没被扫过。下面四条就是那个洞的正反对照。 */
   { name: "正文里写死一个可路由 IP", file: ZH, gate: "links",
-    from: `写信找我就可以`, to: `写信找我就可以（服务器 203.0.113.19）`,
+    from: `写信找我就可以`, to: `写信找我就可以（服务器 ${FAKE_IP}）`,
     expect: /疑似源站公网 IP/ },
   { name: "把 IP 藏进带尖括号的那一行", file: ZH, gate: "links",
-    from: `class="hero" id="top"`, to: `class="hero" id="top" data-node="203.0.113.19"`,
+    from: `class="hero" id="top"`, to: `class="hero" id="top" data-node="${FAKE_IP}"`,
     expect: /疑似源站公网 IP/ },
   { name: "私钥文件名写进页面", file: ZH, gate: "links",
-    from: `class="hero" id="top"`, to: `class="hero" id="top" data-key="aws-key.pem"`,
+    from: `class="hero" id="top"`, to: `class="hero" id="top" data-key="${FAKE_KEY}"`,
     expect: /私钥文件名/ },
   { name: "正文出现科研表述", file: ZH, gate: "links",
     from: `写信找我就可以`, to: `写信找我就可以，目前在做青藏高原气候变化研究的文献综述`,

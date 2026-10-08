@@ -73,15 +73,10 @@ h1,h2,h3{text-wrap:balance}
 ::selection{background:rgba(217,119,87,.28);color:var(--ink)}
 
 /* ── 02 · 排版尺度（衬线做标题、无衬线做标签） ── */
-.sr-only{
-  position:absolute;width:1px;height:1px;padding:0;margin:-1px;
-  overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;
-}
-.eyebrow{
-  font-family:var(--sans);font-size:14px;font-weight:600;
-  letter-spacing:.3em;text-transform:uppercase;
-  color:var(--muted);
-}
+/* 早先这里有 .sr-only 与 .eyebrow 两条：.sr-only 没有任何元素挂过它
+   （.social a span 用的是同一套手法，但那条规则自己写了声明），
+   .eyebrow 只被 404 页的老标题用过，那页现在走 .sec-index。
+   两条都是定义了却没人用的死规则，删掉；tests/quality.test.mjs 会盯住不再长回来。 */
 /* --muted 只允许出现在 ≥14px 的辅助文字上。
    对 cream 实测 **4.652:1**（旧注释写的 5.0:1 是在 --paper 上量的，5.129 才是那个数）；
    仍然过 AA 的 4.5，但余量只有一档，所以小字号一律换 --ink。
@@ -343,7 +338,7 @@ code{
   75%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1);opacity:0}}
 
 /* ── 07 · 区块骨架与节标题 ── */
-main>section,.sec{
+main>section{
   position:relative;
   max-width:var(--maxw);margin-inline:auto;
   padding:clamp(70px,10vw,116px) var(--gut) 0;
@@ -549,7 +544,7 @@ main>section,.sec{
      所以不需要「自己算序号」的后备；早先写的 var(--i) 从来没有任何地方赋值过。 */
   transition-delay:var(--d,0ms);
 }
-.reveal.is-in,.reveal.visible,.is-in .reveal{opacity:1;translate:none}
+.reveal.is-in,.is-in .reveal{opacity:1;translate:none}
 /* 无 JS 降级：所有内容可读可点（粒子与动效只是增强，不是内容） */
 html.no-js .reveal,html.no-js .sec-rule{opacity:1;translate:none;scale:1;transition:none;animation:none}
 html.no-js .progress{display:none}

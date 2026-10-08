@@ -408,6 +408,37 @@ test("HTML 上挂的每个 class 都必须有出处（style.css 或本页内联 
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
+test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 会加上去）", () => {
+  /* .sr-only 定义了却没有任何元素用它；.lang-menu 的 [aria-selected] 那一半也是死的——
+     菜单只写 aria-current（main.js:233/344），从没写过 aria-selected。
+     死规则不会让页面出错，但它让下一个读 CSS 的人以为存在另一条路径，
+     于是「选中态有 aria-selected 和 aria-current 两种写法要照顾」这种负担会一直传下去。 */
+  const ALL = { ...PAGES, "404.html": read("404.html") };
+  const used = new Set();
+  for (const html of Object.values(ALL)) {
+    for (const m of html.matchAll(/\bclass="([^"]+)"/g)) for (const c of m[1].trim().split(/\s+/)) used.add(c);
+  }
+  // JS 会用 classList 或 className 加上去的类名同样算「有人用」
+  for (const m of (MAIN + SCENE).matchAll(/classList\.(?:add|remove|toggle|contains|replace)\(([^)]*)\)/g)) {
+    for (const lit of m[1].matchAll(/['"]([^'"]+)['"]/g)) for (const c of lit[1].split(/\s+/)) used.add(c);
+  }
+  for (const m of (MAIN + SCENE).matchAll(/\.className\s*=\s*['"]([^'"]+)['"]/g)) {
+    for (const c of m[1].split(/\s+/)) used.add(c);
+  }
+  const defined = new Set(
+    [...CSS_CODE.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map(m => m[1])
+  );
+  for (const html of Object.values(ALL)) {
+    const inline = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
+    // 内联块里的注释是散文（404 那段就写着「style.css 加载成功时…」），
+    // 不剥掉的话 "css" 会被当成一个定义过的类名。
+    for (const m of inline.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) defined.add(m[1]);
+  }
+  const dead = [...defined].filter(c => !used.has(c)).sort();
+  assert.ok(defined.size > 30, `只解析出 ${defined.size} 个 class 定义，解析脱节了`);
+  assert.deepEqual(dead, [], `这些类在任何样式表里定义了，却没有任何元素使用：${dead.join(", ")}`);
+});
+
 test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡）", () => {  const dead = ["墨点", "环境音", "音量斜坡", "sound-toggle", "ambient(", "fieldEnergy", "inkDot"];
   const hits = [];
   for (const [f, src] of [["assets/js/main.js", MAIN], ["assets/js/scene.js", SCENE], ["assets/css/style.css", CSS]]) {
