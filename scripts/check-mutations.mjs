@@ -45,8 +45,12 @@ const MUTS = [
     expect: /结构不对称/ },
   { name: "指纹漂移（中文页改了个 ?v=）", file: ZH, from: `?v=`, to: `?v=zzzzzz`,
     expect: /指纹/ },
+  /* 锚点里绝不许出现 ?v= 的值：deploy.sh 第 0 步会按 HEAD 把三页的指纹统一换掉，
+     写死 `avatar.jpg?v=4019bf" alt="` 的那一版在部署当场就「锚点零命中」，
+     而锚点零命中算失败——闸门把一个正常的指纹轮换读成了一次注入攻击没抓到。
+     锚点只能钉在不会随部署漂移的稳定文本上。 */
   { name: "图片缺 alt", file: ZH,
-    from: `avatar.jpg?v=4019bf" alt="`, to: `avatar.jpg?v=4019bf" data-alt="`,
+    from: `alt="站长选定的头像图`, to: `data-alt="站长选定的头像图`,
     expect: /无 alt/ },
   { name: "标题跳级", file: ZH, from: `<h2`, to: `<h4`, expect: /跳到/ },
   { name: "头像 alt 声称是本人照片", file: ZH,
@@ -229,6 +233,25 @@ const run = (dir, gate = "test", only = null) => {
   try { execFileSync(cmd, args, { cwd: dir, encoding: "utf8" }); return null; }
   catch (e) { return String((e.stdout || "") + (e.stderr || "")); }
 };
+
+/* 结构自检：注入锚点里不许出现 ?v= 的值。
+   deploy.sh 第 0 步会按 HEAD 统一换掉三页的指纹，锚点一旦钉在指纹上，
+   下一次部署就会「锚点零命中」——而那是算失败的，闸门会把一次正常的指纹轮换
+   读成一次没抓到的攻击。（真发生过。） */
+{
+  const volatile = MUTS.filter(m => m.from && /\?v=[0-9a-z]{4,8}/.test(m.from));
+  if (volatile.length) {
+    console.log("🛑 这些注入锚点钉在了会随部署漂移的 ?v= 值上，改用稳定文本：");
+    for (const m of volatile) console.log(`   - ${m.name}  →  "${m.from}"`);
+    process.exit(1);
+  }
+  const noop = MUTS.filter(m => m.from && m.from === m.to && m.expect !== null);
+  if (noop.length) {
+    console.log("🛑 这些用例 from === to 且期望变红，是字面意义上的空操作（不可能注入任何东西）：");
+    for (const m of noop) console.log(`   - ${m.name}`);
+    process.exit(1);
+  }
+}
 
 /* 基线：不打补丁的副本必须三道闸门全绿。副本文件带不全的话，
    下面每条都会「红了但不是该抓的那条」，整张表就成了噪音。 */
