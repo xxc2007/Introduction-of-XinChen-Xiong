@@ -116,7 +116,7 @@
 
 | 项 | 现值 | 口径（怎么核实的） |
 |---|---|---|
-| 仓库文件 | 索引与工作区同为 **150** 个 | `git ls-files \| wc -l` = 150；`git ls-files --deleted \| wc -l` = 0；`git ls-files --others --exclude-standard \| wc -l` = 0（三个口径必须同时成立：有文件"已删但留在索引"或"未跟踪但已发布"，前两个数就会各说各话） |
+| 仓库文件 | 索引与工作区同为 **151** 个 | `git ls-files \| wc -l` = 151；`git ls-files --deleted \| wc -l` = 0；`git ls-files --others --exclude-standard \| wc -l` = 0（三个口径必须同时成立：有文件"已删但留在索引"或"未跟踪但已发布"，前两个数就会各说各话） |
 | 页面 | **3** 个 HTML（zh / en / 404） | `git ls-files '*.html' \| wc -l` = 3 |
 | 章节 | **5** 节（ABOUT / WORKS / HOW / BELIEFS / CONTACT），`<section>` **6** 个 | `node scripts/check-parity.mjs` 打印的 `h2=5 section=6` |
 | 已上线作品 | **2** 个：纪念册 `/nc15/`、GEOHOT `/geohot/` | 两个地址都在页面上有入口；路由见 [贰](#贰--site-map-站点结构) |

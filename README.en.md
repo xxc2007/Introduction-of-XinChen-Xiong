@@ -117,7 +117,7 @@ The full effect → byte cost → fallback inventory lives in [docs/design.md](d
 
 | Item | Current value | How it was verified |
 |---|---|---|
-| Repository files | **150**, identical in the index and in the working tree | `git ls-files \| wc -l` = 150; `git ls-files --deleted \| wc -l` = 0; `git ls-files --others --exclude-standard \| wc -l` = 0 (all three must hold at once: if a file is deleted-but-still-in-the-index, or untracked-but-already-published, the first two numbers start telling different stories) |
+| Repository files | **151**, identical in the index and in the working tree | `git ls-files \| wc -l` = 151; `git ls-files --deleted \| wc -l` = 0; `git ls-files --others --exclude-standard \| wc -l` = 0 (all three must hold at once: if a file is deleted-but-still-in-the-index, or untracked-but-already-published, the first two numbers start telling different stories) |
 | Pages | **3** HTML files (zh / en / 404) | `git ls-files '*.html' \| wc -l` = 3 |
 | Sections | **5** (`.sec-head h2`), **6** `<section>` elements | `node scripts/check-parity.mjs` prints `h2=5 section=6` |
 | Live projects | **2**: the memorial at `/nc15/`, GEOHOT at `/geohot/` | Both entry points are on the page; routing table in [II](#ii--site-map) |
