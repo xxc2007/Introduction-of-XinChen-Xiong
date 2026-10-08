@@ -46,7 +46,7 @@
 | 首屏 | `#top` | 头像（`avatar.jpg` 原图直出，无圆框/描边/底色）+ `熊鑫晨 · Xiong Xinchen` + 大字引言「我还没写出改变世界的代码。」+ 一行身份说明 + Three.js 纸屑粒子场 + 下滑提示 | profile README 原句 |
 | 壹 · ABOUT | `#about` | 我是谁：地理科学专业在读、方向 GIS 与遥感、独立开发者、一个人 + AI 做完整站；坐标/所在地仅在已核实前提下写 | profile README |
 | 贰 · WORKS | `#works` | 两张作品卡：① 青山湖畔的纪念册（→ `/nc15/`）② GEOHOT 地理热点（→ `/geohot/`）。每张含：一句话自述（引用他自己的原话）、事实条（栈/形态）、`线上访问` + `开源仓库` 两个入口 | 两站页面 + 两仓库 README |
-| 叁 · HOW | `#how` | 我怎么做事：设计、前端、GIS 制图、部署运维全部 AI 协作；结构·样式·行为三分离、零框架；「我负责想清楚要做什么」 | profile README |
+| 叁 · HOW | `#how` | 我怎么做事：设计、前端、GIS 制图、部署运维全部 AI 协作；结构·样式·行为三分离、零框架；「我负责想清楚要纪念什么」 | profile README |
 | 肆 · BELIEFS | `#beliefs` | 三条他已公开发表的信条，逐字引用，不改写 | profile README |
 | 伍 · CONTACT | `#contact` | 邮箱（`mailto:`）+ 社媒发丝线图标卡一排：抖音 / 小红书 / 哔哩哔哩 / GitHub / X / YouTube（+ 个人站） | profile README 与纪念册页脚 |
 | 页脚 | — | 署名行「编辑标准与代码 · 熊鑫晨」式 + 年份 + 版权 + 回到顶部 | 纪念册页脚式样 |
@@ -82,7 +82,7 @@
 
 - 文件：`index.html`（zh-CN，默认）+ `en/index.html`（en）。
 - `canonical`：`https://xxc2007.me/` 与 `https://xxc2007.me/en/`；`hreflang` 两条互为 + `x-default` 指向中文。
-- `og:image` 1200×630（新站自有分享卡），`theme-color #F0EEE6`，JSON-LD `Person`（name/url/sameAs = 六个社媒 + 两个项目）。
+- `og:image` 1200×630（新站自有分享卡），`theme-color #F0EEE6`，JSON-LD `Person`（name/url/sameAs = 本站 + 六个社媒，共 7 条；两个项目的地址不在 sameAs 里，它们在正文的作品卡上）。
 - `sitemap.xml` 两条 URL；域名根 `robots.txt` 由本站拥有（含两条 Sitemap 行，并保留 `/geohot/*` 既有规则）。
 - 防漂移：`scripts/check-parity.mjs` 断言两页的节标数量、锚点集合、链接集合、图片集合一一对应，数量不等即失败退出。
 - 英文语气：与 `README.en.md` 一致——短句、第一人称、无营销腔；数字与事实与中文页完全一致。

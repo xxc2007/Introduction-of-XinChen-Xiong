@@ -123,12 +123,12 @@
 | 社媒入口 | **7** 个（个人站 / GitHub / 抖音 / 小红书 / B站 / X / YouTube） | 同一命令的 `social li=7` |
 | 中英两页字节 | **20.1 KB / 20.6 KB**（`20,621` / `21,111` B） | `wc -c index.html en/index.html` |
 | 全站 CSS | **40.7 KB**（`41,692` B）· gzip **15.7 KB** | `wc -c assets/css/style.css` · `node -e` 里 `zlib.gzipSync` |
-| 首屏 JS（含 Three.js） | gzip **189.3 KB** / 上限 195.3 KB | `node scripts/check-bytes.mjs`（自有 JS gzip + `assets/vendor/` gzip） |
+| 首屏 JS（含 Three.js） | gzip **192.5 KB** / 上限 195.3 KB | `node scripts/check-bytes.mjs`（自有 JS gzip + `assets/vendor/` gzip） |
 | 自托管 Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B；`three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c assets/vendor/*.js` · `node -e` 里 `zlib.gzipSync` |
 | 自托管衬线切片 | **101** 片 woff2，合计 **6,027,992** B；`wght.css` 里 **101** 条 `@font-face` | `find assets/fonts -name '*.woff2' \| wc -l`（切片在 `…/noto-serif-sc/files/`，直接 `ls assets/fonts/noto-serif-sc/*.woff2` 数到的是 0）· `grep -c '@font-face' assets/fonts/noto-serif-sc/wght.css` |
 | 图片（头像 + 两张作品截图） | **85.8 KB**（`87,886` B）/ 上限 87.9 KB → `BUDGET OK` | `wc -c assets/images/avatar.jpg assets/images/shot-nc15.webp assets/images/shot-geohot.webp`（`avatar.jpg` 26,762 + `shot-nc15.webp` 28,624 + `shot-geohot.webp` 32,500） |
 | 首屏总传输量 | **1,493.6 KB ≈ 1.46 MB**，**27** 个请求：文本 gzip **251.2 KB** + 首屏真正拉到的 **17** 片 woff2 **1,214.1 KB** + 图片 **28.3 KB** | 本机 Chrome headless 起一趟 CDP `Network` 事件流记全请求，文本按 `zlib.gzipSync`、woff2 与图片按原字节累加（与「图录」里那三张截图同一趟） |
-| 不进首屏的分享素材 | **78.7 KB**（`80,541` B）/ 上限 195.3 KB | `wc -c assets/images/banner.svg assets/images/og-card.svg assets/images/og-card.png assets/images/favicon.ico assets/images/favicon-32.png` |
+| 不进首屏的分享素材 | **77.8 KB**（`79,646` B）/ 上限 195.3 KB | `wc -c assets/images/banner.svg assets/images/og-card.svg assets/images/og-card.png assets/images/favicon.ico assets/images/favicon-32.png` |
 | 仓库内外部资源引用 | **0** | `grep -c 'src="https://' index.html en/index.html` → 两页都是 `0`；`grep -oE 'https?://[a-z0-9.-]+' index.html \| sort -u` 里只有 canonical、JSON-LD 的 `schema.org` 与外链目标，没有一样是可请求资源。**这条数的是仓库源码；线上边缘会另注入，见下方「外部请求」边界注** |
 | 构建步骤 | **0**（仓库里没有构建清单） | `git ls-files '*.json' \| wc -l` → `0` |
 | 仓库体积 | 工作区 **7.93 MiB**（不含 `.git/`）· `.git` **6.91 MiB** | `du -sb --exclude=.git .` = `8,314,693` · `du -sb .git` = `7,249,147` |

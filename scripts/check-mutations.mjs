@@ -253,6 +253,11 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "等高线动画挂回后代选择器（那个从没匹配上的写法）", file: CSS,
     re: /\.reveal\.is-in ~ \.contours path/, to: ".is-in .contours path",
     expect: /永远匹配不上|没有带 \.reveal 的兄弟/ },
+  { name: "对比度表里改一个数（--terra-deep 对 paper）", file: "docs/design.md",
+    re: /(\| 3\.638:1 \| )4\.011:1/, to: "$13.997:1", expect: /现算 4\.011:1/ },
+  { name: "README 的首屏 JS gzip 没跟着 JS 变化更新", file: "README.md",
+    re: /(\| 首屏 JS（含 Three\.js） \| gzip \*\*)[\d.]+ KB/, to: "$1999.9 KB",
+    expect: /首屏 JS gzip KB：README 写/ },
 ];
 
 /* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，

@@ -591,6 +591,34 @@ test("等高线画入动画的挂载点必须真的能匹配上", () => {
   }
 });
 
+/* design.md 「壹 · TOKENS」那张表把每个令牌对 cream / 对 paper 的对比度都抄了一遍（约 30 个数）。
+   同一轮里已经抓到两个抄错：cream↔paper 是同一个比值却写成 1.060 与 1.094（对称的量不该有两个值），
+   `--terra-deep` 对 paper 写 3.997 而算出来是 4.011。
+   与其逐个数改，不如让整张表自己受检：谁改了令牌没重算表，这里就红。 */
+test("design.md 的令牌对比度表必须等于按 WCAG 公式现算的值", () => {
+  const dm = read("docs/design.md");
+  const cream = TOKENS["--cream"], paper = TOKENS["--paper"];
+  const rows = dm.split("\n").filter((l) => /^\|\s*`--[a-z0-9-]+`/.test(l));
+  assert.ok(rows.length >= 8, `只从 design.md 认出 ${rows.length} 行令牌表，版式大概变了，这条等于没跑`);
+  const bad = [];
+  for (const line of rows) {
+    const cells = line.split("|").map((c) => c.trim());
+    const token = (cells[1].match(/(--[a-z0-9-]+)/) || [])[1];
+    const hex = (cells[2].match(/#[0-9a-fA-F]{6}/) || [])[0];
+    if (!token || !hex) continue;
+    if (!TOKENS[token] || TOKENS[token].toLowerCase() !== hex.toLowerCase())
+      bad.push(`${token} 表里写 ${hex}，CSS 是 ${TOKENS[token] || "(不存在)"}`);
+    for (const [i, bg] of [[4, cream], [5, paper]]) {
+      const cell = (cells[i] || "").replace(/\*\*/g, "");
+      const m = cell.match(/^([\d.]+):1(?![\d.])/);
+      if (!m) continue;                       // 只有 "—" 这类没有数字的格子不参与对账
+      const got = +m[1], real = +ratio(hex, bg).toFixed(3);
+      if (Math.abs(got - real) > 0.001) bad.push(`${token} 对 ${i === 4 ? "cream" : "paper"} 表里写 ${got}:1，现算 ${real}:1`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n  "));
+});
+
 test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
   /* prefersReducedMotion 曾经挂着 export 却没人 import：main.js 自己算 RM 再传进来。
      两个模块各自读同一个媒体查询、还各留一个导出口，就会有「谁负责判断 reduced」的歧义。
@@ -681,8 +709,11 @@ test("README 两张现状表里抄下来的数字必须与实测一致", () => {
   const bytes = (p) => statSync(join(ROOT, p)).size;
   const gz = (p) => gzipSync(readFileSync(join(ROOT, p))).length;
   const KB = (n) => Math.round(n / 102.4) / 10;          // 与 check-bytes.mjs 同一个口径
-  const tracked = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" })
-    .trim().split("\n").filter(Boolean).length;
+  const trackedList = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" })
+    .trim().split("\n").filter(Boolean);
+  const tracked = trackedList.length;
+  const sum = (re) => trackedList.filter((f) => re.test(f)).reduce((a, p) => a + bytes(p), 0);
+  const sumGz = (re) => trackedList.filter((f) => re.test(f)).reduce((a, p) => a + gz(p), 0);
   const num = (s) => +s.replace(/,/g, "");
   // 按行取，不用全文正则：`20,621` / `36,107` 这种「数字 + B」的形状在好几行里都有，
   // 全文匹配会串台（第一版就把 CSS 那格匹配到了中英两页那格上）。
@@ -704,6 +735,14 @@ test("README 两张现状表里抄下来的数字必须与实测一致", () => {
     // 显示用的 KB 值也要查：改 CSS 那天我把 35.3 KB 误写成 352.6 KB，只比字节的版本放行了
     ["CSS 显示 KB", KB(bytes("assets/css/style.css")), "全站 CSS|Site CSS", true, /\*\*([\d.]+) KB\*\*\s*[（(]/],
     ["CSS gzip KB", KB(gz("assets/css/style.css")), "全站 CSS|Site CSS", true, /gzip \*\*([\d.]+) KB\*\*/],
+    /* 下面这几行原先没人盯：评审代理一次就数出两条过期值
+       （分享素材写 78.7 KB / 80,541 B，实测 77.8 KB / 79,646 B；首屏 JS 写 189.3 KB，实测 192.5 KB）。
+       它们和 CSS 那几行是同一张表、同一种"抄一份测量值"的形状，没有理由只钉一半。 */
+    ["首屏 JS gzip KB", KB(sumGz(/^assets\/(js|vendor)\/.*\.js$/)), "首屏 JS（含 Three.js）|Hero JS", true, /gzip \*\*([\d.]+) KB\*\*/],
+    ["分享素材字节", sum(/^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/), "不进首屏的分享素材|Social/share assets", false, /`([\d,]+)` B|`([\d,]+)` bytes/],
+    ["分享素材 KB", KB(sum(/^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/)), "不进首屏的分享素材|Social/share assets", true, /\*\*([\d.]+) KB\*\*\s*[（(]/],
+    ["首屏图片字节", sum(/^assets\/images\/(avatar|shot)[^/]*\.(jpg|jpeg|png|webp)$/), "图片（头像|Images \\(avatar", false, /`([\d,]+)` B|`([\d,]+)` bytes/],
+    ["首屏图片 KB", KB(sum(/^assets\/images\/(avatar|shot)[^/]*\.(jpg|jpeg|png|webp)$/)), "图片（头像|Images \\(avatar", true, /\*\*([\d.]+) KB\*\*\s*[（(]/],
   ];
   const bad = [];
   let done = 0;
@@ -712,7 +751,7 @@ test("README 两张现状表里抄下来的数字必须与实测一致", () => {
       const m = rowOf(doc, label).match(re);
       if (!m) { bad.push(`${docName} / ${what}：找不到这一格（行标签或版式变了）`); continue; }
       done++;
-      const got = +num(m[1]);
+      const got = +num(m[1] ?? m[2] ?? "");
       const okv = isKb ? Math.abs(got - real) <= 0.05 : got === real;
       if (!okv) bad.push(`${docName} / ${what}：README 写 ${m[1]}，实测 ${isKb ? real : real.toLocaleString("en-US")}`);
     }

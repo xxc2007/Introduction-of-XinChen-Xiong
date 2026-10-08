@@ -8,7 +8,7 @@
 | Three.js | `assets/vendor/three.module.min.js` | r0.180.0，338,908 B（gzip 数值不在此抄写：**字节与预算的唯一出处是 `node scripts/check-bytes.mjs` 与 `wc -c assets/vendor/*.js`**），MIT，文件头 license 注释保留 |
 | 衬线字体 | `assets/fonts/noto-serif-sc/wght.css` + `files/`（101 个 woff2 切片） | 与纪念册同一份，按 `unicode-range` 惰性加载 |
 
-引用写法一律**相对路径**（这样站点放在域名根或任何子路径都能跑）：
+引用写法一律**相对路径**（这样站点放在域名根或任何子路径都能跑）——**唯一的页面例外是 `404.html`**：它会被 nginx 从任意深度重写到 `/404.html`，相对路径在那种位置解析不出来，所以它整页只用根绝对路径（`tests/quality.test.mjs` 有一条断言钉这件事）：
 
 ```html
 <link rel="stylesheet" href="./assets/fonts/noto-serif-sc/wght.css">
@@ -108,7 +108,7 @@ body
 
 - 姓名：中文 `熊鑫晨`；英文 `Xiong Xinchen`（GitHub 显示名另一种写法 `XinChen Xiong` 仅用于仓库名与 `<title>` 的英文位）。
 - 首屏引言（逐字）：`我还没写出改变世界的代码。`
-- 身份（逐字改写自 profile README 第 5、7 行）：`但用 AI 做出了自己的第一个网站——把母校装进一个可以随时回去的网页。` / `设计、前端、GIS 制图、部署运维，全部 AI 协作完成。我负责想清楚要做什么。`
+- 身份（逐字改写自 profile README 第 5、7 行）：`但用 AI 做出了自己的第一个网站——把母校装进一个可以随时回去的网页。` / `设计、前端、GIS 制图、部署运维，全部 AI 协作完成。我负责想清楚要纪念什么。`
 - 所在地：只写 `China`（GitHub profile 原文）。**不得**写南昌/九江为他的住址，**不得**使用 28.7208°N 115.9322°E（那是校园定位坐标）。
 - 邮箱：`xxc200707@gmail.com`（来源 GitHub profile API 与各仓库 commit 作者）。
 - 作品一：`青山湖畔的纪念册 · 纪念南昌市第十五中学`，线上 `https://xxc2007.me/nc15/`，仓库 `In-memory-of-Nanchang-No.-15-Middle-School`；事实条：纯 HTML/CSS/Vanilla JS、结构·样式·行为三分离、25 张自己拍摄的校园实景、八机位时光漫游、一张中文定位图、一面无需登录的自托管留言墙、10 种语言。

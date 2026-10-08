@@ -14,16 +14,16 @@
 ## 壹 · TOKENS 令牌与它们的算式
 
 令牌逐字继承纪念册母本（`D:\nanchang15-website\site\assets\style.css` 的 `:root`），值一个都没改；
-本站另加五条只为排版服务的派生尺度（`--maxw` `--gut` `--bar` `--dur` `--lift`），**没有新增颜色**。
+本站另加五条只为排版服务的派生尺度（`--maxw` `--gut` `--bar` `--dur` `--lift`）；颜色则加了**三档**：`--terra-ink-2`、`--line-strong`、`--terra-wash`（理由见 §1 与 build-contract §1 补记，三份表都由 tests/quality.test.mjs 与 CSS 对账）。
 
 | 令牌 | 值 | 用在哪 | 对 cream 实测对比度 | 对 paper 实测对比度 |
 |---|---|---|---|---|
-| `--cream` | `#F0EEE6` | 页面底色、顶栏底、`.shot` 底 | — | 1.060:1（纯装饰层，不作文字底） |
-| `--paper` | `#FAF9F5` | 卡片白、`.lang-menu` 底、`<code>` 底 | 1.094:1 | — |
+| `--cream` | `#F0EEE6` | 页面底色、顶栏底、`.shot` 底 | — | **1.103:1**（纯装饰层，不作文字底） |
+| `--paper` | `#FAF9F5` | 卡片白、`.lang-menu` 底、`<code>` 底 | **1.103:1** | — |
 | `--ink` | `#1F1E1D` | 正文、标题、深色区 | **14.328:1** | **15.799:1** |
 | `--muted` | `#6E6A5E` | 辅助文字（只允许 ≥14px） | **4.652:1** | **5.129:1** |
 | `--terra` | `#D97757` | 填充、描边、装饰——**永不做文字** | 2.687:1 | 2.963:1 |
-| `--terra-deep` | `#C15F3C` | hover 边框、强调描边 | 3.638:1 | 3.997:1 |
+| `--terra-deep` | `#C15F3C` | hover 边框、强调描边 | 3.638:1 | 4.011:1 |
 | `--terra-ink` | `#A8492A` | **文字专用赤陶橙**（链接、节号、焦点环） | **4.951:1** | **5.459:1** |
 | `--terra-ink-2` | `#9A4226` | **落在被赤陶橙染过的底上的文字**（导航当前项、语言 pill hover/展开、hero CTA hover 等） | **5.682:1** | 6.266:1 |
 | `--line` | `#E4DFD3` | 发丝线（全站唯一分层手段） | 装饰元素，不在 1.4.3 的范围内 | — |
@@ -120,12 +120,12 @@ body{ font-family:var(--sans); … }                    /* style.css 第 48–49
 ```
 grep -c 'box-shadow'  assets/css/style.css   → 0
 grep -c 'gradient'    assets/css/style.css   → 0
-grep -o 'border-radius:[^;}]*' … | uniq -c   → 8 处 2px  +  1 处 50%（圆形：WebGL 拿不到时 hero 的同心发丝环 `.hero[data-field="off"]::before/::after`；一处声明画两圈，头像与光标都没有圆角/圆形）
+grep -o 'border-radius:[^;}]*' … | uniq -c   → 9 处 2px  +  1 处 50%（圆形：WebGL 拿不到时 hero 的同心发丝环 `.hero[data-field="off"]::before/::after`；一处声明画两圈，头像与光标都没有圆角/圆形）
 ```
 
 圆角全站只有一个值 **2px**（按钮、卡片、`<code>`、语言菜单、404 卡片），另有一处 `50%` 是**圆**（ WebGL 失败时那两圈环），不是"大圆角"。头像 `avatar.jpg` 原图直出，**不加圆框、不加外环、不加描边**。
 `--bar` 64px 顶栏下沿、`.facts>div` 上边线 + 最后一项下边线、`blockquote` 上边线 + 左 2px 竖线、
-`.work-card` 外框、`.social a` 的 40×40 卡框、`footer.foot` 上边线——层级全部由这些线撑出来。
+`.work-card` 外框、`.social a` 的 44×44 卡框、`footer.foot` 上边线——层级全部由这些线撑出来。
 hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `#DCD5C6`，`.shot` 边框转成
 `rgba(217,119,87,.5)`。
 
@@ -134,7 +134,7 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 `.hero[data-field="off"]::before/::after` 画的两圈同心环——**大色块的层次靠线，不靠影**。
 
 单强调色纪律的另一面是"不许有第二种颜色"：粒子场只有墨、纸、赤陶橙三色 + `--line` 的等高线；
-`::selection` 用 `background:var(--terra); color:var(--paper)`（反白是填充场景，不算文字色）。
+`::selection` 用 `background:rgba(217,119,87,.28); color:var(--ink)`——不是反白填充，而是给选中区盖一层淡赤陶，文字色不变，所以任何一档字色被选中都不会翻。
 禁止清单原样继承 `docs/site-spec.md` §1：玻璃拟态、彩色阴影、霓虹、蓝紫渐变、emoji 堆砌、默认 Three.js 打光。
 
 ---
@@ -175,7 +175,7 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 锚点跳转不被 sticky 顶栏压住，靠 `html{scroll-padding-top:calc(var(--bar) + 24px)}`；
 `--bar` 在 ≤768px 变 **104px**（顶栏折成两行）、≤420px 变 **112px**，留白跟着走。
 ≥1200px 才把 ABOUT 拉成"正文 1.45fr / 事实表 1fr"两栏、把 `ol.steps` 排成 2×2；
-≤1024px 收导航字号并把 `.brand span` 藏掉；≤768px 让 `#nav` 独占一行、5 项 `flex:1 0 auto` 均分
+≤1024px 收导航字号并把 `.brand span` 藏掉；≤768px 让 `#nav` 独占一行、5 项 `flex:0 0 auto` 各自按内容宽居中排布（原先写的是 `flex:1 0 auto` 均分，实测在 390px 下会把导航项压到互相重叠，已改；见 style.css 那段注释）
 （注释里写了原因：藏滚动条的窄 nav 会把末位入口彻底推出屏幕）；≤420px 把 `.social` 钉成 4 列网格（**4 + 3** 两行），
 按钮 `min-height:44px`，`body` 字号回到 16px。
 
@@ -225,7 +225,7 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 |---|---|---|
 | 磁吸：一处写、一处读，已收敛成一条路径 | `main.js` 遍历 `[data-magnetic]`（两页各 **6** 处），`setProperty('--mx'/'--my', … + 'px')`；CSS `.hero-cta,.btn-live,.btn-repo,.copy-mail{translate:var(--mx,0px) var(--my,0px)}` 消费它。旧版 JS 覆盖 `style.transform=translate3d(…)`、CSS 读 `translate:var(--mx)`，两套各写各的 | **JS 写 `--mx/--my`、CSS 读 `translate`**——同一通道，位移按 px 生效（唯 `.hero-cta` 被 `animation:rise … both` 的 `translate:none` 终态钉住，`style.css` 注释记此条待办） |
 | 卡片倾斜：两套写法已合并为一套 | 旧版 CSS `.work-card{transform:perspective(1200px) rotateX(var(--rx))…}` + `#works{perspective:1200px}`，而 JS 直接覆盖 `style.transform` 并自带 `perspective(720px)`，三份透视互相打架 | **只剩 CSS 一条**：`.work-card{transform:perspective(1200px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}`，`main.js` 只写 `--rx/--ry`（deg），`#works` 不再设 perspective；±5 deg |
-| `.progress` 静止值写在变量里 | CSS `width:var(--p,0)`，JS 直接改 `progress.style.width` | 生效的是 JS 直写；`--p` 通道闲置 |
+| `.progress` 的静止值 | CSS `width:0`，JS 每帧直写 `progress.style.width` | 早先那条 `width:var(--p,0)` 已经删掉——`--p` 从来没有任何地方写过，那层间接是死的 |
 | 几个为骨架预留的选择器还没有宿主 | `.hero-body`、`.works-stack`、`.sec-lede`、`.contact-line`、`.sr-only` 在 CSS 里各 1–2 处，两页 HTML 里 **0** 次 | 间距目前由 `.work-card+.work-card{margin-top}`、`.work-card>*+*{margin-top}` 这类兜底规则撑起（这是刻意的：注释说"任何一层没被显式 margin 覆盖的都靠这条撑开"） |
 
 这些不影响读者看到的东西，但**改样式的人必须先知道**，否则会把"两套写法"当一套来调。

@@ -142,7 +142,7 @@ profile README 里也没写。而 GEOHOT 的代码里明写 `contactEmail: null 
    只能按原文引用，**不许写成校名+城市来推定他住在哪**。
 5. **社交平台数字**：followers = 0、两个仓库各 1 star、`public_repos = 6`（2026-10-07 `gh api users/xxc2007 --jq .public_repos` → `6`；六个是 GeoHot、In-memory-of-Nanchang-No.-15-Middle-School、Introduction-of-XinChen-Xiong（本站）、xxc2007、xxc2007-me、xxc2007.github.io）、账号创建于 2026-03-30。
    这些是 API 数出来的，但它们不是成就，也不做徽章。profile README 里那个 `<!-- STATS-START -->` 统计块属于 profile 仓库，不进作品仓库。
-6. **头衔膨胀**：`全栈工程师`、`资深开发者`、`专家`、`独立顾问`。他页面里只出现"我负责想清楚要做什么"这一种自我描述。
+6. **头衔膨胀**：`全栈工程师`、`资深开发者`、`专家`、`独立顾问`。他页面里只出现"我负责想清楚要纪念什么"这一种自我描述。
 7. **上游署名**：GEOHOT 建在开源框架 AIHOT 之上，但 AIHOT 的名字、Logo、版权都不是他的（GeoHot 的 `LICENSE` 版权行仍是上游，站内不使用 AIHOT 名字与 Logo）。
    并且 **GEOHOT 站内不署他的真名**——`founder.name = '地理热点编辑部'`，代码注释写着"没有真名之前就用编辑部，不要替站点编一个人名"。
    介绍站提 GEOHOT 时，可以说"他做的"，但不能把 GEOHOT 站内的署名改成他。

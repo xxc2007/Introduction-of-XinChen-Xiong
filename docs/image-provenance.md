@@ -37,7 +37,7 @@
 
 | 口径 | 字节 | 说明 |
 | --- | --- | --- |
-| 目录合计（删掉旧 README 之后） | 1,185,239 | 删之前 1,191,999（旧 `assets/images/README.md` 占 6,760） |
+| 目录合计（删掉旧 README 之后） | 1,185,680 | 删之前 1,191,999（旧 `assets/images/README.md` 占 6,760） |
 | `check-bytes.mjs`「头像 + 两张作品截图」 | 以脚本输出为准 | `avatar.jpg` + `shot-nc15.webp` + `shot-geohot.webp`（上限 90,000）；具体占用跑 `node scripts/check-bytes.mjs`，别在此抄数 |
 | `check-bytes.mjs`「不进首屏的分享素材」 | 以脚本输出为准 | `og-card.png` + `og-card.svg` + `banner.svg` + `favicon-32.png` + `favicon.ico`（上限 200,000，`favicon.ico` 现是 32×32 ICO）；同上，占用看脚本 |
 | **两条预算都没盖到的** | 1,016,812 | 三张 README 配图 999,288 + `apple-touch-icon.png` 17,524。今天确实占了目录体积的 86%，但 `check-bytes.mjs` 的两条正则都匹配不到它们 |
@@ -82,7 +82,7 @@
 
 1. **`favicon.ico` 的扩展名与内容过去不一致，现已修好。** 早先那份 `.ico` 头四字节其实是 `FF D8 FF E0`（JPEG），不是 `00 00 01 00`（ICO 容器），
    浏览器靠内容嗅探才画得出来——这是个已知缺陷。现在它由 `node tools/make-favicon.mjs` 从 `favicon-32.png` 重建：合法 ICO 容器 + 内嵌 32×32 PNG，
-   HTML 那边 `type="image/x-icon"` 与内容终于对得上，四条图标引用（`.ico/.png/apple-touch`）都带 `?v=` 指纹。
+   HTML 那边 `type="image/x-icon"` 与内容终于对得上，三条图标引用（`favicon.ico` / `favicon-32.png` / `apple-touch-icon.png`）都带 `?v=` 指纹——条数由 `tests/quality.test.mjs`「每个被 HTML 直接取用的资源都带 ?v=」盯着，这里不再自己数。
 2. **两张 PNG 都没有 alpha 通道**（IHDR colorType=2，纯 RGB）。`apple-touch-icon.png` 左上角像素是 `[39,11,12]`，
    是照片本身的颜色，不是透明像素 ⇒ 图标里**同样没烤进圆形遮罩**。
 

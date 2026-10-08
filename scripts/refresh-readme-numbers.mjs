@@ -18,14 +18,23 @@ const KB = (n) => Math.round(n / 102.4) / 10;                 // 与 check-bytes
 const bytes = (p) => statSync(join(ROOT, p)).size;
 const gz = (p) => gzipSync(readFileSync(join(ROOT, p))).length;
 const grp = (n) => n.toLocaleString("en-US");
-const tracked = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" })
-  .trim().split("\n").filter(Boolean).length;
+const trackedFiles = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" })
+  .trim().split("\n").filter(Boolean);
+const tracked = trackedFiles.length;
+const sum = (re) => trackedFiles.filter((f) => re.test(f)).reduce((a, p) => a + statSync(join(ROOT, p)).size, 0);
+const sumGz = (re) => trackedFiles.filter((f) => re.test(f)).reduce((a, p) => a + gz(p), 0);
+const HERO_JS = /^assets\/(js|vendor)\/.*\.js$/;
+const SHARE = /^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/;
+const SHOT = /^assets\/images\/(avatar|shot)[^/]*\.(jpg|jpeg|png|webp)$/;
 
 const V = {
   tracked,
   zh: bytes("index.html"), en: bytes("en/index.html"),
   css: bytes("assets/css/style.css"), cssKb: KB(bytes("assets/css/style.css")),
   cssGzKb: KB(gz("assets/css/style.css")),
+  heroJsKb: KB(sumGz(HERO_JS)),
+  share: sum(SHARE), shareKb: KB(sum(SHARE)),
+  shot: sum(SHOT), shotKb: KB(sum(SHOT)),
 };
 
 /* 每份 README 的写法不同（中文用「（N B）」、英文用 "(N bytes)"），
@@ -38,6 +47,11 @@ const SPEC = {
       out: `**${KB(V.zh)} KB / ${KB(V.en)} KB**（\`${grp(V.zh)}\` / \`${grp(V.en)}\` B）` },
     { label: "全站 CSS", re: /\*\*[\d.]+ KB\*\*（`[\d,]+` B）· gzip \*\*[\d.]+ KB\*\*/,
       out: `**${V.cssKb} KB**（\`${grp(V.css)}\` B）· gzip **${V.cssGzKb} KB**` },
+    { label: "首屏 JS（含 Three.js）", re: /gzip \*\*[\d.]+ KB\*\* \/ 上限/, out: `gzip **${V.heroJsKb} KB** / 上限` },
+    { label: "不进首屏的分享素材", re: /\*\*[\d.]+ KB\*\*（`[\d,]+` B）\/ 上限/,
+      out: `**${V.shareKb} KB**（\`${grp(V.share)}\` B）/ 上限` },
+    { label: "图片（头像", re: /\*\*[\d.]+ KB\*\*（`[\d,]+` B）\/ 上限/,
+      out: `**${V.shotKb} KB**（\`${grp(V.shot)}\` B）/ 上限` },
   ],
   "README.en.md": [
     { label: "Repository files", re: /\*\*[\d,]+\*\*, identical/, out: `**${grp(V.tracked)}**, identical` },
@@ -46,6 +60,11 @@ const SPEC = {
       out: `**${KB(V.zh)} KB / ${KB(V.en)} KB** (\`${grp(V.zh)}\` / \`${grp(V.en)}\` bytes)` },
     { label: "Site CSS", re: /\*\*[\d.]+ KB\*\* \(`[\d,]+` bytes\) · gzip \*\*[\d.]+ KB\*\*/,
       out: `**${V.cssKb} KB** (\`${grp(V.css)}\` bytes) · gzip **${V.cssGzKb} KB**` },
+    { label: "Hero JS", re: /gzip \*\*[\d.]+ KB\*\* against/, out: `gzip **${V.heroJsKb} KB** against` },
+    { label: "Social/share assets", re: /\*\*[\d.]+ KB\*\* \(`[\d,]+` B\) against/,
+      out: `**${V.shareKb} KB** (\`${grp(V.share)}\` B) against` },
+    { label: "Images (avatar", re: /\*\*[\d.]+ KB\*\* \(`[\d,]+` B\) against/,
+      out: `**${V.shotKb} KB** (\`${grp(V.shot)}\` B) against` },
   ],
 };
 
