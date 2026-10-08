@@ -25,14 +25,20 @@ let fail = 0;
 const ok = (name) => console.log(`  ✓ ${name}`);
 const bad = (name, detail) => { console.log(`  ✗ ${name}\n      ${detail}`); fail = 1; };
 
-/* 顺序敏感的相等：上一版用 sorted+unique，于是「社交图标换序」和「重复项少一个」都看不见。 */
+/* 顺序敏感的相等：上一版用 sorted+unique，于是「社交图标换序」和「重复项少一个」都看不见。
+   两侧都为空同样必须判红：抽取正则一旦与写法脱节，a 与 b 会一起变成 []，
+   长度相等、循环零次、于是打印「✓ 某集合（0 项，含顺序）」——
+   这正是 alt 检查上一版死掉的形状，不能留给比较器本身。 */
+const EMPTY = "两侧都抽出 0 项：抽取正则大概已经和 HTML 写法脱节，这条比较等于没跑";
 const seqEq = (name, a, b) => {
+  if (!a.length && !b.length) return bad(name, EMPTY);
   if (a.length !== b.length) return bad(name, `条数不同 ZH=${a.length} EN=${b.length}\n      ZH: ${a.join(" | ")}\n      EN: ${b.join(" | ")}`);
   for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return bad(name, `第 ${i + 1} 项不同\n      ZH: ${a[i]}\n      EN: ${b[i]}`);
   ok(`${name}（${a.length} 项，含顺序）`);
 };
 const setEq = (name, a, b) => {
   const x = uniq(a), y = uniq(b), missing = x.filter(v => !y.includes(v)), extra = y.filter(v => !x.includes(v));
+  if (!x.length && !y.length) return bad(name, EMPTY);
   if (!missing.length && !extra.length) return ok(`${name}（${x.length} 项）`);
   bad(name, `只在 ZH: ${missing.join(",") || "—"} ｜ 只在 EN: ${extra.join(",") || "—"}`);
 };
@@ -140,11 +146,18 @@ for (const cls of LOAD_BEARING) {
   const dup = (h, name) => {
     const l = grab(h, /aria-label="([^"]+)"/g), seen = new Set(), twice = [];
     for (const v of l) { if (seen.has(v)) twice.push(v); seen.add(v); }
-    twice.length ? bad(`${name} aria-label 不重复`, `重复：${twice.join(" / ")}`) : ok(`${name} aria-label 不重复（${l.size || l.length} 条）`);
+    // 0 条 label 时 twice 必然为空，旧写法于是报「✓ 不重复（0 条）」——
+    // 把两页 aria-label 全删光它照样绿。计数为 0 要先判红。
+    if (!l.length) { bad(`${name} aria-label 不重复`, "一条 aria-label 都没抓到，正则大概脱节了"); return; }
+    twice.length ? bad(`${name} aria-label 不重复`, `重复：${twice.join(" / ")}`) : ok(`${name} aria-label 不重复（${l.length} 条）`);
   };
   dup(pages.ZH, "ZH"); dup(pages.EN, "EN");
 }
-setEq("data-* 属性名集合", grab(pages.ZH, /\b(data-[a-z-]+)=/g), grab(pages.EN, /\b(data-[a-z-]+)=/g));
+/* 这个抓取必须容得下**无值**属性：全站唯一的 data-* 是 data-magnetic，
+   而 HTML 允许布尔属性不写 =""。旧写法 /data-[a-z-]+=/ 要求等号，
+   于是两页各抽出 0 项、setEq 比「空 == 空」报绿——这条断言从来没有工作过
+   （新加的「两侧都空判红」兜底第一次运行就把它抓出来了）。 */
+setEq("data-* 属性名集合", grab(pages.ZH, /\b(data-[a-z-]+)(?:="[^"]*")?(?=[\s>])/g), grab(pages.EN, /\b(data-[a-z-]+)(?:="[^"]*")?(?=[\s>])/g));
 /* 每个 <img> 都必须有 alt。
    上一版把 /<img[^>]*>/g（没有捕获组）交给 grab()，而 grab 一律取 m[1] ——
    于是两页每一项都是 undefined，映射后都是「缺」，两个「全都缺」的列表永远相等：

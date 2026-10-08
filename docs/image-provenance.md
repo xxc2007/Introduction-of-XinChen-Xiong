@@ -19,7 +19,7 @@
 | 文件 | 实测尺寸 | 实测字节 | 怎么来的 | 用在哪 |
 | --- | --- | --- | --- | --- |
 | `avatar.jpg` | 300×300 | 26,762 | 站长本人提供的原图，逐字节搬进来，没重编码、没裁切、没做圆形遮罩（见「三」） | `index.html:102`、`en/index.html:103` 首屏头像 |
-| `favicon.ico` | 48×48 | 895 | 由 `avatar.jpg` 缩放后 ffmpeg 编码；**字节其实是 JPEG，不是 ICO 容器**（见「四」） | `index.html:24`、`:27`，`en/index.html:24`、`:27` |
+| `favicon.ico` | 32×32（内嵌 PNG） | 1,336 | 由 `tools/make-favicon.mjs` 把 `favicon-32.png` 原样装进合法 ICO 容器（不重新编码像素）；**是真正的 ICO 容器、内嵌一张 32×32 PNG**（见「四」） | `index.html:24`、`en/index.html:24`（`type="image/x-icon"`，带 `?v=`） |
 | `favicon-32.png` | 32×32 | 1,314 | 由 `avatar.jpg` 缩放 32×32，ffmpeg 封装 PNG | `index.html:25`、`en/index.html:25` |
 | `apple-touch-icon.png` | 180×180 | 17,524 | 由 `avatar.jpg` 缩放 180×180，ffmpeg 封装 PNG | `index.html:26`、`en/index.html:26` |
 | `shot-nc15.webp` | 1200×750 | 28,624 | 线上站点实拍 → 裁成 1200×750 → `ffmpeg -c:v libwebp -quality 72`（**逐字节复现成功**，见「六」） | `index.html:139`、`en/index.html:140` 作品卡一 |
@@ -38,8 +38,8 @@
 | 口径 | 字节 | 说明 |
 | --- | --- | --- |
 | 目录合计（删掉旧 README 之后） | 1,185,239 | 删之前 1,191,999（旧 `assets/images/README.md` 占 6,760） |
-| `check-bytes.mjs`「头像 + 两张作品截图」 | 87,886 / 上限 90,000 | `avatar.jpg` + `shot-nc15.webp` + `shot-geohot.webp`，与 `README.md` 记的 87,886 一致 |
-| `check-bytes.mjs`「不进首屏的分享素材」 | 80,541 / 上限 200,000 | `og-card.png` + `og-card.svg` + `banner.svg` + `favicon.ico` + `favicon-32.png` |
+| `check-bytes.mjs`「头像 + 两张作品截图」 | 以脚本输出为准 | `avatar.jpg` + `shot-nc15.webp` + `shot-geohot.webp`（上限 90,000）；具体占用跑 `node scripts/check-bytes.mjs`，别在此抄数 |
+| `check-bytes.mjs`「不进首屏的分享素材」 | 以脚本输出为准 | `og-card.png` + `og-card.svg` + `banner.svg` + `favicon-32.png` + `favicon.ico`（上限 200,000，`favicon.ico` 现是 32×32 ICO）；同上，占用看脚本 |
 | **两条预算都没盖到的** | 1,016,812 | 三张 README 配图 999,288 + `apple-touch-icon.png` 17,524。今天确实占了目录体积的 86%，但 `check-bytes.mjs` 的两条正则都匹配不到它们 |
 
 复算：`wc -c assets/images/*`；预算口径看 `node scripts/check-bytes.mjs`（2026-10-07 跑通，`BUDGET OK`）。
@@ -56,39 +56,40 @@
   ```
   同一个 blob 哈希同时等于工作区文件与桌面原图 ⇒ **没有重编码、没有裁切、没有圆形遮罩**。
 - 文件内部的旁证：baseline JPEG（SOF0 `0xC0`）、单次扫描（非 progressive）、JFIF APP0、**没有 EXIF、没有 XMP、没有注释段**。
-  `ffprobe` 报 `pix_fmt=yuvj420p`。三枚图标里那个 `favicon.ico` 带着 `Lavc63.1.101` 注释段，`avatar.jpg` 没有——
-  它不是 ffmpeg 吐出来的。
+  `ffprobe` 报 `pix_fmt=yuvj420p`。两张 PNG 图标（`favicon-32.png`、`apple-touch-icon.png`）是 ffmpeg 封装的，
+  `favicon.ico` 现在是 `tools/make-favicon.mjs` 把那张 32×32 PNG 装进 ICO 容器得来的——三者都不是从 `avatar.jpg` 重新编码 JPEG 得来的。
 - 显示成方的，不是圆的：`.hero .avatar`（`assets/css/style.css:299`）只有宽度与入场动画，注释写着
   「原图直出：不加圆框、不加外环、不加描边」；`style.css:585` 在窄屏只改宽度。全站唯一的 `border-radius:50%`
   在 `style.css:290`，管的是 hero 那两个装饰同心环的 `::before/::after`，跟头像无关。
 - 与 `92e48b3` 那次提交里的 `avatar.jpg`（旧清单记的 9,814 B 那版）**不是同一个 blob**：当前值是 `6856bc0`
   「头像回归原图无装饰」换进来的，旧版已不在工作区。
 
-## 四 · 三枚图标是从 `avatar.jpg` 派生的（像素级验过）
+## 四 · 三枚图标都出自 `avatar.jpg`；`favicon.ico` 现由 `tools/make-favicon.mjs` 生成
 
-三枚都是正方形，`avatar.jpg` 也是正方形，所以是等比缩放、不需要裁切。派生关系用像素比对确认，
-不是靠猜：把 `avatar.jpg` 用 ffmpeg 缩到目标尺寸，再和仓库里那三个文件的解码像素比平均绝对差（满量程 255）。
+三枚都是正方形，`avatar.jpg` 也是正方形，所以是等比缩放、不需要裁切。两张 PNG（`favicon-32.png` 32×32、`apple-touch-icon.png` 180×180）
+是从 `avatar.jpg` 缩放后由这台机器上的 ffmpeg 封装出来的，派生关系用像素比对确认，不是靠猜：把 `avatar.jpg` 缩到目标尺寸，
+再和仓库里那两个文件的解码像素比平均绝对差（满量程 255）。`favicon.ico` 则**不再单独编码**——它由 `tools/make-favicon.mjs`
+把 `favicon-32.png` 那张真 32×32 PNG 原样装进一个合法 ICO 容器（头六字节 `00 00 01 00 01 00`，内嵌 PNG），字节可复现。
 
 | 对比 | MAD | 结论 |
 | --- | --- | --- |
 | `favicon-32.png` vs `avatar.jpg`→32×32 | 0.71 / 255 | 同一张图 |
 | `apple-touch-icon.png` vs `avatar.jpg`→180×180 | 0.43 / 255 | 同一张图 |
-| `favicon.ico`→48×48 vs `avatar.jpg`→48×48 | 2.16 / 255 | 同一张图（差值来自它自己那次 4:2:0 有损编码） |
+| `favicon.ico` 内嵌的 PNG vs `favicon-32.png` | 逐字节相同 | ICO 里装的就是这张 PNG（`make-favicon.mjs` 不重新编码像素） |
 | `apple-touch-icon.png`→32×32 vs `favicon-32.png` | 1.07 / 255 | 两个尺寸出自同一母图 |
 
 另外两条实测事实：
 
-1. **`favicon.ico` 的扩展名和内容不一致。** 头四字节是 `FF D8 FF E0`（JPEG / JFIF），不是 `00 00 01 00`（ICO 容器）。
-   它是 48×48 的单帧 JPEG，带 `COM=Lavc63.1.101` 注释段，也就是这台机器上 ffmpeg 9.0.1 的 libavcodec 写的。
-   HTML 那边 `type="image/x-icon"` 写的还是 x-icon。浏览器靠内容嗅探能画出来，但**这是个已知不一致，不是我以为它是对的**。
+1. **`favicon.ico` 的扩展名与内容过去不一致，现已修好。** 早先那份 `.ico` 头四字节其实是 `FF D8 FF E0`（JPEG），不是 `00 00 01 00`（ICO 容器），
+   浏览器靠内容嗅探才画得出来——这是个已知缺陷。现在它由 `node tools/make-favicon.mjs` 从 `favicon-32.png` 重建：合法 ICO 容器 + 内嵌 32×32 PNG，
+   HTML 那边 `type="image/x-icon"` 与内容终于对得上，四条图标引用（`.ico/.png/apple-touch`）都带 `?v=` 指纹。
 2. **两张 PNG 都没有 alpha 通道**（IHDR colorType=2，纯 RGB）。`apple-touch-icon.png` 左上角像素是 `[39,11,12]`，
    是照片本身的颜色，不是透明像素 ⇒ 图标里**同样没烤进圆形遮罩**。
 
-没能复现的部分：这三枚图标的**确切编码命令**。我按 `scale=180:180` / `scale=32:32` / `scale=48:48` 加
-`-update 1`（以及 `-q:v 5`）跑过一遍，像素对得上（上表），字节数对不上——仓库里那份分别多出 953 B、94 B、21 B。
-差的是缩放算法与 JPEG 质量参数，这两样都没留下记录。**图标的具体参数：provenance unknown**；
-「从 `avatar.jpg` 缩放而来、由这台机器上的 ffmpeg 编出来的」这一条是实测成立的
-（我另跑一趟 ffmpeg 编了张 JPEG，注释串同样是 `Lavc63.1.101`，和 `favicon.ico` 里那串逐字相同）。
+没能复现的部分：两张 **PNG** 图标（`favicon-32.png`、`apple-touch-icon.png`）的**确切 ffmpeg 缩放/编码命令**——
+我按 `scale=32:32` / `scale=180:180` 加 `-update 1` 跑过，像素对得上（上表），字节数对不上（多出 94 B、以及 PNG 那两枚各差若干字节）。
+差的是缩放算法与 PNG 过滤器选择，没留下记录，**这两枚的参数：provenance unknown**。但 `favicon.ico` 现在是**逐字节可复现**的：
+`node tools/make-favicon.mjs` 从 `favicon-32.png` 重跑一次即得到仓库里那 1,336 B。
 
 ## 五 · `og-card.png`：这条链路我逐字节复现成功了
 
@@ -182,8 +183,9 @@ Playwright 驱动本机 Chrome，`viewport 1280×800`、`deviceScaleFactor 1`、
 1. ~~`index.html` 与 `en/index.html` 的 JSON-LD `"image"` 指着已经删掉的 `avatar.webp`。~~
    **本文写完之前已被并行提交 `38f86e8` 修掉**，复查现状：`index.html:48` 与 `en/index.html:49` 现在都是
    `https://xxc2007.me/assets/images/avatar.jpg`。留这句是为了说明本文核对到的时刻。
-2. `docs/build-contract.md` §0 那行还写着 `avatar.jpg (9.8 KB) / avatar.webp (5.3 KB)`，两个数字都是旧版；
-   同一文件第 52 行还写着 `.avatar(圆框)`，而 `style.css:299` 那条已经注明「不加圆框、不加外环、不加描边」。
+2. ~~`docs/build-contract.md` §0 那行还写着 `avatar.jpg (9.8 KB) / avatar.webp (5.3 KB)`，两个数字都是旧版；
+   同一文件 `.avatar(圆框)` 那句与「不加圆框」相冲。~~ **现已改到 §0**：`avatar.jpg` 26,762 B、`avatar.webp 已删`、
+   `.avatar(原图直出，无圆框/描边/底色)`，与 `style.css:306` 那条注释一致——本文这条账已了结。
 3. `README.md:156` / `README.en.md:157` 的目录树注释还写着「另有实测清单 README.md」/ "a measured asset manifest"，
    指的是本文搬走之前的那份。
 4. **线上还有个缓存尾巴**：`avatar.webp` 与 `favicon.svg` 早已从仓库删除，公网

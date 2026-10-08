@@ -234,17 +234,18 @@ bash scripts/deploy.sh "revised the hero motto"
 
 ### 2 · PARITY
 
-`verify-sync.sh` proves that **four sources agree on the same bytes** (it runs as five stages), which is more than "I saw the page load":
+`verify-sync.sh` proves that **four sources agree on the same bytes** (it runs as **six** stages, A–F), which is more than "I saw the page load":
 
 | Stage | Compares | Method |
 |---|---|---|
-| A | Local HEAD ↔ server files | `sha256` of every file in the deploy set on both sides, sorted, and the whole list must be identical |
-| B | Local HEAD ↔ GitHub tree | Tree hash first; if it differs, blob-by-blob comparison (git blob SHAs and GitHub blob SHAs come from the same source); README/docs and other non-deployed files are excluded |
+| A | Local HEAD ↔ server files | `sha256` of every file in the deploy set on both sides, `sort -k2`, and the whole list must be identical; a diff of the first 20 lines otherwise. If the remote returns no hashes at all (usually a wrong `$DEPLOY_ROOT`) it fails rather than counting as "equal" |
+| B | Local HEAD ↔ GitHub remote | **First compare `git rev-parse HEAD` against the remote HEAD sha from `gh api .../commits/HEAD`** (a single check); then compare each deploy-set file's git blob sha (git blob SHAs and GitHub blob SHAs come from the same source); README/docs and other non-deployed files are excluded. The old version compared tree hashes, but that endpoint returns the commit sha for `HEAD`, so it was permanently red — a permanently-red check is no check |
 | C | Local ↔ **origin**, bypassing the CDN | On the server itself, curl the loopback address with a `Host` header, hash what comes back — **byte for byte**, no cache excuses |
-| D | Local ↔ public internet through Cloudflare | Fetch `/` and `/en/`, normalize Cloudflare's email obfuscation first (it swaps `mailto:` for a protected link and injects `email-decode.min.js` — a site-level feature, not a stale cache), then hash |
-| E | Neighbouring sites untouched | `/nc15/` and `/geohot/` must still be 200 |
+| D | Local ↔ public internet through Cloudflare | Fetch `/` and `/en/`, normalize Cloudflare's email obfuscation first (`mailto:` is swapped for a protected link and `email-decode.min.js` is injected — a site-level feature, not a stale cache). **Normalization has exactly one implementation, `tools/normalize-cf.mjs`** (the old copy of `sed` rules drifted against it); it then self-checks — if the normalizer or node breaks, both sides hash to the same empty string and "both broken" reads as "both equal", so an empty normalizer output fails the stage instead of passing |
+| E | Public internet, one resource URL at a time | Extract the exact URLs the browser would fetch (including `?v=`) from the three HTML files and re-fetch each from the origin, hashing with `sha256`, **up to 3 retries per URL** (after a `?v=` change every URL is a fresh cache key and the first hit can land mid-fill); `three.core.min.js`, which carries no fingerprint, is listed explicitly. An empty list fails |
+| F | Neighbouring sites untouched | `/nc15/` and `/geohot/` must still be 200 |
 
-Splitting C from D is deliberate: **C asks "did the deploy land", D asks "is the CDN serving an old copy"**; merging them produces false diffs because of Cloudflare's rewrite. The normalization rules live in `tools/normalize-cf.mjs` and mirror the `sed` expressions in stage D.
+Splitting C from D is deliberate: **C asks "did the deploy land", D asks "is the CDN serving an old copy"**; merging them produces false diffs because of Cloudflare's rewrite. Normalization is **only `tools/normalize-cf.mjs`** — stage D calls it directly and there is no second `sed` list to drift against.
 
 ### 3 · FALLBACK
 

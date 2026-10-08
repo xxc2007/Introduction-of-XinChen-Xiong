@@ -128,6 +128,10 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     expect: null },
 
   /* ── check-parity 那道关 ── */
+  { name: "两页 aria-label 全删光（旧版会报「✓ 不重复（0 条）」）", file: ZH, gate: "parity",
+    from: `aria-label="`, to: `data-x="`, expect: /一条 aria-label 都没抓到|不重复/ },
+  { name: "parity 的 data-* 集合两页不对称必须报", file: ZH, gate: "parity", all: true,
+    from: `data-magnetic`, to: `dataMag`, expect: /只在|两侧都抽出 0 项/ },
   { name: "英文页漏掉一个资源指纹", file: EN, gate: "parity",
     from: `style.css?v=`, to: `style.css?x=`, expect: /指纹|v=/ },
   { name: "英文页删掉一条 hreflang", file: EN, gate: "parity",
@@ -182,8 +186,11 @@ for (const m of MUTS) {
     const p = join(dir, m.file);
     const src = readFileSync(p, "utf8");
     if (!m.append && !src.includes(m.from)) { console.log(`⚠️  ${m.name}: 注入锚点零命中 → "${m.from}"`); missed++; continue; }
-    // 三种注入姿势：追加到文件尾 / 插在锚点前 / 直接替换锚点。
-    const patched = m.append ? src + m.to : m.insert ? src.replace(m.from, m.to + m.from) : src.replace(m.from, m.to);
+    // 四种注入姿势：追加到文件尾 / 插在锚点前 / 只替换第一处 / 替换每一处。
+    const patched = m.append ? src + m.to
+      : m.insert ? src.replace(m.from, m.to + m.from)
+      : m.all ? src.split(m.from).join(m.to)
+      : src.replace(m.from, m.to);
     writeFileSync(p, patched);
 
     const out = run(dir, gate), green = out === null;

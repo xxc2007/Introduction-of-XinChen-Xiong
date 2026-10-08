@@ -25,6 +25,7 @@
 | `--terra` | `#D97757` | 填充、描边、装饰——**永不做文字** | 2.687:1 | 2.963:1 |
 | `--terra-deep` | `#C15F3C` | hover 边框、强调描边 | 3.638:1 | 3.997:1 |
 | `--terra-ink` | `#A8492A` | **文字专用赤陶橙**（链接、节号、焦点环） | **4.951:1** | **5.459:1** |
+| `--terra-ink-2` | `#9A4226` | **落在被赤陶橙染过的底上的文字**（导航当前项、语言 pill hover/展开、hero CTA hover 等） | **5.682:1** | 6.266:1 |
 | `--line` | `#E4DFD3` | 发丝线（全站唯一分层手段） | 装饰元素，不在 1.4.3 的范围内 | — |
 | `--ease` | `cubic-bezier(.16,.84,.28,1)` | 全站唯一缓动 | — | — |
 
@@ -50,14 +51,15 @@ terra      / cream = 0.90388 / 0.33633 = 2.687:1     ← 不够 3:1，连大字�
 terra-deep / cream = 0.90388 / 0.24848 = 3.638:1     ← 只够 1.4.11 非文本控件，不够正文
 ```
 
-结论只有一句：**赤陶橙要做文字，就必须是 `#A8492A`。** 亮两档的 `--terra` 与 `--terra-deep` 都够不着
-4.5:1，所以它们的权限被写死成"填充、描边、装饰"。代码里这条纪律是看得见的：
-`.hero-cta`、`.btn-live`、`.lang-btn`、`#nav a[aria-current="true"]`、`.sec-index`、`a`、`:focus-visible`
-全部用 `color:var(--terra-ink)`，而 `--terra` 只出现在 `background:rgba(217,119,87,.07–.14)`、
-`border-color`、`.progress` 的填充、`.scroll-cue::after` 的 1px 竖线、`blockquote` 的 2px 左竖线这些地方。
+结论不止一句，是**三条**（比值以 `tests/quality.test.mjs` 为准，别在文档里各抄一份）：
 
-焦点环同理：`::focus-visible{outline:2px solid var(--terra-ink)}`——注释里写得很直白，
-亮 `--terra` 只有 **2.687:1**，低视力读者看不见它，所以环也用文字级的那个橙。
+1. **赤陶橙要做文字，落在 `--cream` / `--paper` 这类没被染过的底上，用 `--terra-ink`（#A8492A，4.951 / 5.459）。** 亮两档的 `--terra`（2.687）与 `--terra-deep` 够不着 4.5:1，所以它们的权限被写死成"填充、描边、装饰"。
+2. **凡把底色染上赤陶橙（`background:rgba(217,119,87,.NN)`）的规则，文字一律降到 `--terra-ink-2`（#9A4226，对 cream 5.682）。** 染色底本身吃掉 0.3–0.6 档对比：`--terra-ink` 对 cream 是 4.951，对 `cream+12% 赤陶`只剩 **4.443**，掉出 AA。代码里命中这条的：`#nav a[aria-current="true"]`、`.lang-btn:hover` / `[aria-expanded="true"]`、`.lang-menu a:hover` / 选中项、`.hero-cta:hover` / `.btn-live:hover`、`.btn-repo:hover` / `.copy-mail:hover`——它们都是 `--terra-ink-2` 文字 + 染色底，**不是** `--terra-ink`。基态的 `a`、`.sec-index`、`.brand:hover span`、`.mail`、`.social a` 承的是没染过的 cream/paper，仍是 `--terra-ink`。
+3. **任何赤陶橙文字都不许直接压在 WebGL 粒子场上。** 一颗 12% 墨色纸屑落到字下，`--terra-ink` 只剩 **3.916**、`--terra-ink-2` 也只有 **4.495**，两档都够不着 4.5。所以：压在场上的 `hero-sub`、`scroll-cue` 用 `--ink`；`.hero-cta` 自带一张不透光的 `--paper` 底把文字与画布解耦（`--terra-ink` 对 `--paper` 是 5.459）；**`.scroll-cue:hover` 因此改用下划线而不是变色**（`text-decoration` 用 `--terra`，不占用文字色）。
+
+这三条都由 `tests/quality.test.mjs` 从 CSS 反推核对——它扫每条"染色底 + 赤陶文字"的组合并逐个量比值，写成 `--terra-ink` 放在染色底上会直接判红。`--terra` 只出现在 `background:rgba(217,119,87,…)`、`border-color`、`.progress` 的填充、`.scroll-cue::after` 的 1px 竖线、`blockquote` 的 2px 左竖线这些地方。
+
+焦点环同理：`:focus-visible{outline:2px solid var(--terra-ink)}`——亮 `--terra` 只有 **2.687:1**，低视力读者看不见它，所以环也用文字级的那个橙。
 
 ### 一处注释与算术不符（已修）
 
@@ -111,10 +113,10 @@ body{ font-family:var(--sans); … }                    /* style.css 第 48–49
 ```
 grep -c 'box-shadow'  assets/css/style.css   → 0
 grep -c 'gradient'    assets/css/style.css   → 0
-grep -o 'border-radius:[^;}]*' … | uniq -c   → 8 处 2px  +  2 处 50%（圆形：头像框与光标墨点）
+grep -o 'border-radius:[^;}]*' … | uniq -c   → 8 处 2px  +  1 处 50%（圆形：WebGL 拿不到时 hero 的同心发丝环 `.hero[data-field="off"]::before/::after`；一处声明画两圈，头像与光标都没有圆角/圆形）
 ```
 
-圆角全站只有一个值 **2px**（按钮、卡片、`<code>`、语言菜单、404 卡片），另外两处 `50%` 是圆的，不是"大圆角"。
+圆角全站只有一个值 **2px**（按钮、卡片、`<code>`、语言菜单、404 卡片），另有一处 `50%` 是**圆**（ WebGL 失败时那两圈环），不是"大圆角"。头像 `avatar.jpg` 原图直出，**不加圆框、不加外环、不加描边**。
 `--bar` 64px 顶栏下沿、`.facts>div` 上边线 + 最后一项下边线、`blockquote` 上边线 + 左 2px 竖线、
 `.work-card` 外框、`.social a` 的 40×40 卡框、`footer.foot` 上边线——层级全部由这些线撑出来。
 hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `#DCD5C6`，`.shot` 边框转成
@@ -170,7 +172,7 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 ## 伍 · INTERACTIONS 交互清单（效果 / 成本 / 三档降级）
 
 全站只有 **3** 个每帧写入者挂在同一条 rAF 链上（`grep -c 'updaters.push' assets/js/main.js` = 3：
-进度条、弹性跟随组、光标墨点），滚动与 resize 事件只调 `schedule()`，
+进度条、纸屑场取能缓动、弹性跟随组——后者同时跑磁吸与卡片倾斜），滚动与 resize 事件只调 `schedule()`，
 一个帧里跑完所有写入——**没有第二个循环**。
 
 | 效果 | 实现 | 实测成本 | `prefers-reduced-motion` | 无 WebGL | 无 JS |
@@ -181,12 +183,11 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 | 等高线（贰 节背景） | HTML 内联 4 条 `<path>` + `.is-in` 触发 `contourDraw 2.6s`；scene 侧另有 10 环 × 96 段 `LineSegments`，`rotation.z += dt × 0.0055`（≈19 分钟一圈） | 内联 SVG 记在页面自己的字节里（`index.html` raw **20,170 B** / gzip **约 7.8 KB**，`wc -c` + `zlib.gzipSync` 实测） | 动画关掉，`stroke-dasharray:none` 直接显示完整线 | 只剩 HTML 那 4 条，静态可读 | 静止态即终态 |
 | 逐节揭示 | `IntersectionObserver`（`threshold:.12`、`rootMargin:'0px 0px -4% 0px'`）加 `.is-in`；CSS `--dur:.52s`（**520 ms**）、`--lift:14px`、错峰 `min(同级序号, 8) × 60ms` | 每元素 1 次 class 写；无逐帧成本 | `RM` 时一次给所有 `.reveal` 加 `.is-in`，等于直接呈现 | 不受影响 | `.reveal{opacity:0}` 由 `html.no-js` 与 `@media (scripting:none)` 两条兜底改回可见（第 548、556 行），内容不缺字 |
 | 滚动进度条 | `.progress`（`height:2px`、`background:var(--terra)`）宽度每帧由 `window.scrollY / (scrollHeight - innerHeight)` 写百分比，先读后写 | 每帧 1 次 style 写 | `transition` 无，跟手；`scroll-behavior` 变 `auto` | 不相关 | CSS 里 `html.no-js .progress{display:none}` |
-| 当前节高亮 | scrollspy：`IntersectionObserver` `rootMargin:'-45% 0px -50% 0px'`，命中项写 `aria-current="true"`，CSS 用 `--terra-ink` + `rgba(217,119,87,.13)` 底 | 观察 5 个 section | 与动效无关，照常工作 | 不相关 | 无 JS 时导航仍是 5 个可点锚点 |
+| 当前节高亮 | scrollspy：`IntersectionObserver` `rootMargin:'-45% 0px -50% 0px'`，命中项写 `aria-current="true"`，CSS 用 `--terra-ink-2` + `rgba(217,119,87,.13)` 染底（染色底必须降到 ink-2，见「壹」那条纪律） | 观察 5 个 section | 与动效无关，照常工作 | 不相关 | 无 JS 时导航仍是 5 个可点锚点 |
 | 作品卡 3D 倾斜 | 只在 `FINE && !COARSE && !RM` 绑定：`nx,ny ∈ [-.5,.5]`，`×10` → **±5 deg**；插值系数 0.2，`|d| ≤ 0.05` 即归零并停帧 | 每卡 2 个 transform 分量，最多 2 张卡 | 不绑定（`CSS` 里 `.work-card{transform:none}` 兜住） | 不相关 | `.work-card` 静止态无 transform |
-| 磁吸按钮 | `if (HOVER && !RM)` 遍历 `[data-magnetic]`，位移上限 **6 px**，写 `translate3d` | 0 字节增量 | 不绑定 | — | 不生效 |
-| 语言菜单 | 复刻母本 AMD 式样：地球图标 + 当前语言名 + chevron，`listbox/option` 语义，`Esc` 关闭并焦点归位，`↑↓ Home End Enter Tab` 全可达，选中项 `--terra-ink` + `✓`；`localStorage` 键 `intro-lang` **只提示不代跳** | 无额外请求（两份 HTML 各自带完整菜单） | `.lang-menu` 的 `langIn .18s` 入场动画关掉 | 不相关 | `html.no-js` 把 `.lang-btn` 隐藏、`.lang-menu` 摊平成两个 `<a>`（另有 `<noscript>` 兜底样式），两页互链始终可点 |
+| 磁吸按钮 | `if (HOVER && !RM)` 遍历 `[data-magnetic]`（两页各 **6** 处：hero CTA、两张卡的 live/repo、复制邮箱），位移上限 **6 px**，写的是 `--mx/--my`（px）交给 CSS 的独立 `translate` 属性 | 0 字节增量 | 不绑定 | — | 不生效 |
+| 语言菜单 | 复刻母本 AMD 式样：地球图标 + 当前语言名 + chevron，`listbox/option` 语义，`Esc` 关闭并焦点归位，`↑↓ Home End Enter Tab` 全可达，选中项 `--terra-ink-2`（染了赤陶底）+ `✓`；`localStorage` 键 `intro-lang` **只提示不代跳** | 无额外请求（两份 HTML 各自带完整菜单） | `.lang-menu` 的 `langIn .18s` 入场动画关掉 | 不相关 | `html.no-js` 把 `.lang-btn` 隐藏、`.lang-menu` 摊平成两个 `<a>`（另有 `<noscript>` 兜底样式），两页互链始终可点 |
 | 复制邮箱 | `navigator.clipboard.writeText` → 失败退回隐藏 `<textarea>` + `execCommand`；回显写进 `aria-live="polite"` 的 `.copy-status`，**1800 ms** 后清空；再失败提示"已选中，按 Ctrl+C" | 无 | 不相关 | 不相关 | 按钮无 JS 不出现，但 `<a href="mailto:">` 一直是明文地址 |
-| 桌面光标墨点 | 仅 `FINE && !RM`；`8px` 圆点，`opacity .85`，命中热区 `scale(2.6)`，插值 0.22/0.18 | 运行时插入 1 个 `div`，`aria-hidden` | 不注入 | — | 不注入 |
 | 锚点平滑滚动 | 事件委托，`behavior: RM ? 'auto' : 'smooth'`，含 `#top` 回顶；跳转后给目标补 `tabindex="-1"` 并 `focus({preventScroll:true})` | 零字节 | 直接跳（`auto`） | 不相关 | 浏览器原生锚点跳转仍然工作 |
 | 横向溢出哨兵 | `root.dataset.overflow = '1'` 当 `scrollWidth > innerWidth + 1`；在 resize / load / `document.fonts.ready` 三处测 | 3 次事件绑定 | 不相关 | 不相关 | 不跑，但布局本身不依赖它 |
 
@@ -211,9 +212,8 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 
 | 现象 | 证据 | 现在实际生效的是哪一个 |
 |---|---|---|
-| 磁吸挂着但不跑 | `main.js` 只遍历 `[data-magnetic]`，而 `grep -c 'data-magnetic' index.html en/index.html` 两页都是 **0**；且 JS 写的是 `style.transform = translate3d(…)`，CSS 读的是 `translate:var(--mx,0px) var(--my,0px)` | **都不生效**：按钮位移实际是 0 px |
-| 卡片倾斜有两套写法 | CSS `.work-card{transform:perspective(1200px) rotateX(var(--rx,0deg)) …}` + `#works{perspective:1200px}`；JS 却写 inline `perspective(720px) rotateX(…deg)` | **inline 那份生效**（后写者胜），±5 deg 的幅度是两份一致的 |
-| `.work-card` 上的 `--mx/--my` 是百分比 | JS 写 `((nx+.5)*100).toFixed(1)+'%'`，而 CSS 只在按钮组上把 `--mx/--my` 当 **px** 位移读 | 卡片那两个变量当前没有被任何规则消费（注释说"发丝高光跟随"，实现尚未接上） |
+| 磁吸：一处写、一处读，已收敛成一条路径 | `main.js` 遍历 `[data-magnetic]`（两页各 **6** 处），`setProperty('--mx'/'--my', … + 'px')`；CSS `.hero-cta,.btn-live,.btn-repo,.copy-mail{translate:var(--mx,0px) var(--my,0px)}` 消费它。旧版 JS 覆盖 `style.transform=translate3d(…)`、CSS 读 `translate:var(--mx)`，两套各写各的 | **JS 写 `--mx/--my`、CSS 读 `translate`**——同一通道，位移按 px 生效（唯 `.hero-cta` 被 `animation:rise … both` 的 `translate:none` 终态钉住，`style.css` 注释记此条待办） |
+| 卡片倾斜：两套写法已合并为一套 | 旧版 CSS `.work-card{transform:perspective(1200px) rotateX(var(--rx))…}` + `#works{perspective:1200px}`，而 JS 直接覆盖 `style.transform` 并自带 `perspective(720px)`，三份透视互相打架 | **只剩 CSS 一条**：`.work-card{transform:perspective(1200px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg))}`，`main.js` 只写 `--rx/--ry`（deg），`#works` 不再设 perspective；±5 deg |
 | `.progress` 静止值写在变量里 | CSS `width:var(--p,0)`，JS 直接改 `progress.style.width` | 生效的是 JS 直写；`--p` 通道闲置 |
 | 几个为骨架预留的选择器还没有宿主 | `.hero-body`、`.works-stack`、`.sec-lede`、`.contact-line`、`.sr-only` 在 CSS 里各 1–2 处，两页 HTML 里 **0** 次 | 间距目前由 `.work-card+.work-card{margin-top}`、`.work-card>*+*{margin-top}` 这类兜底规则撑起（这是刻意的：注释说"任何一层没被显式 margin 覆盖的都靠这条撑开"） |
 
@@ -239,10 +239,14 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 - 面向现代常青浏览器（Chrome / Edge / Firefox / Safari 近两年版本），**明确不支持 IE 与 Legacy Edge，全站无 polyfill**；
   `min-height:min(calc(100svh - var(--bar)),880px)` 外面还包了一条 `@supports not (min-height:100svh)` 兜底。
 - 正文对比度实测 **14.328:1**（ink / cream），远高于 7:1 的红线；辅助文字下限字号 14px 与 `--muted` 绑在一起。
-- 缓存与安全头由 nginx 提供，以 `deploy/nginx.conf.example` 为准：**HTML 一律 `no-cache`**（`/index.html`、`/en/index.html`、
+- 缓存与安全头以 `deploy/nginx.conf.example` 为准：**HTML 一律 `no-cache`**（`/index.html`、`/en/index.html`、
   `/404.html`、`/nc15/` 与其 `robots.txt`/`sitemap.xml`），**按扩展名匹配的静态资源 `public, max-age=31536000, immutable`**
-  （含 `woff2/ttf/otf/mp4`），`X-Content-Type-Options: nosniff` 与 `Referrer-Policy` 在每个声明了 add_header 的
+  （含 `woff2/ttf/otf/mp4`），`X-Content-Type-Options: nosniff`、`Referrer-Policy`、`Permissions-Policy` 与一份 CSP 在每个声明了 add_header 的
   location 里重抄一遍——nginx 的 `add_header` 不会被子 location 继承，漏抄就等于子层丢头。
-  线上**没有** `X-Frame-Options`，也没有 CSP；`/assets/fonts/` 不再有独立的 1 年规则，它由扩展名正则统一覆盖。
+  示例配置**已声明一条 CSP**（`default-src 'self'; script-src 'self'; …`，`frame-ancestors 'none'` 顶掉了 `X-Frame-Options` 的活）；
+  但线上此刻**还没有下发这条 CSP**（公网只回 `Referrer-Policy`）——照「五」把示例整份挂上去时才会生效。
+  **一条要拍板的冲突**：这条 CSP 的 `script-src 'self'` 会**挡住 Cloudflare 注入的 `static.cloudflareinsights.com/beacon.min.js`**（跨源，非 `'self'`），
+  同源的 `email-decode.min.js` 则不受影响。启用 CSP 前若还开着 Cloudflare Web Analytics，取数脚本会被拦掉——这属于生产配置，交给站长定，不在文档里擅改 CSP 值。
+  `/assets/fonts/` 不再有独立的 1 年规则，它由扩展名正则统一覆盖。
 - 想新增效果之前先量字节：`node scripts/check-bytes.mjs` 的逐类预算行就是闸门本身。2026-10-07 09:53 全绿，
   但 09:35 那次图片行是红的——**闸门随构建变动，别把一次绿当成永久的**。

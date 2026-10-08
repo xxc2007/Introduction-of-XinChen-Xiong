@@ -99,7 +99,7 @@ body
  footer.foot             ：p.foot-sign（署名行）+ p.foot-meta（年份 · MIT · 返回顶部 a#top）
 ```
 
-**数量断言（`check-parity.mjs` 会钉死，中英两页相等且都非零）**：章节标题的真实结构是 `.sec-head` 里放 `.sec-index`（眉标串）+ `<h2>`（标题本体），**没有 `.sec-title` 这个类**——它只活在 `404.html` 自带的 `<style>` 里，两页正文一处都不用它。
+**数量断言（`check-parity.mjs` 会钉死，中英两页相等且都非零）**：章节标题的真实结构是 `.sec-head` 里放 `.sec-index`（眉标串）+ `<h2>`（标题本体），**`.sec-title` / `.num` 这个类现在整个仓库一处都不用**（`404.html` 也只在一句注释里提到它，实际同样走 `.sec-head`/`.sec-index`）——旧契约写的 `h2.sec-title` 早已不存在。
 `.sec-head` = 5、`.sec-index` = 5、`.sec-rule` = 5、`<h2>` = 5；`section` = 6；`nav a` = 5；
 `.work-card` = 2；`.social li` = 7；`<img>` = 3（avatar + shot-nc15 + shot-geohot）；
 `blockquote` = 3；`dl.facts div` = 4；`ol.steps li` = 4。
