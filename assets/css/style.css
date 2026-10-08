@@ -240,12 +240,13 @@ code{
 }
 .lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink-2)}
 /* 选中态：--terra-ink-2 文字 + 一挡极淡的赤陶底色 + 尾部 ✓（染色底必须配 ink-2，见 §按钮那条注释）。
-   ✓ 优先用 HTML 自带的 .lang-check；下面的 CSS 生成勾是兜底，两页结构因此可互校（parity 好核对）。 */
-.lang-menu [aria-selected="true"]>a,.lang-menu a[aria-selected="true"],
+   ✓ 优先用 HTML 自带的 .lang-check；下面的 CSS 生成勾是兜底，两页结构因此可互校（parity 好核对）。
+   这一组早先每个选择器都并列写着 `[aria-selected="true"]` 与 `[aria-current="true"]` 两种口径，
+   但 aria-selected 从来没有被任何代码写过——菜单两页都走 menuitem + aria-current
+   （main.js:233 与 :344 都只设 aria-current）。留着会让人以为还有第二条选中路径要照顾。 */
 .lang-menu [aria-current="true"]>a,.lang-menu a[aria-current="true"]{
   color:var(--terra-ink-2);font-weight:900;background:rgba(217,119,87,.09);
 }
-.lang-menu [aria-selected="true"]>a::after,.lang-menu a[aria-selected="true"]::after,
 .lang-menu [aria-current="true"]>a::after,.lang-menu a[aria-current="true"]::after{
   content:"✓";font-family:var(--sans);font-size:14px;line-height:1;
 }
@@ -257,9 +258,7 @@ code{
   fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
   opacity:0;
 }
-.lang-menu [aria-selected="true"] .lang-check,
 .lang-menu a[aria-current="true"] .lang-check{opacity:1}
-.lang-menu [aria-selected="false"] .lang-check{display:none}
 
 
 /* ---------- 顶部 2px 滚动进度（贴在顶栏下沿） ---------- */

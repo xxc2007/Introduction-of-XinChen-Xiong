@@ -21,6 +21,7 @@ const SCENE = read("assets/js/scene.js");
 const HTML_ZH = read("index.html");
 const HTML_EN = read("en/index.html");
 const README_MD = read("README.md");
+const README_EN = read("README.en.md");
 const PAGES = { "index.html": HTML_ZH, "en/index.html": HTML_EN };
 
 /* 把 CSS 按块切开，方便区分「令牌声明」和「使用处」。
@@ -523,6 +524,33 @@ test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
   assert.deepEqual(dead, [], `scene.js 导出了但 main.js 从没用过：${dead.join(", ")}`);
 });
 
+test("CSS 里按属性选中的每个属性都必须真的被写上（aria-selected 那组就是死的）", () => {
+  /* .lang-menu 的选中态每个选择器都并列写了 [aria-selected="true"] 和 [aria-current="true"]
+     两种口径，但 aria-selected 从来没被任何代码写过——两页与 main.js 只用 aria-current
+     （main.js:233、:344）。这条死规则不会出错，只是让人以为还有第二条选中路径要照顾。
+     class 那条闸门看不见属性选择器，所以单独查一遍属性。 */
+  const HTML_JS = Object.values(ALL_PAGES).map(stripComments).join("\n") + "\n" + JS_CODE;
+  const written = new Set(
+    [...HTML_JS.matchAll(/\b(?:aria-[a-z-]+|data-[a-z-]+|role|lang|hreflang|type|hidden|dir)\b/g)].map(m => m[0])
+  );
+  /* JS 还常常走 el.dataset.someKey = …，源码里根本不出现 data-some-key 这个串。
+     不认 dataset 的话，data-field（scene.js 写 hero.dataset.field）与
+     data-state（main.js 写 btn.dataset.state）会被当成死规则——
+     新断言第一次跑就红，有两种可能：抓到真 bug，或者断言写宽了。这次是后者。 */
+  const kebab = (s) => s.replace(/[A-Z]/g, c => "-" + c.toLowerCase());
+  for (const m of JS_CODE.matchAll(/\.dataset\.([A-Za-z_$][\w$]*)/g)) written.add("data-" + kebab(m[1]));
+  for (const m of JS_CODE.matchAll(/dataset\s*=\s*\{([^}]*)\}/g))
+    for (const k of m[1].matchAll(/([A-Za-z_$][\w$]*)\s*:/g)) written.add("data-" + kebab(k[1]));
+  assert.ok(written.size >= 8, `使用侧只认出 ${written.size} 个属性名，解析脱节了`);
+  const asked = new Set(
+    [...CSS_CODE.matchAll(/\[\s*(aria-[a-z-]+|data-[a-z-]+|role|lang|hreflang)\s*(?:[=~^$*|]?=([^\]]*))?\]/g)]
+      .map(m => m[1])
+  );
+  // 排除掉「写在 JS 里但用 setAttribute 拼接」的情况：再扫一遍字符串常量
+  const dead = [...asked].filter(a => !written.has(a)).sort();
+  assert.deepEqual(dead, [], `CSS 按这些属性选中样式，但没有任何地方写上它们：${dead.join(", ")}`);
+});
+
 test("文档说 verify-sync 有几段，就必须真的有几段", () => {
   /* 「六段 A–F」这种话每加一段就会过期一次——本轮就是我自己加了 G 段之后发现的。
      所以不靠记性：数脚本里真实的 `echo "── X. …"` 段数，和文档里写的字母表、
@@ -554,35 +582,46 @@ test("README 两张现状表里抄下来的数字必须与实测一致", () => {
      只钉「能唯一对上某个真实测量」的那几个数，散文里的数量词不管。 */
   const bytes = (p) => statSync(join(ROOT, p)).size;
   const gz = (p) => gzipSync(readFileSync(join(ROOT, p))).length;
+  const KB = (n) => Math.round(n / 102.4) / 10;          // 与 check-bytes.mjs 同一个口径
   const tracked = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" })
     .trim().split("\n").filter(Boolean).length;
   const num = (s) => +s.replace(/,/g, "");
-  // 按行取，不用全文正则：`20,621` / `36,036` 这种「数字 + B）」的形状在好几行里都有，
+  // 按行取，不用全文正则：`20,621` / `36,107` 这种「数字 + B」的形状在好几行里都有，
   // 全文匹配会串台（第一版就把 CSS 那格匹配到了中英两页那格上）。
-  const row = (label) => (README_MD.split("\n").find(l => l.startsWith("|") && l.includes(label)) || "");
+  /* 两份 README 都要查。上一版只查中文那份，于是英文那份的 `36,036` 在我改了 CSS
+     之后仍写着旧值而全绿——同一张表抄两遍，就只有一半会被盯住。 */
+  const DOCS = { "README.md": README_MD, "README.en.md": README_EN };
+  /* 行标签可能是「中文或英文那一份的说法」，所以按正则匹配。
+     第一版把 "中英两页字节|HTML size" 整串塞给 String.includes()，
+     竖号被当字面量，于是四格全部「找不到这一格」——报的是版式变了，其实是匹配器写错。 */
+  const rowOf = (doc, label) => {
+    const re = label instanceof RegExp ? label : new RegExp(label);
+    return doc.split("\n").find(l => l.startsWith("|") && re.test(l)) || "";
+  };
   const checks = [
-    ["跟踪文件数", tracked, row("git ls-files \\| wc -l") || row("仓库文件"), /wc -l`? = ([\d,]+)/],
-    ["中文页字节", bytes("index.html"), row("中英两页字节"), /`([\d,]+)` \/ `[\d,]+`/],
-    ["英文页字节", bytes("en/index.html"), row("中英两页字节"), /`[\d,]+` \/ `([\d,]+)`/],
-    ["CSS 字节", bytes("assets/css/style.css"), row("全站 CSS"), /`([\d,]+)` B/],
+    ["跟踪文件数", tracked, "wc -l", false, /wc -l`? = ([\d,]+)/],
+    ["中文页字节", bytes("index.html"), "中英两页字节|HTML size", false, /`([\d,]+)`[^\d]*`?[\d,]*`?/],
+    ["英文页字节", bytes("en/index.html"), "中英两页字节|HTML size", false, /`[\d,]+`[^\d]+`([\d,]+)`/],
+    ["CSS 字节", bytes("assets/css/style.css"), "全站 CSS|Site CSS", false, /`([\d,]+)` B/i],
+    // 显示用的 KB 值也要查：改 CSS 那天我把 35.3 KB 误写成 352.6 KB，只比字节的版本放行了
+    ["CSS 显示 KB", KB(bytes("assets/css/style.css")), "全站 CSS|Site CSS", true, /\*\*([\d.]+) KB\*\*\s*[（(]/],
+    ["CSS gzip KB", KB(gz("assets/css/style.css")), "全站 CSS|Site CSS", true, /gzip \*\*([\d.]+) KB\*\*/],
   ];
   const bad = [];
   let done = 0;
-  for (const [what, real, line, re] of checks) {
-    const m = line.match(re);
-    if (!m) { bad.push(`${what}：README 里找不到这一格（行标签或版式变了），要么改文档要么改这条断言`); continue; }
-    done++;
-    if (num(m[1]) !== real) bad.push(`${what}：README 写 ${m[1]}，实测 ${real.toLocaleString("en-US")}`);
+  for (const [docName, doc] of Object.entries(DOCS)) {
+    for (const [what, real, label, isKb, re] of checks) {
+      const m = rowOf(doc, label).match(re);
+      if (!m) { bad.push(`${docName} / ${what}：找不到这一格（行标签或版式变了）`); continue; }
+      done++;
+      const got = +num(m[1]);
+      const okv = isKb ? Math.abs(got - real) <= 0.05 : got === real;
+      if (!okv) bad.push(`${docName} / ${what}：README 写 ${m[1]}，实测 ${isKb ? real : real.toLocaleString("en-US")}`);
+    }
   }
-  // CSS 那行还抄了 gzip 的 KB 值
-  const gzKB = row("全站 CSS").match(/gzip \*\*([\d.]+) KB\*\*/);
-  if (gzKB) {
-    done++;
-    const real = Math.round(gz("assets/css/style.css") / 102.4) / 10;
-    if (Math.abs(+gzKB[1] - real) > 0.05) bad.push(`CSS gzip：README 写 ${gzKB[1]} KB，实测 ${real} KB`);
-  } else bad.push("CSS gzip：README 里那一格找不到 gzip 数字");
-  assert.equal(done, 5, `只核对了 ${done} / 5 个数，README 表格大概改了版式`);
   assert.deepEqual(bad, [], bad.join("\n"));
+  assert.equal(done, checks.length * Object.keys(DOCS).length,
+    `只核对了 ${done} / ${checks.length * Object.keys(DOCS).length} 个数，README 表格大概改了版式`);
 });
 
 test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡）", () => {
