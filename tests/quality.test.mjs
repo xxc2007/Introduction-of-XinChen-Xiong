@@ -6,7 +6,9 @@
    JS 与 CSS 各说各话、注释描述的功能已经被删掉、reduced-motion 漏掉某个动画。 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, statSync } from "node:fs";
+import { gzipSync } from "node:zlib";
+import { execFileSync } from "node:child_process";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,6 +20,7 @@ const MAIN = read("assets/js/main.js");
 const SCENE = read("assets/js/scene.js");
 const HTML_ZH = read("index.html");
 const HTML_EN = read("en/index.html");
+const README_MD = read("README.md");
 const PAGES = { "index.html": HTML_ZH, "en/index.html": HTML_EN };
 
 /* 把 CSS 按块切开，方便区分「令牌声明」和「使用处」。
@@ -478,6 +481,44 @@ test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 
   const dead = [...defined].filter(c => !used.has(c)).sort();
   assert.ok(defined.size > 30, `只解析出 ${defined.size} 个 class 定义，解析脱节了`);
   assert.deepEqual(dead, [], `这些类在任何样式表里定义了，却没有任何元素使用：${dead.join(", ")}`);
+});
+
+test("README 两张现状表里抄下来的数字必须与实测一致", () => {
+  /* 这一轮审出的 docs 缺陷几乎全是同一个形状：文档抄了一份测量值，代码继续走，
+     数字就悄悄过期（146 个文件、20,110 B、31,806 B、`h2.sec-title=5`）。
+     靠人记得去更新是失败的——所以把这几个数钉成断言：改了文件而没改 README，这里就红。
+     只钉「能唯一对上某个真实测量」的那几个数，散文里的数量词不管。 */
+  const bytes = (p) => statSync(join(ROOT, p)).size;
+  const gz = (p) => gzipSync(readFileSync(join(ROOT, p))).length;
+  const tracked = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" })
+    .trim().split("\n").filter(Boolean).length;
+  const num = (s) => +s.replace(/,/g, "");
+  // 按行取，不用全文正则：`20,621` / `36,036` 这种「数字 + B）」的形状在好几行里都有，
+  // 全文匹配会串台（第一版就把 CSS 那格匹配到了中英两页那格上）。
+  const row = (label) => (README_MD.split("\n").find(l => l.startsWith("|") && l.includes(label)) || "");
+  const checks = [
+    ["跟踪文件数", tracked, row("git ls-files \\| wc -l") || row("仓库文件"), /wc -l`? = ([\d,]+)/],
+    ["中文页字节", bytes("index.html"), row("中英两页字节"), /`([\d,]+)` \/ `[\d,]+`/],
+    ["英文页字节", bytes("en/index.html"), row("中英两页字节"), /`[\d,]+` \/ `([\d,]+)`/],
+    ["CSS 字节", bytes("assets/css/style.css"), row("全站 CSS"), /`([\d,]+)` B/],
+  ];
+  const bad = [];
+  let done = 0;
+  for (const [what, real, line, re] of checks) {
+    const m = line.match(re);
+    if (!m) { bad.push(`${what}：README 里找不到这一格（行标签或版式变了），要么改文档要么改这条断言`); continue; }
+    done++;
+    if (num(m[1]) !== real) bad.push(`${what}：README 写 ${m[1]}，实测 ${real.toLocaleString("en-US")}`);
+  }
+  // CSS 那行还抄了 gzip 的 KB 值
+  const gzKB = row("全站 CSS").match(/gzip \*\*([\d.]+) KB\*\*/);
+  if (gzKB) {
+    done++;
+    const real = Math.round(gz("assets/css/style.css") / 102.4) / 10;
+    if (Math.abs(+gzKB[1] - real) > 0.05) bad.push(`CSS gzip：README 写 ${gzKB[1]} KB，实测 ${real} KB`);
+  } else bad.push("CSS gzip：README 里那一格找不到 gzip 数字");
+  assert.equal(done, 5, `只核对了 ${done} / 5 个数，README 表格大概改了版式`);
+  assert.deepEqual(bad, [], bad.join("\n"));
 });
 
 test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡）", () => {  const dead = ["墨点", "环境音", "音量斜坡", "sound-toggle", "ambient(", "fieldEnergy", "inkDot"];

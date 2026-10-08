@@ -101,7 +101,7 @@ body{ font-family:var(--sans); … }                    /* style.css 第 48–49
 中文页 `motto` 的层次靠衬线 + `clamp(23px,3.5vw,42px)` + `line-height:1.62` 拉开。
 
 尺度全部是流形的：`body` `clamp(15.5px,.55vw + 14px,17px)` / `line-height:1.95`，
-`h1` `clamp(40px,7.4vw,86px)`，`.sec-title .zh` `clamp(27px,3.6vw,44px)`，≤420px 再钉死小档
+`h1` `clamp(40px,7.4vw,86px)`，节标题 `.sec-head h1,.sec-head h2` `clamp(27px,3.6vw,44px)`，≤420px 再钉死小档
 （`h1` `clamp(32px,10.5vw,44px)`、`.motto` `21px`）。`p{text-wrap:pretty}`、`h1,h2,h3{text-wrap:balance}`。
 
 ---
@@ -135,8 +135,13 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 ## 肆 · SECTIONS 壹/贰/叁 节标系统
 
 > 本节 2026-10-08 重写。旧版写的 `<h2 class="sec-title"><span class="num">…</span><span class="eyebrow">…</span><span class="zh">…</span></h2>`
-> 这套 DOM **在 CSS 与两页 HTML 里一处都不存在**（`.sec-title`/`.num`/`.zh` 只在 `404.html` 自带的 `<style>` 里活着），
-> 还声称 `check-parity.mjs` 断言 `h2.sec-title=5`——那也不成立。描述一份不存在的实现，比不写更容易误导改代码的人。
+> 这套 DOM **在 CSS 与两页 HTML 里一处都不存在**——`.sec-title` 与 `.num` 从来没有被**任何**样式表定义过
+> （`404.html` 自带的 `<style>` 只定义了 `.nf-note` / `.nf-links` / 其中的 `.zh` `.en`，没有这两个类；
+> 早先一句「只在 404 的 style 里活着」的说法是我自己写错的，已核）。
+> 所以那行 `<h1 class="sec-title">` 一直是个裸 h1，只有浏览器默认字号撑着，肉眼看不出丢了样式。
+> 404 页现在与首页同结构，走 `.sec-head` + `.sec-index`。
+> 还声称 `check-parity.mjs` 断言 `h2.sec-title=5`——那也不成立，parity 打印的是 `h2 = 5`。
+> 描述一份不存在的实现，比不写更容易误导改代码的人。
 
 真实结构是**两行**：节标行 + 一根独立的发丝线。
 

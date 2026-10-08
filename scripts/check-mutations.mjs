@@ -90,7 +90,7 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "写在块之前的普通规则不该误报", file: CSS,
     from: `@media (prefers-reduced-motion:reduce)`, insert: true,
     to: `.skip{color:var(--ink);animation:bogus 2s}\n`,
-    expect: null },   // 期望：仍然绿——块前的普通规则不该报警
+    only: "reduced-motion 块必须真的把动画与迟到都压掉", expect: null },   // 只跑这一条：往 CSS 加行会改字节数，那是别的断言该管的
                       // 复用 .skip 而不是新造一个类名：新造的类没人挂，会先被「死规则」那条打掉
   { name: "404 页用相对路径", file: "404.html", from: `href="/`, to: `href="./`,
     expect: /相对路径/ },
@@ -102,6 +102,9 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
 
   { name: "挂了一个没有样式定义的 class（404 的 .sec-title 就是这个）", file: "404.html",
     from: `<div class="sec-head">`, to: `<div class="sec-title">`, expect: /没有任何样式表定义它/ },
+  { name: "README 抄的测量值过期了（数字与代码脱节）", file: "README.md",
+    from: "`git ls-files \\| wc -l` = 150", to: "`git ls-files \\| wc -l` = 146",
+    expect: /跟踪文件数：README 写 146/ },
   { name: "注释引用了一条不存在的 CSS 规则", file: "assets/js/main.js",
     from: `/* 触屏与 reduced-motion 一律不绑定倾斜`,
     to: `/* 透视由 #works{perspective:1200px} 提供 */\n/* 触屏与 reduced-motion 一律不绑定倾斜`,
@@ -156,8 +159,13 @@ const GATES = {
   links: ["node", ["scripts/check-links.mjs"]],
   parity: ["node", ["scripts/check-parity.mjs"]],
 };
-const run = (dir, gate = "test") => {
-  const [cmd, args] = GATES[gate];
+/* only=<断言名> 的控制用例：只跑那一条。
+   控制用例问的是「这条断言会不会误报」，而注入本身常常会碰到别的断言
+   （往 CSS 加一行就改了字节数，README 那张抄了测量值的表立刻红），
+   那些是副作用，不是这条控制用例要问的事。 */
+const run = (dir, gate = "test", only = null) => {
+  let cmd = GATES[gate][0], args = [...GATES[gate][1]];
+  if (only) args = ["--test", `--test-name-pattern=${only}`, "tests/*.test.mjs"];
   try { execFileSync(cmd, args, { cwd: dir, encoding: "utf8" }); return null; }
   catch (e) { return String((e.stdout || "") + (e.stderr || "")); }
 };
@@ -181,7 +189,9 @@ let red = 0, wrong = 0, missed = 0;
 for (const m of MUTS) {
   if (!existsSync(join(ROOT, m.file))) { console.log(`⚠️  ${m.name}: 文件不在仓库里`); missed++; continue; }
   const gate = m.gate || "test";
-  const dir = sandbox(gate === "links");   // check-links 要跑 git ls-files，得带上 .git
+  // 一直带 .git：README 那张表的断言要跑 git ls-files，links 那道关也要，
+  // 少了它这些用例会以「git 报错」的形式变红——红是红了，但不是该抓的那条。
+  const dir = sandbox(true);
   try {
     const p = join(dir, m.file);
     const src = readFileSync(p, "utf8");
@@ -193,7 +203,7 @@ for (const m of MUTS) {
       : src.replace(m.from, m.to);
     writeFileSync(p, patched);
 
-    const out = run(dir, gate), green = out === null;
+    const out = run(dir, gate, m.only), green = out === null;
 
     if (m.expect === null) {           // 反向对照：这条不该报警
       if (green) console.log(`✅ ${m.name}: 正确地没有误报`);

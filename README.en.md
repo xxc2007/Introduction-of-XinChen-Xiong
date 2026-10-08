@@ -117,13 +117,13 @@ The full effect → byte cost → fallback inventory lives in [docs/design.md](d
 
 | Item | Current value | How it was verified |
 |---|---|---|
-| Repository files | **146**, identical in the index and in the working tree | `git ls-files \| wc -l` = 146; `git ls-files --deleted \| wc -l` = 0; `git ls-files --others --exclude-standard \| wc -l` = 0 (re-measured 11:56 — the 4 files that were deleted-but-still-in-the-index are now committed, so the two measures agree again) |
+| Repository files | **150**, identical in the index and in the working tree | `git ls-files \| wc -l` = 150; `git ls-files --deleted \| wc -l` = 0; `git ls-files --others --exclude-standard \| wc -l` = 0 (all three must hold at once: if a file is deleted-but-still-in-the-index, or untracked-but-already-published, the first two numbers start telling different stories) |
 | Pages | **3** HTML files (zh / en / 404) | `git ls-files '*.html' \| wc -l` = 3 |
-| Sections | **5** (`h2.sec-title`), **6** `<section>` elements | `node scripts/check-parity.mjs` prints `h2=5 section=6` |
+| Sections | **5** (`.sec-head h2`), **6** `<section>` elements | `node scripts/check-parity.mjs` prints `h2=5 section=6` |
 | Live projects | **2**: the memorial at `/nc15/`, GEOHOT at `/geohot/` | Both entry points are on the page; routing table in [II](#ii--site-map) |
 | Contact entry points | **7** (site / GitHub / Douyin / Xiaohongshu / Bilibili / X / YouTube) | Same command, `social li=7` |
-| HTML size | **19.6 KB / 19.9 KB** (`20,110` / `20,334` bytes) | `wc -c index.html en/index.html` |
-| Site CSS | **31.1 KB** (`31,806` bytes) · gzip **11.0 KB** | `wc -c assets/css/style.css` · `node -e` with `zlib.gzipSync` |
+| HTML size | **20.1 KB / 20.6 KB** (`20,621` / `21,115` bytes) | `wc -c index.html en/index.html` |
+| Site CSS | **35.2 KB** (`36,036` bytes) · gzip **13.3 KB** | `wc -c assets/css/style.css` · `node -e` with `zlib.gzipSync` |
 | Hero JS | gzip **189.3 KB** against a 195.3 KB budget | `node scripts/check-bytes.mjs` (own JS gzip + `assets/vendor/` gzip) |
 | Self-hosted Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B; `three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c assets/vendor/*.js` · `node -e` with `zlib.gzipSync` |
 | Self-hosted serif | **101** woff2 slices, **6,027,992** B in total; **101** `@font-face` rules in `wght.css` | `find assets/fonts -name '*.woff2' \| wc -l` (the slices live in `…/noto-serif-sc/files/`, so `ls assets/fonts/noto-serif-sc/*.woff2` counts 0) · `grep -c '@font-face' assets/fonts/noto-serif-sc/wght.css` |

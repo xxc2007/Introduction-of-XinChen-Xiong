@@ -40,7 +40,7 @@
 <p><b>一眼数</b></p>
 
 [![网站](https://img.shields.io/badge/🌐_网站-xxc2007.me-D97757)](https://xxc2007.me/)
-[![仓库](https://img.shields.io/badge/仓库-146_个跟踪文件-1F1E1D)](https://github.com/xxc2007/Introduction-of-XinChen-Xiong)
+[![仓库](https://img.shields.io/badge/仓库-150_个跟踪文件-1F1E1D)](https://github.com/xxc2007/Introduction-of-XinChen-Xiong)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![语言](https://img.shields.io/badge/语言-2_页-1F1E1D)](#其三--state-现状与边界)
 [![章节](https://img.shields.io/badge/章节-5_节-1F1E1D)](#其三--state-现状与边界)
@@ -116,13 +116,13 @@
 
 | 项 | 现值 | 口径（怎么核实的） |
 |---|---|---|
-| 仓库文件 | 索引与工作区同为 **146** 个 | `git ls-files \| wc -l` = 146；`git ls-files --deleted \| wc -l` = 0；`git ls-files --others --exclude-standard \| wc -l` = 0（11:56 复测：先前那 4 个"已删但留在索引"的项已提交，两个口径重新对齐） |
+| 仓库文件 | 索引与工作区同为 **150** 个 | `git ls-files \| wc -l` = 150；`git ls-files --deleted \| wc -l` = 0；`git ls-files --others --exclude-standard \| wc -l` = 0（三个口径必须同时成立：有文件"已删但留在索引"或"未跟踪但已发布"，前两个数就会各说各话） |
 | 页面 | **3** 个 HTML（zh / en / 404） | `git ls-files '*.html' \| wc -l` = 3 |
 | 章节 | **5** 节（ABOUT / WORKS / HOW / BELIEFS / CONTACT），`<section>` **6** 个 | `node scripts/check-parity.mjs` 打印的 `h2=5 section=6` |
 | 已上线作品 | **2** 个：纪念册 `/nc15/`、GEOHOT `/geohot/` | 两个地址都在页面上有入口；路由见 [贰](#贰--site-map-站点结构) |
 | 社媒入口 | **7** 个（个人站 / GitHub / 抖音 / 小红书 / B站 / X / YouTube） | 同一命令的 `social li=7` |
-| 中英两页字节 | **19.6 KB / 19.9 KB**（`20,110` / `20,334` B） | `wc -c index.html en/index.html` |
-| 全站 CSS | **31.1 KB**（`31,806` B）· gzip **11.0 KB** | `wc -c assets/css/style.css` · `node -e` 里 `zlib.gzipSync` |
+| 中英两页字节 | **20.1 KB / 20.6 KB**（`20,621` / `21,115` B） | `wc -c index.html en/index.html` |
+| 全站 CSS | **35.2 KB**（`36,036` B）· gzip **13.3 KB** | `wc -c assets/css/style.css` · `node -e` 里 `zlib.gzipSync` |
 | 首屏 JS（含 Three.js） | gzip **189.3 KB** / 上限 195.3 KB | `node scripts/check-bytes.mjs`（自有 JS gzip + `assets/vendor/` gzip） |
 | 自托管 Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B；`three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c assets/vendor/*.js` · `node -e` 里 `zlib.gzipSync` |
 | 自托管衬线切片 | **101** 片 woff2，合计 **6,027,992** B；`wght.css` 里 **101** 条 `@font-face` | `find assets/fonts -name '*.woff2' \| wc -l`（切片在 `…/noto-serif-sc/files/`，直接 `ls assets/fonts/noto-serif-sc/*.woff2` 数到的是 0）· `grep -c '@font-face' assets/fonts/noto-serif-sc/wght.css` |
