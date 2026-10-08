@@ -764,17 +764,25 @@ test("文档不许用行号指向本仓库的文件", () => {
      这种本站文件必须判红。上一版的名单是手写的，漏了 README.md 与带目录前缀的路径，
      评审代理一次就数出六条漏网的。 */
   const OWN = /`([a-zA-Z0-9._/-]+\.(?:md|sh|mjs|c?js|css|json|example|html|xml|txt|pem))(?::(\d+))(?:[–-](\d+))?`/g;
+  /* 文档里写 `style.css:12` 时指的是 assets/css/style.css。只按字面路径判存在，
+     这种简写会被当成"本仓库没有这个文件"而放过——闸门自己就是这么漏掉第一条用例的。 */
+  const TRACKED = execFileSync("git", ["ls-files"], { cwd: ROOT, encoding: "utf8" }).trim().split("\n");
+  const resolve = (p) => {
+    if (existsSync(join(ROOT, p))) return p;
+    const hit = TRACKED.find((t) => t === p || t.endsWith("/" + p));
+    return hit || null;
+  };
   const hits = [];
   for (const f of [...readdirSync(join(ROOT, "docs")).filter((x) => x.endsWith(".md")).map((x) => `docs/${x}`), "README.md", "README.en.md"]) {
     const doc = read(f);
     for (const m of doc.matchAll(OWN)) {
-      if (!existsSync(join(ROOT, m[1]))) continue;
-      const lines = read(m[1]).split("\n").length;
-      hits.push(`${f} → ${m[0]}（该文件只有 ${lines} 行；就算行号还对，也会在下一次编辑后指错）`);
+      const target = resolve(m[1]);
+      if (!target) continue;
+      hits.push(`${f} → ${m[0]}（= ${target}；就算行号今天还对，下一次编辑就会指错）`);
     }
-    /* 中文那一式：「`scripts/deploy.sh` 第 60 行」。同样要求路径存在。 */
+    /* 中文那一式：「`scripts/deploy.sh` 第 60 行」。同样要求路径能解析到本仓库文件。 */
     const CN = /`(\/?[a-z0-9./_-]+\/[a-z0-9._-]+|[a-z0-9._-]+\.(?:md|sh|mjs|js|css|json|example|html))`\s*第\s*\d+(?:[–-]\d+)?\s*行/g;
-    for (const m of doc.matchAll(CN)) if (existsSync(join(ROOT, m[1]))) hits.push(`${f} → ${m[0]}`);
+    for (const m of doc.matchAll(CN)) if (resolve(m[1])) hits.push(`${f} → ${m[0]}`);
   }
   assert.deepEqual(hits, [], `这些地方在用行号引用本仓库文件：\n  ${hits.join("\n  ")}`);
 });
