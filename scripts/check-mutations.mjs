@@ -239,6 +239,10 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "html.no-js 摊平菜单的 display 丢了 !important（实测过的假兜底）", file: CSS,
     re: /(\.lang-menu\[hidden\]\{[^{}]{0,60}?display:\s*flex)!important/, to: "$1",
     expect: /会被 \[hidden\]/ },
+  { name: "契约的「数量断言」表抄错一项（work-card 2 写成 3）", file: "docs/build-contract.md",
+    re: /(`\.work-card` = )2/, to: "$13", expect: /契约写 3/ },
+  { name: "往契约的数量表里加一项、测试却没有量法", file: "docs/build-contract.md",
+    re: /(`ol\.steps li` = 4)/, to: "$1、`.not-measured` = 9", expect: /没有这一项的量法/ },
 ];
 
 /* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，

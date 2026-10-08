@@ -763,6 +763,44 @@ test("文档里逐字抄的 CSS 片段必须仍在 CSS 里", () => {
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
+/* 契约里那段「数量断言」是本站最容易悄悄过期的表：它把 HTML 的结构数抄成散文。
+   今天逐条量过 12 项全对（zh 与 en 各自相等），所以这条闸门现在的作用不是抓现行，
+   而是钉住以后——加一个 section 却忘了改文档、或者反过来照着过期文档去改代码，都会立刻红。
+   表里出现而这里没有量法的标签也算失败：不许往表里加没人量的数。 */
+test("build-contract 的「数量断言」表必须逐项等于 HTML 实测", () => {
+  const para = (CONTRACT_MD.split("数量断言")[1] || "").split("\n\n")[0];
+  const claims = [...para.matchAll(/`([^`]+)`\s*=\s*(\d+)/g)];
+  assert.ok(claims.length >= 10, `只从契约里读到 ${claims.length} 个数——那段表大概改了版式，这条闸门等于没跑`);
+  const inner = (html, open, close) => {
+    const m = html.match(new RegExp(`<${open}[\\s\\S]*?<\\/${close}>`));
+    return m ? m[0] : "";
+  };
+  const COUNTS = {
+    ".sec-head": (h) => (h.match(/class="[^"]*\bsec-head\b/g) || []).length,
+    ".sec-index": (h) => (h.match(/class="[^"]*\bsec-index\b/g) || []).length,
+    ".sec-rule": (h) => (h.match(/class="[^"]*\bsec-rule\b/g) || []).length,
+    "<h2>": (h) => (h.match(/<h2[\s>]/g) || []).length,
+    "section": (h) => (h.match(/<section[\s>]/g) || []).length,
+    "nav a": (h) => ((inner(h, "nav", "nav").match(/<a[\s>]/g) || []).length),
+    ".work-card": (h) => (h.match(/class="[^"]*\bwork-card\b/g) || []).length,
+    ".social li": (h) => ((inner(h, "ul class=\"social", "ul").match(/<li[\s>]/g) || []).length),
+    "<img>": (h) => (h.match(/<img[\s>]/g) || []).length,
+    "blockquote": (h) => (h.match(/<blockquote[\s>]/g) || []).length,
+    "dl.facts div": (h) => ((inner(h, "dl class=\"facts", "dl").match(/<div[\s>]/g) || []).length),
+    "ol.steps li": (h) => ((inner(h, "ol class=\"steps", "ol").match(/<li[\s>]/g) || []).length),
+  };
+  const bad = [];
+  for (const [, label, want] of claims) {
+    const fn = COUNTS[label];
+    if (!fn) { bad.push(`契约写了「${label} = ${want}」，但测试里没有这一项的量法`); continue; }
+    for (const [page, html] of Object.entries(PAGES)) {
+      const got = fn(html);
+      if (got !== +want) bad.push(`${label}：契约写 ${want}，${page} 实测 ${got}`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n  "));
+});
+
 test("404.html 必须只用根绝对路径（它会被重写到任意深度）", () => {
   const rel = [...read("404.html").matchAll(/(?:href|src)="(\.\/[^"]*|\.\.\/[^"]*)"/g)].map((m) => m[1]);
   assert.deepEqual(rel, [], `错误页里出现了相对路径，嵌套 URL 下会解析错：${rel.join(", ")}`);
