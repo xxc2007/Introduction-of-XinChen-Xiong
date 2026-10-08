@@ -207,7 +207,7 @@ node tools/serve.mjs            # 默认端口 8899，只监听本机回环地�
 换一个写死的空闲端口（别 `kill` 别人的进程）：
 
 ```bash
-netstat -ano | grep LISTENING | grep -E ':89[0-9][0-9]'   # 先看谁在听
+netstat -ano | grep LISTENING | grep -E ':8[89][0-9][0-9]'   # 先看谁在听（含 88xx 与 89xx：8890 / 8899 都在这个范围）
 node tools/serve.mjs 8907                                 # 用没被占的端口
 ```
 

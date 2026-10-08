@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN" dir="ltr">
+<!-- class="no-js" 在这页是**真话**：这一页不挂任何脚本，main.js 那句
+     root.classList.replace('no-js','js') 永远不会执行，所以降级规则必须在这里生效。
+     .reveal 的静止态是 opacity:0，全靠 html.no-js 把它抬回来——
+     漏写这个类，将来任何人在这页加一个 .reveal 元素都会得到一个永久隐形的元素。 -->
+<html lang="zh-CN" dir="ltr" class="no-js">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -205,7 +205,7 @@ node tools/serve.mjs            # port 8899 by default, binds only to the loopba
 If that port is taken, pick a free one instead of killing somebody else's process:
 
 ```bash
-netstat -ano | grep LISTENING | grep -E ':89[0-9][0-9]'   # see what is listening
+netstat -ano | grep LISTENING | grep -E ':8[89][0-9][0-9]'   # see what is listening (88xx and 89xx: 8890 / 8899 are in range)
 node tools/serve.mjs 8907                                 # use a free port
 ```
 

@@ -417,6 +417,26 @@ test("英文页的缩写用印刷体撇号（’），不用直撇号（'）", (
   assert.ok(curly.length >= 3, `只找到 ${curly.length} 处印刷体撇号，正则或页面大概脱节了`);
 });
 
+test("不挂脚本的页面必须带 html.no-js，否则 .reveal 会永久隐形", () => {
+  /* .reveal 的静止态是 opacity:0，把它抬回来只有两条路：main.js 加 .is-in，
+     或 CSS 的 html.no-js / @media (scripting:none) 兜底。
+     404 页刻意零脚本，早先 <html> 上却没有 no-js 类——那时它恰好没用 .reveal 才没出事。
+     「恰好没事」不是设计：谁在这页加一个 .reveal 元素，就会得到一个永久不可见的元素，
+     而页面看起来一切正常（内容还在 DOM 里，读屏也能读到，只是眼睛看不见）。 */
+  for (const [name, html] of Object.entries({ ...PAGES, "404.html": read("404.html") })) {
+    const hasScript = /<script\b/i.test(html);
+    const hasNoJsClass = /<html[^>]*class="[^"]*\bno-js\b/.test(html);
+    const usesReveal = /class="[^"]*\breveal\b/.test(html);
+    if (!hasScript) {
+      assert.ok(hasNoJsClass, `${name} 没有脚本却缺 class="no-js"：.reveal 无人抬升`);
+    }
+    if (usesReveal) {
+      assert.ok(hasScript || hasNoJsClass,
+        `${name} 用了 .reveal，却既没有脚本也没有 html.no-js——内容会停在 opacity:0`);
+    }
+  }
+});
+
 test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
   /* prefersReducedMotion 曾经挂着 export 却没人 import：main.js 自己算 RM 再传进来。
      两个模块各自读同一个媒体查询、还各留一个导出口，就会有「谁负责判断 reduced」的歧义。
