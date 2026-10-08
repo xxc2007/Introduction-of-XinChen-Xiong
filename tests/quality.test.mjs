@@ -6,7 +6,7 @@
    JS 与 CSS 各说各话、注释描述的功能已经被删掉、reduced-motion 漏掉某个动画。 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { execFileSync } from "node:child_process";
 import { join, resolve, dirname } from "node:path";
@@ -22,6 +22,8 @@ const HTML_ZH = read("index.html");
 const HTML_EN = read("en/index.html");
 const README_MD = read("README.md");
 const README_EN = read("README.en.md");
+const CONTRACT_MD = read("docs/build-contract.md");
+const SPEC_MD = read("docs/site-spec.md");
 const PAGES = { "index.html": HTML_ZH, "en/index.html": HTML_EN };
 
 /* 把 CSS 按块切开，方便区分「令牌声明」和「使用处」。
@@ -118,16 +120,6 @@ test("中英两页结构对称", () => {
     assert.equal(zh[k], en[k], `结构不对称：${k} 中文页 ${zh[k]} / 英文页 ${en[k]}`);
   }
   assert.equal(zh.h1, 1, "每页必须恰好一个 h1");
-});
-
-test("页面里所有 ?v= 指纹是同一个值", () => {
-  for (const [name, html] of Object.entries(PAGES)) {
-    const vs = [...new Set((html.match(/\?v=([0-9a-z]+)/g) || []).map((s) => s.slice(3)))];
-    assert.equal(vs.length, 1, `${name} 上有 ${vs.length} 个指纹值：${vs.join(", ")}`);
-  }
-  const zhV = (HTML_ZH.match(/\?v=([0-9a-z]+)/) || [])[1];
-  const enV = (HTML_EN.match(/\?v=([0-9a-z]+)/) || [])[1];
-  assert.equal(zhV, enV, "两页的指纹值必须相同，否则一次部署只刷新一边");
 });
 
 test("HTML 引用的每个本地图都要在仓库里存在", () => {
@@ -245,6 +237,37 @@ test("令牌对比度：承载正文的色档必须过 AA，装饰色档必须�
   // 亮赤陶橙只能当线、点、底色用；它当文字一定不达标，这条把「为什么另设 --terra-ink」钉住。
   const rt = ratio(TOKENS["--terra"], TOKENS["--cream"]);
   assert.ok(rt < 3, `--terra 对 cream 有 ${rt.toFixed(3)}:1，与「不可承载文字」的约定不再一致，注释要重写`);
+});
+
+/* 上一轮 --dark 的来历：它与 --ink 逐字符同值、从未被任何 var() 读过，
+   而两份文档都把它抄在令牌表里——于是"文档描述了一份不存在的实现"。
+   口头纪律管不住这个，所以改成三条能倒下的断言：不闲置、不重名、文档不超售。 */
+test("自定义属性不许闲置：声明了却没有一处 var() 读取，就是死代码", () => {
+  const used = new Set(cssUses);
+  const idle = [...new Set(cssDecls)].filter((t) => !used.has(t));
+  assert.deepEqual(idle, [], `从未被读取的自定义属性：${idle.join(", ")}`);
+});
+
+test("颜色令牌不许两个名字同值：改一个必漏另一个", () => {
+  const byValue = {};
+  for (const [t, v] of Object.entries(TOKENS)) (byValue[v.toLowerCase()] ??= []).push(t);
+  const dup = Object.entries(byValue).filter(([, ts]) => ts.length > 1);
+  assert.deepEqual(dup, [], `同值双名：${dup.map(([v, ts]) => `${v} → ${ts.join(" / ")}`).join("；")}`);
+});
+
+test("文档里的令牌表必须与 CSS 一致：不许点名一个已删除的令牌，也不许抄错值", () => {
+  /* 只挑「令牌名 + 色值」成对出现的地方——那就是文档在替 CSS 报数。
+     分隔符类里故意不放中日韩标点：`--cream #F0EEE6   页面底色  --paper …` 这种
+     一行两列的表格里，`--cream` 不能隔着一串汉字去认领下一个色号。 */
+  const CLAIM = /(--[a-z][a-z0-9-]*)[\s|:`]{0,8}(#[0-9a-fA-F]{6})/g;
+  for (const [name, doc] of Object.entries({ "build-contract.md": CONTRACT_MD, "site-spec.md": SPEC_MD })) {
+    const bad = [];
+    for (const [all, token, hex] of [...doc.matchAll(CLAIM)]) {
+      if (!TOKENS[token]) bad.push(`${all.trim()} —— CSS 里没有这个令牌`);
+      else if (TOKENS[token].toLowerCase() !== hex.toLowerCase()) bad.push(`${token} 文档写 ${hex}，CSS 是 ${TOKENS[token]}`);
+    }
+    assert.deepEqual(bad, [], `${name} 的令牌表与 CSS 不符：\n  ${bad.join("\n  ")}`);
+  }
 });
 
 test("压在粒子场上的文字必须过 AA（--muted 与裸 --terra-ink 都不许）", () => {
@@ -665,15 +688,43 @@ test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / �
 
 /* ---- 下面四条是 2026-10-08 那轮评审查出来的缺陷类别，各自钉一条 ---- */
 
-test("三个 HTML 文件共用同一个 ?v= 指纹（404.html 曾被漏在重写名单外）", () => {
+/* 这一条吸收了原先的「页面里所有 ?v= 是同一个值」：那条只看中英两页、
+   且拿 <=1 判等，两个页面可以「一起没有指纹」而全绿。
+   改成逐页要求 href/src 必须带指纹，再要求全站只有一个值。
+   为什么这么严：nginx 长缓存按扩展名命中、与查询串无关，
+   少一个 ?v= 就等于把旧字节钉一年——favicon 就是这么被 3,290 B 的旧图占住的。 */
+test("每个被 HTML 直接取用的资源都带 ?v=，且全站只有同一个指纹", () => {
   const seen = {};
   for (const f of ["index.html", "en/index.html", "404.html"]) {
-    const vs = [...new Set((read(f).match(/\?v=([0-9a-z]+)/g) || []).map((s) => s.slice(3)))];
-    assert.ok(vs.length <= 1, `${f} 内部就有 ${vs.length} 个指纹值：${vs.join(", ")}`);
-    if (vs.length) seen[f] = vs[0];
+    const html = read(f);
+    const refs = [...html.matchAll(/(?:href|src)="((?:\.\/|\.\.\/|\/)assets\/[^"]*)"/g)].map((m) => m[1]);
+    const bare = refs.filter((u) => !/\?v=[0-9a-z]+/.test(u));
+    assert.deepEqual(bare, [], `${f} 里这些资源没带指纹，改了内容也会被长缓存钉住：${bare.join(", ")}`);
+    const vs = [...new Set(refs.map((u) => (u.match(/\?v=([0-9a-z]+)/) || [])[1]))];
+    assert.equal(vs.length, 1, `${f} 上有 ${vs.length} 个指纹值：${vs.join(", ")}`);
+    seen[f] = vs[0];
   }
   const uniq = [...new Set(Object.values(seen))];
   assert.equal(uniq.length, 1, `各页指纹不一致，说明有文件不在重写名单里：${JSON.stringify(seen)}`);
+});
+
+/* 行号是文档里最容易悄悄失效的一种引用：任何一次编辑都会让它指向别处，
+   而它看起来仍然像证据。2026-10-08 抽查 design.md 的四处内部行号，三处已指错。
+   上游仓库（profile / 纪念册 / GeoHot 的 README）的行号允许保留——那些是**带日期的取证快照**，
+   本仓库里的文件则要求按引文或 `grep -n` 定位。 */
+test("文档不许用行号指向本仓库的文件", () => {
+  const OWN = /`((?:en\/)?index\.html|404\.html|assets\/[a-z0-9./-]+\.(?:js|css)|docs\/[a-z0-9.-]+\.md|[a-z-]+\.(?:md|sh|mjs|json|example)|LICENSE|style\.css|main\.js|scene\.js):\d+(?:[–-]\d+)?`/g;
+  /* 中文那一式「`scripts/deploy.sh` 第 60 行」同一种病。这一式必须再验一步路径是否真的在本仓库里——
+     「纪念册 `assets/map.js` 第 324–327 行」「`assets/style.css` 第 25 行」那些是**别的产品**的取证快照，
+     行号钉在对方那天的字节上，本来就不该被本站的编辑冲掉。 */
+  const CN = /`(\/?[a-z0-9./_-]+\/[a-z0-9._-]+|[a-z0-9._-]+\.(?:md|sh|mjs|js|css|json|example|html))`\s*第\s*\d+(?:[–-]\d+)?\s*行/g;
+  const hits = [];
+  for (const f of [...readdirSync(join(ROOT, "docs")).filter((x) => x.endsWith(".md")).map((x) => `docs/${x}`), "README.md", "README.en.md"]) {
+    const doc = read(f);
+    for (const m of doc.matchAll(OWN)) hits.push(`${f} → ${m[0]}`);
+    for (const m of doc.matchAll(CN)) if (existsSync(join(ROOT, m[1]))) hits.push(`${f} → ${m[0]}`);
+  }
+  assert.deepEqual(hits, [], `这些地方在用行号引用本仓库文件，改一次代码就会指错：\n  ${hits.join("\n  ")}`);
 });
 
 test("404.html 必须只用根绝对路径（它会被重写到任意深度）", () => {

@@ -218,6 +218,21 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "英文页删掉一条 hreflang", file: EN, gate: "parity",
     from: `<link rel="alternate" hreflang="zh-Hans"`, to: `<link rel="alternate" hreflang="zh-TW"`,
     expect: /hreflang/ },
+
+  /* ── 2026-10-08 精简轮新增的四条断言，逐条注入验红 ── */
+  { name: "声明一个没人读的颜色令牌（--dark 那一类）", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`, to: `:root{--idle-demo:#3C7A2E}\n`,
+    expect: /从未被读取的自定义属性/ },
+  { name: "同一个色值起两个名字", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`,
+    to: `:root{--ink-again:#1F1E1D}\n.brand b{color:var(--ink-again)}\n`,
+    expect: /同值双名/ },
+  { name: "文档令牌表里留着一个已删除的令牌", file: "docs/site-spec.md", append: true,
+    to: `\n--idle-demo  #3C7A2E  注入演示用的假令牌\n`, expect: /令牌表与 CSS 不符/ },
+  { name: "文档用行号指向本仓库的文件", file: "docs/design.md", append: true,
+    to: `\n注入演示：透视见 \`style.css:12\`。\n`, expect: /行号引用本仓库文件/ },
+  { name: "一条资源引用丢了 ?v=（favicon 那次事故）", file: ZH,
+    from: `favicon.ico?v=`, to: `favicon.ico?x=`, expect: /没带指纹/ },
 ];
 
 /* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，

@@ -51,7 +51,6 @@ import * as THREE from "../vendor/three.module.min.js";
 :root{
   --cream:#F0EEE6; --paper:#FAF9F5; --ink:#1F1E1D; --muted:#6E6A5E;
   --terra:#D97757; --terra-deep:#C15F3C; --terra-ink:#A8492A; --line:#E4DFD3;
-  --dark:#1F1E1D;
   --serif:'Noto Serif SC Variable','Noto Serif SC',Georgia,"Times New Roman","Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --ease:cubic-bezier(.16,.84,.28,1);

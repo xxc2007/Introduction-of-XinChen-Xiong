@@ -97,7 +97,7 @@ body{ font-family:var(--sans); … }                    /* style.css 第 48–49
 回退链 `Georgia → Times New Roman → Songti SC / STSong / SimSun → serif`，远端字体拿不到也只换字形不塌版面。
 
 **斜体只给拉丁页。** 中文没有真正的斜体字面，`font-style:italic` 只会得到机器伪斜、笔画发糊，
-所以 CSS 把它限定在 `html[lang^="en"] .motto{font-style:italic}`（第 98 行）。
+所以 CSS 把它限定在 `html[lang^="en"] .motto{font-style:italic}`（`grep -n 'html[lang^="en"] .motto' assets/css/style.css` 定位）。
 中文页 `motto` 的层次靠衬线 + `clamp(23px,3.5vw,42px)` + `line-height:1.62` 拉开。
 
 尺度全部是流形的：`body` `clamp(15.5px,.55vw + 14px,17px)` / `line-height:1.95`，
@@ -182,11 +182,11 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 
 | 效果 | 实现 | 实测成本 | `prefers-reduced-motion` | 无 WebGL | 无 JS |
 |---|---|---|---|---|---|
-| 纸屑粒子场 | `scene.js`：`Points` + `ShaderMaterial`（顶点算漂移与闪烁，片元用 `gl_PointCoord` 现算软圆盘，无贴图） | 文件 raw **13,884 B** / gzip **5,990 B**；外加 `three.module.min.js` gzip **79,328 B** + `three.core.min.js` gzip **101,305 B**（vendor 合计 gzip **180,633 B**） | `initField` 只 `render()` **一帧**，永不启动 RAF（`scene.js` 第 311 行） | `getContext("webgl2")` 探不到就 `throw new Error("no-webgl")`，`main.js` 在 `.hero` 上写 `data-field="off"` → 画布撤出布局，只留两圈同心发丝环 | `bootField` 是动态 `import`，脚本被拦时 canvas 空白、hero 照常排版 |
+| 纸屑粒子场 | `scene.js`：`Points` + `ShaderMaterial`（顶点算漂移与闪烁，片元用 `gl_PointCoord` 现算软圆盘，无贴图） | 字节不抄在这里——`node scripts/check-bytes.mjs` 现量（自有 JS 与 Three.js vendor 分两档预算） | `initField` 在减弱动效下只 `render()` **一帧**，永不启动 RAF | `getContext("webgl2")` 探不到就 `throw new Error("no-webgl")`，`main.js` 在 `.hero` 上写 `data-field="off"` → 画布撤出布局，只留两圈同心发丝环 | `bootField` 是动态 `import`，脚本被拦时 canvas 空白、hero 照常排版 |
 | 粒子性能护栏 | 上限 **1200 / 700 / 400** 三档（`(pointer:coarse)` 或宽 <768 → 400；<1200 → 700；其余 1200），下限 `Math.max(64,…)`；DPR 钉 **1.75**；`camera.position.z` 由 `6.6 + progress × 1.9` 推进；指针视差最大 **0.35** 世界单位，仅 `(hover:hover) and (pointer:fine)` | 单向降级：跳过热身 10 帧后取 **60 帧均值**，> **22 ms** 就 `setDrawRange(0, count >> 1)` 且只减一次 | 同上一行：不动 | — | resize 合并 **120 ms** 后才 `setSize`，绝不逐帧重建 |
 | hero 出视口即停 | `IntersectionObserver` 观察 hero + `visibilitychange` | 零额外字节 | `sync()` 直接返回，不启动 | 不相关 | 观察器不存在时 `io=null` 静默跳过 |
-| 等高线（贰 节背景） | HTML 内联 4 条 `<path>` + `.is-in` 触发 `contourDraw 2.6s`；scene 侧另有 10 环 × 96 段 `LineSegments`，`rotation.z += dt × 0.0055`（≈19 分钟一圈） | 内联 SVG 记在页面自己的字节里（`index.html` raw **20,170 B** / gzip **约 7.8 KB**，`wc -c` + `zlib.gzipSync` 实测） | 动画关掉，`stroke-dasharray:none` 直接显示完整线 | 只剩 HTML 那 4 条，静态可读 | 静止态即终态 |
-| 逐节揭示 | `IntersectionObserver`（`threshold:.12`、`rootMargin:'0px 0px -4% 0px'`）加 `.is-in`；CSS `--dur:.52s`（**520 ms**）、`--lift:14px`、错峰 `min(同级序号, 8) × 60ms` | 每元素 1 次 class 写；无逐帧成本 | `RM` 时一次给所有 `.reveal` 加 `.is-in`，等于直接呈现 | 不受影响 | `.reveal{opacity:0}` 由 `html.no-js` 与 `@media (scripting:none)` 两条兜底改回可见（第 548、556 行），内容不缺字 |
+| 等高线（贰 节背景） | HTML 内联 4 条 `<path>` + `.is-in` 触发 `contourDraw 2.6s`；scene 侧另有 10 环 × 96 段 `LineSegments`，`rotation.z += dt × 0.0055`（≈19 分钟一圈） | 内联 SVG 记在页面自己的字节里（不抄数：`wc -c index.html` 与 `node -e "console.log(require('zlib').gzipSync(require('fs').readFileSync('index.html')).length)"` 现量；README 的实测表由 `node scripts/refresh-readme-numbers.mjs` 同步） | 动画关掉，`stroke-dasharray:none` 直接显示完整线 | 只剩 HTML 那 4 条，静态可读 | 静止态即终态 |
+| 逐节揭示 | `IntersectionObserver`（`threshold:.12`、`rootMargin:'0px 0px -4% 0px'`）加 `.is-in`；CSS `--dur:.52s`（**520 ms**）、`--lift:14px`、错峰 `min(同级序号, 8) × 60ms` | 每元素 1 次 class 写；无逐帧成本 | `RM` 时一次给所有 `.reveal` 加 `.is-in`，等于直接呈现 | 不受影响 | `.reveal{opacity:0}` 由 `html.no-js .reveal{opacity:1}` 与 `@media (scripting:none){.reveal{opacity:1}}` 两条兜底改回可见，内容不缺字 |
 | 滚动进度条 | `.progress`（`height:2px`、`background:var(--terra)`）宽度每帧由 `window.scrollY / (scrollHeight - innerHeight)` 写百分比，先读后写 | 每帧 1 次 style 写 | `transition` 无，跟手；`scroll-behavior` 变 `auto` | 不相关 | CSS 里 `html.no-js .progress{display:none}` |
 | 当前节高亮 | scrollspy：`IntersectionObserver` `rootMargin:'-45% 0px -50% 0px'`，命中项写 `aria-current="true"`，CSS 用 `--terra-ink-2` + `rgba(217,119,87,.13)` 染底（染色底必须降到 ink-2，见「壹」那条纪律） | 观察 5 个 section | 与动效无关，照常工作 | 不相关 | 无 JS 时导航仍是 5 个可点锚点 |
 | 作品卡 3D 倾斜 | 只在 `FINE && !COARSE && !RM` 绑定：`nx,ny ∈ [-.5,.5]`，`×10` → **±5 deg**；插值系数 0.2，`|d| ≤ 0.05` 即归零并停帧 | 每卡 2 个 transform 分量，最多 2 张卡 | 不绑定（`CSS` 里 `.work-card{transform:none}` 兜住） | 不相关 | `.work-card` 静止态无 transform |
@@ -194,7 +194,6 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 | 语言菜单 | 复刻母本 AMD 式样：地球图标 + 当前语言名 + chevron，`listbox/option` 语义，`Esc` 关闭并焦点归位，`↑↓ Home End Enter Tab` 全可达，选中项 `--terra-ink-2`（染了赤陶底）+ `✓`；`localStorage` 键 `intro-lang` **只提示不代跳** | 无额外请求（两份 HTML 各自带完整菜单） | `.lang-menu` 的 `langIn .18s` 入场动画关掉 | 不相关 | `html.no-js` 把 `.lang-btn` 隐藏、`.lang-menu` 摊平成两个 `<a>`（另有 `<noscript>` 兜底样式），两页互链始终可点 |
 | 复制邮箱 | `navigator.clipboard.writeText` → 失败退回隐藏 `<textarea>` + `execCommand`；回显写进 `aria-live="polite"` 的 `.copy-status`，**1800 ms** 后清空；再失败提示"已选中，按 Ctrl+C" | 无 | 不相关 | 不相关 | 按钮无 JS 不出现，但 `<a href="mailto:">` 一直是明文地址 |
 | 锚点平滑滚动 | 事件委托，`behavior: RM ? 'auto' : 'smooth'`，含 `#top` 回顶；跳转后给目标补 `tabindex="-1"` 并 `focus({preventScroll:true})` | 零字节 | 直接跳（`auto`） | 不相关 | 浏览器原生锚点跳转仍然工作 |
-| 横向溢出哨兵 | `root.dataset.overflow = '1'` 当 `scrollWidth > innerWidth + 1`；在 resize / load / `document.fonts.ready` 三处测 | 3 次事件绑定 | 不相关 | 不相关 | 不跑，但布局本身不依赖它 |
 
 ### 降级是三档的，不是"有动画/没动画"两档
 
@@ -203,7 +202,7 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
    `transition-duration` 压到 `.001ms` 并 `iteration-count:1`，再逐条点名把 `.reveal`、
    `.scroll-cue::after`、`.work-card`、`.mail::after` 拉回静止终态。
 2. **拿不到 WebGL**：`scene.js` 抛 `no-webgl`，`main.js` 兜住并把 hero 退化为两圈发丝环——**粒子是装饰，不是内容**。
-3. **关掉 JavaScript**：`html.no-js`（`main.js` 第 5 行才换成 `js`）+ `<noscript>` 样式 + `@media (scripting:none)`
+3. **关掉 JavaScript**：`html.no-js`（`main.js` 开头第一句 `root.classList.replace('no-js', 'js')` 才换掉）+ `<noscript>` 样式 + `@media (scripting:none)`
    三重兜底：全部内容可读、5 个锚点可点、语言菜单摊平成两个链接、进度条干脆不出现。
 
 ### 一处必须写下来的事实：减弱动效**不省字节**
@@ -228,10 +227,12 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 
 ## 陆 · 双语与 SEO 的视觉后果
 
-- 两页各 **19.7 KB**（`20,170` / `20,195` B，2026-10-07 09:53 快照，复算记录里有命令），`check-parity.mjs` 断言 **10** 项结构数量与 **5** 组集合两页相等；
+- 两页的字节数不抄在这里（README 的实测表是唯一定点，由 `node scripts/refresh-readme-numbers.mjs` 刷新、`tests/quality.test.mjs` 核对）；
+  `check-parity.mjs` 断言两页的结构数量与若干组集合相等——它每打一行 `✓` 是一项，项数随断言增减，不在文档里记死数。
   互链（`./en/` 与 `../`）按设计就不同，所以比较一律取 basename。
-- 版本串：四个资源引用 `?v=` 必须是同一个 4 位十六进制值（它跟着 HEAD 走，`deploy.sh` 每次部署重算，所以别在文档里
-  写死具体值），`check-parity.mjs` 用 `new Set(grab(h, /\?v=([0-9a-z]+)"/g)).size === 1` 钉死。
+- 版本串：每一个被 HTML 直接取用的资源引用都带 `?v=`，且全站只有同一个值（它是 `git rev-parse --short=6 HEAD` 的 **6 位**十六进制，
+  跟着 HEAD 走，`deploy.sh` 每次部署重算，所以别在文档里写死具体值）。
+  钉这件事的是 `tests/quality.test.mjs`「每个被 HTML 直接取用的资源都带 ?v=」与 `check-parity.mjs` 的集合比较两处。
   nginx 的长缓存是按**扩展名**命中的、跟查询串无关，所以 `?v=` 是唯一的换版本手段：内容变了不换串，
   浏览器与 CDN 就继续端旧字节（实测：不带 `?v=` 的 `/assets/css/style.css` 至今仍回旧副本）。
 - 顶栏是双语共用的预算：英文页品牌行写 `Xiong Xinchen`，语言按钮在 ≤420px 收成只剩地球图标（母本站同一手法），

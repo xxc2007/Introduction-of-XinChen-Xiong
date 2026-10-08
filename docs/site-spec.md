@@ -26,7 +26,6 @@
 --terra-ink   #A8492A  文字专用赤陶橙（承 cream / paper 时）
 --terra-ink-2 #9A4226  文字专用赤陶橙（承被赤陶橙染过的底时）
 --line  #E4DFD3   发丝线          --line-strong #DCD5C6  hover 发丝线
---dark  #1F1E1D   深色区
 --serif  Noto Serif SC Variable（自托管切片）→ Georgia → 宋体族
 --sans   系统无衬线（标签、eyebrow、按钮）
 ```

@@ -224,7 +224,7 @@ node --test "tests/*.test.mjs"    # 质量闸门；必须带 glob，`node --test
 - [ ] `bash scripts/verify-sync.sh` → `ALL CHECKS PASSED`
 - [ ] `bash scripts/switch-routes.sh --dry-run` 的四条计数符合预期，再 `apply`
 - [ ] 线上 `/`、`/en/`、`/404.html`、`/nc15/`、`/nc15/en/`、`/geohot/`、`/comment/` 各回一次状态码
-- [ ] 手机上 ≤420px 与 390px 无横向滚动（`main.js` 的溢出哨兵会把 `data-overflow="1"` 挂出来，验收时断言它永远不为 `1`）
+- [ ] 手机上 ≤420px 与 390px 无横向滚动：DevTools 调到 390×844 后在控制台执行 `document.documentElement.scrollWidth - innerWidth`，**必须是 0**（原先这条靠 `main.js` 往 `<html>` 挂 `data-overflow="1"`，但没有任何脚本或 CSS 读它，已于 2026-10-08 删掉——量一次布局宽度不需要常驻哨兵）
 - [ ] 仓库里没有真实主机信息：`.deploy.env` 仍是未跟踪状态（`git ls-files | grep -c deploy.env` 应为 **1**，即只有 `.deploy.env.example`）
 
 ## 九 · 迁移后第一件事

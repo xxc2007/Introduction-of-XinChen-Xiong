@@ -4,7 +4,7 @@
 命令一并写在各节里，任何人都能重跑一遍对上号。
 
 > **这份文件为什么在 `docs/` 而不是 `assets/`。** 它的前身是 `assets/images/README.md`（2026-10-07 已删）。
-> `scripts/deploy.sh` 第 60 行的归档清单是
+> `scripts/deploy.sh` 里的归档清单是
 > `git archive --format=tar HEAD index.html en 404.html robots.txt sitemap.xml assets`——
 > `assets` 是整目录打包的，所以放在 `assets/` 里的任何 `.md` 都会变成一个公网 URL。
 > 这条清单**不含 `docs`**，本文件因此不进部署包。
@@ -18,14 +18,14 @@
 
 | 文件 | 实测尺寸 | 实测字节 | 怎么来的 | 用在哪 |
 | --- | --- | --- | --- | --- |
-| `avatar.jpg` | 300×300 | 26,762 | 站长本人提供的原图，逐字节搬进来，没重编码、没裁切、没做圆形遮罩（见「三」） | `index.html:102`、`en/index.html:103` 首屏头像 |
-| `favicon.ico` | 32×32（内嵌 PNG） | 1,336 | 由 `tools/make-favicon.mjs` 把 `favicon-32.png` 原样装进合法 ICO 容器（不重新编码像素）；**是真正的 ICO 容器、内嵌一张 32×32 PNG**（见「四」） | `index.html:24`、`en/index.html:24`（`type="image/x-icon"`，带 `?v=`） |
-| `favicon-32.png` | 32×32 | 1,314 | 由 `avatar.jpg` 缩放 32×32，ffmpeg 封装 PNG | `index.html:25`、`en/index.html:25` |
-| `apple-touch-icon.png` | 180×180 | 17,524 | 由 `avatar.jpg` 缩放 180×180，ffmpeg 封装 PNG | `index.html:26`、`en/index.html:26` |
-| `shot-nc15.webp` | 1200×750 | 28,624 | 线上站点实拍 → 裁成 1200×750 → `ffmpeg -c:v libwebp -quality 72`（**逐字节复现成功**，见「六」） | `index.html:139`、`en/index.html:140` 作品卡一 |
-| `shot-geohot.webp` | **1000×626** | 32,500 | 同一趟实拍的 GEOHOT 那张，母图 1200×750，交付时缩到 1000×626 再编 WebP；**编码参数没能复现** | `index.html:152`、`en/index.html:153` 作品卡二 |
+| `avatar.jpg` | 300×300 | 26,762 | 站长本人提供的原图，逐字节搬进来，没重编码、没裁切、没做圆形遮罩（见「三」） | index.html、en/index.html 首屏头像 |
+| `favicon.ico` | 32×32（内嵌 PNG） | 1,336 | 由 `tools/make-favicon.mjs` 把 `favicon-32.png` 原样装进合法 ICO 容器（不重新编码像素）；**是真正的 ICO 容器、内嵌一张 32×32 PNG**（见「四」） | index.html、en/index.html（`type="image/x-icon"`，带 `?v=`） |
+| `favicon-32.png` | 32×32 | 1,314 | 由 `avatar.jpg` 缩放 32×32，ffmpeg 封装 PNG | index.html、en/index.html |
+| `apple-touch-icon.png` | 180×180 | 17,524 | 由 `avatar.jpg` 缩放 180×180，ffmpeg 封装 PNG | index.html、en/index.html |
+| `shot-nc15.webp` | 1200×750 | 28,624 | 线上站点实拍 → 裁成 1200×750 → `ffmpeg -c:v libwebp -quality 72`（**逐字节复现成功**，见「六」） | index.html、en/index.html 作品卡一 |
+| `shot-geohot.webp` | **1000×626** | 32,500 | 同一趟实拍的 GEOHOT 那张，母图 1200×750，交付时缩到 1000×626 再编 WebP；**编码参数没能复现** | index.html、en/index.html 作品卡二 |
 | `og-card.svg` | 1200×630（viewBox `0 0 1200 630`） | 1,663 | 手写 SVG，没有任何外链资源 | 不被任何页面引用，是 `og-card.png` 的母文件 |
-| `og-card.png` | 1200×630 | 74,866 | `og-card.svg` 在 Chrome 里 1:1 栅格化，再经 ffmpeg 封装（**逐字节复现成功**，见「五」） | `og:image`：`index.html:18`、`en/index.html:18` |
+| `og-card.png` | 1200×630 | 74,866 | `og-card.svg` 在 Chrome 里 1:1 栅格化，再经 ffmpeg 封装（**逐字节复现成功**，见「五」） | `og:image`：index.html、en/index.html |
 | `banner.svg` | 1200×400（viewBox `0 0 1200 400`） | 1,803 | 手写 SVG，同上 | **不被任何 HTML 引用**，仓库横幅素材 |
 | `readme-hero-desktop.png` | 2880×1800 | 321,551 | 本地预览实拍（1440×900 @2），Chrome 154 headless 走 CDP `Page.captureScreenshot` | `README.md:59` |
 | `readme-works-desktop.png` | 2880×1800 | 434,385 | 同上，滚到 `#works` | `README.md:66` |
@@ -58,9 +58,9 @@
 - 文件内部的旁证：baseline JPEG（SOF0 `0xC0`）、单次扫描（非 progressive）、JFIF APP0、**没有 EXIF、没有 XMP、没有注释段**。
   `ffprobe` 报 `pix_fmt=yuvj420p`。两张 PNG 图标（`favicon-32.png`、`apple-touch-icon.png`）是 ffmpeg 封装的，
   `favicon.ico` 现在是 `tools/make-favicon.mjs` 把那张 32×32 PNG 装进 ICO 容器得来的——三者都不是从 `avatar.jpg` 重新编码 JPEG 得来的。
-- 显示成方的，不是圆的：`.hero .avatar`（`assets/css/style.css:299`）只有宽度与入场动画，注释写着
-  「原图直出：不加圆框、不加外环、不加描边」；`style.css:585` 在窄屏只改宽度。全站唯一的 `border-radius:50%`
-  在 `style.css:290`，管的是 hero 那两个装饰同心环的 `::before/::after`，跟头像无关。
+- 显示成方的，不是圆的：`.hero .avatar`（assets/css/style.css）只有宽度与入场动画，注释写着
+  「原图直出：不加圆框、不加外环、不加描边」；style.css 在窄屏只改宽度。全站唯一的 `border-radius:50%`
+  在 style.css，管的是 hero 那两个装饰同心环的 `::before/::after`，跟头像无关。
 - 与 `92e48b3` 那次提交里的 `avatar.jpg`（旧清单记的 9,814 B 那版）**不是同一个 blob**：当前值是 `6856bc0`
   「头像回归原图无装饰」换进来的，旧版已不在工作区。
 
@@ -143,7 +143,7 @@ Playwright 驱动本机 Chrome，`viewport 1280×800`、`deviceScaleFactor 1`、
   它与 `crop-geohot.png` 缩到 1000×626 的结果 MAD 1.740 / 255 ⇒ 母图就是那次实拍的 1200×750。
   但按 `-quality 72` 跑出来是 37,710 B，我从 q70 一路试到 q40（37,006 / 36,340 / … / 29,112），
   没有一个命中 32,500 B。缩放算法与质量参数都没记录。**这张的编码参数：provenance unknown。**
-- ⚠️ **`shot-geohot.webp` 实际是 1000×626，`index.html:152` 与 `en/index.html:153` 上写的却是 `width="1200" height="750"`。**
+- ⚠️ **`shot-geohot.webp` 实际是 1000×626，index.html 与 en/index.html 上写的却是 `width="1200" height="750"`。**
   宽高比 1.5974 对 1.6000，差 0.2%，肉眼看不出来，但声明与实物不符，浏览器只能靠 `aspect-ratio` 兜。
   改 `index.html` 不在我这次的动手范围，留给站长。
 - 裁切口径修正一条：旧清单说纪念册取 `x=40`、GEOHOT 取 `x=0`。用 `cap-geohot.png` 分别按 x=40 和 x=0 裁出 1200×750
@@ -181,11 +181,11 @@ Playwright 驱动本机 Chrome，`viewport 1280×800`、`deviceScaleFactor 1`、
 顺带四条由这次实测翻出来的账，前三条不属于本文的动手范围：
 
 1. ~~`index.html` 与 `en/index.html` 的 JSON-LD `"image"` 指着已经删掉的 `avatar.webp`。~~
-   **本文写完之前已被并行提交 `38f86e8` 修掉**，复查现状：`index.html:48` 与 `en/index.html:49` 现在都是
+   **本文写完之前已被并行提交 `38f86e8` 修掉**，复查现状：index.html 与 en/index.html 现在都是
    `https://xxc2007.me/assets/images/avatar.jpg`。留这句是为了说明本文核对到的时刻。
 2. ~~`docs/build-contract.md` §0 那行还写着 `avatar.jpg (9.8 KB) / avatar.webp (5.3 KB)`，两个数字都是旧版；
    同一文件 `.avatar(圆框)` 那句与「不加圆框」相冲。~~ **现已改到 §0**：`avatar.jpg` 26,762 B、`avatar.webp 已删`、
-   `.avatar(原图直出，无圆框/描边/底色)`，与 `style.css:306` 那条注释一致——本文这条账已了结。
+   `.avatar(原图直出，无圆框/描边/底色)`，与 style.css 那条注释一致——本文这条账已了结。
 3. `README.md:156` / `README.en.md:157` 的目录树注释还写着「另有实测清单 README.md」/ "a measured asset manifest"，
    指的是本文搬走之前的那份。
 4. **线上还有个缓存尾巴**：`avatar.webp` 与 `favicon.svg` 早已从仓库删除，公网

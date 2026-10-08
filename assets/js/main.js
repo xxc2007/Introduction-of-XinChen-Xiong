@@ -36,16 +36,6 @@ if (progress) updaters.push(() => {
   progress.style.width = (max > 0 ? clamp(y / max, 0, 1) * 100 : 0).toFixed(2) + '%';
 });
 
-/* ---------- 横向溢出哨兵（验收脚本断言它永远不为 '1'） ---------- */
-function checkOverflow() {
-  if ((root.scrollWidth || 0) > window.innerWidth + 1) root.dataset.overflow = '1';
-  else if (root.dataset.overflow) delete root.dataset.overflow;
-}
-window.addEventListener('resize', checkOverflow, { passive: true });
-window.addEventListener('load', checkOverflow);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(checkOverflow);
-checkOverflow();
-
 /* ---------- 逐节揭示：--d 由同级序号推出，错峰 60ms ---------- */
 (function reveal() {
   const els = $$('.reveal');
