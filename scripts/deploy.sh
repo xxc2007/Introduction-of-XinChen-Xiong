@@ -23,7 +23,7 @@ V="$(git rev-parse --short=6 HEAD)"
 node - "$V" <<'NODE'
 const fs = require("fs");
 const v = process.argv[2];
-for (const p of ["index.html", "en/index.html"]) {
+for (const p of ["index.html", "en/index.html", "404.html"]) {
   if (!fs.existsSync(p)) continue;
   const t = fs.readFileSync(p, "utf8");
   const n = t.replace(/\?v=[0-9a-z]{4,8}/g, "?v=" + v);
@@ -35,6 +35,7 @@ echo "== 1/5 质量闸门 =="
 node scripts/check-parity.mjs
 node scripts/check-links.mjs
 node scripts/check-bytes.mjs
+node --test tests/                 # 结构与约定断言，见 tests/quality.test.mjs
 for s in scripts/*.sh tools/*.mjs; do [ -f "$s" ] && case "$s" in *.sh) bash -n "$s";; *) node --check "$s";; esac; done
 echo "  ✓ 闸门通过"
 

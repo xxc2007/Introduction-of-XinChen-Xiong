@@ -190,10 +190,19 @@ export function initField(canvas, opts = {}) {
   const dpr = Math.min(window.devicePixelRatio || 1, DPR_CAP);
   const count = tierCount(opts);
 
-  const renderer = new THREE.WebGLRenderer({
-    canvas: canvas, antialias: false, alpha: true,
-    premultipliedAlpha: true, powerPreference: "high-performance"
-  });
+  let renderer;
+  try {
+    /* 把探测到的那份上下文直接交给 Three 复用。同一个 canvas 同一种类型只会有一份上下文，
+       早先这里重传一遍属性其实是死配置（后一次 getContext 返回既有对象、属性被忽略）。 */
+    renderer = new THREE.WebGLRenderer({
+      canvas, context: probe, alpha: true, antialias: false, premultipliedAlpha: true
+    });
+  } catch (e) {
+    /* 构造失败一定要把探测到的上下文放掉：teardown() 只是被 return 出去、这里走不到，
+       那个 GPU 槽位会一直占到页面卸载为止。 */
+    try { const lo = probe && probe.getExtension("WEBGL_lose_context"); if (lo) lo.loseContext(); } catch (_) { }
+    throw new Error("no-webgl");
+  }
   renderer.setPixelRatio(dpr);
   renderer.setClearColor(0x000000, 0); /* 透明清屏，让 CSS 的 cream 透上来 */
 
@@ -203,7 +212,10 @@ export function initField(canvas, opts = {}) {
 
   const uni = {
     uTime: { value: 0 },
-    uEnergy: { value: typeof opts.energy === "number" ? opts.energy : 0.35 },
+    /* 与 main.js 的 FIELD_BASE 同值；调用方现在直接把 opts 传进来，不再两边各写一遍字面量。
+       这条路径上 NaN/Infinity 会一路进 uniform，着色器算出 NaN 之后整片点就消失了，
+       所以这里要像 setEnergy 那样先验后夹。 */
+    uEnergy: { value: (typeof opts.energy === "number" && isFinite(opts.energy)) ? Math.min(1, Math.max(0, opts.energy)) : 0.34 },
     uFade: { value: 1 },
     uDpr: { value: dpr }
   };
@@ -247,6 +259,10 @@ export function initField(canvas, opts = {}) {
     renderer.setSize(w, h, false); /* false：不覆盖 CSS 里 inset:0 的尺寸 */
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
+    /* 减弱动效下这一帧就是画面全部：改了尺寸必须重画，否则那张静止图会被拉伸到页面结束。
+       这是补 setEnergy 不再在 reduced 下 render 之后留下的洞——那条改动是对的，
+       但它把这个文件里唯一会执行的重绘路径也一起拿掉了。 */
+    if (reduced) renderer.render(scene, camera);
   }
 
   /* 滚动进度用 section 的 rect，一次 getBoundingClientRect，不逐帧查询 */
@@ -284,6 +300,15 @@ export function initField(canvas, opts = {}) {
     });
     ro.observe(host);
   } catch (e) { ro = null; }
+  /* ResizeObserver 缺席时（ro === null）原来没有任何东西会重算尺寸：
+     换外接屏、改窗口缩放、横竖屏切换都会让画布停在旧尺寸上，
+     而 reduced 模式下那更是永久停在一张拉伸的静止帧。补一条同规则的兜底。 */
+  if (!ro) {
+    window.addEventListener("resize", () => {
+      if (destroyed || resizeTimer) return;
+      resizeTimer = setTimeout(applySize, 120);
+    }, { passive: true });
+  }
 
   function frame(now) {
     raf = requestAnimationFrame(frame);
@@ -327,8 +352,13 @@ export function initField(canvas, opts = {}) {
     sync();
   }
 
-  function onContextLost(ev) {
-    ev.preventDefault();
+  function onContextLost() {
+    /* 这里刻意不调 ev.preventDefault()。
+       preventDefault 是向浏览器申请「稍后给我一次 webglcontextrestored」，
+       可我们紧接着就 teardown() 把两份几何体、两份材质和 renderer 全释放了，
+       也没有任何 webglcontextrestored 处理器——申请一次永远兑现不了的恢复，
+       等于让驱动重置之后的首屏永久停在一张不会再画的画布上。
+       现在直接放弃这块画布，CSS 的 data-field="lost" 静态底纹接管。 */
     if (host && host.dataset) host.dataset.field = "lost";
     teardown();
   }
@@ -356,10 +386,13 @@ export function initField(canvas, opts = {}) {
   return {
     destroy: teardown,
     setEnergy(v) {
-      if (destroyed) return;
+      if (destroyed || reduced) return;
+      /* 减弱动效下这一帧就是最终态：文件头承诺「只出一帧、永不启动 RAF」，
+         所以外部再怎么改场强都不该在这里重新 render——
+         早先这里是 if (reduced) renderer.render(...)，
+         于是 main.js 每次滚动缓动都会让静态画面重画一次，等于把承诺从后门漏掉了。 */
       const v2 = Math.min(1, Math.max(0, typeof v === "number" && isFinite(v) ? v : 0));
       uni.uEnergy.value = v2;
-      if (reduced) renderer.render(scene, camera);
     }
   };
 }

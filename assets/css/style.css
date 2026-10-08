@@ -20,6 +20,7 @@
 :root{
   --cream:#F0EEE6; --paper:#FAF9F5; --ink:#1F1E1D; --muted:#6E6A5E;
   --terra:#D97757; --terra-deep:#C15F3C; --terra-ink:#A8492A; --terra-ink-2:#9A4226; --line:#E4DFD3;
+  --line-strong:#DCD5C6;              /* 悬停时重一档的发丝线；仍是「线」，不是新主色 */
   --dark:#1F1E1D;
   --serif:'Noto Serif SC Variable','Noto Serif SC',Georgia,"Times New Roman","Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
@@ -256,10 +257,10 @@ code{
 
 
 /* ---------- 顶部 2px 滚动进度（贴在顶栏下沿） ---------- */
-/* main.js 每帧写 progress.style.width，所以这里用 width 承态；
-   静止（无 JS / 未滚动）时宽度 0，等于不存在。 */
+/* main.js 每帧直接写 progress.style.width，所以静止（无 JS / 未滚动）时就是 0，等于不存在。
+   早先这里读的是 var(--p,0)，而 --p 从来没有任何人写过——那条间接是死的。 */
 .progress{
-  position:absolute;left:0;bottom:0;height:2px;width:var(--p,0);
+  position:absolute;left:0;bottom:0;height:2px;width:0;
   max-width:100%;background:var(--terra);pointer-events:none;
 }
 
@@ -375,7 +376,7 @@ main>section,.sec{
   padding:clamp(22px,3vw,40px) clamp(20px,3vw,42px) clamp(24px,3vw,40px);
   /* 3D 倾斜（§3-4）：main.js 写 --rx/--ry，幅度 ≤5deg；perspective 挂在 #works 上，
      这样卡片自身的 transform 不被祖先裁切，也不与 .reveal 的 translate 抢属性 */
-  transform:perspective(1200px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
   transition:transform .5s var(--ease),border-color .35s var(--ease);
   will-change:transform;
 }
@@ -384,7 +385,7 @@ main>section,.sec{
    任何一层没被下面显式 margin 覆盖的（或多套了一层 wrapper）都靠这条撑开 */
 .work-card>*+*{margin-top:clamp(18px,2.4vw,26px)}
 #works{perspective:1200px}
-.work-card:hover{border-color:#DCD5C6}
+.work-card:hover{border-color:var(--line-strong)}
 .work-card h3{
   font-size:clamp(21px,2.3vw,30px);font-weight:900;letter-spacing:.03em;line-height:1.42;
 }
@@ -487,7 +488,7 @@ main>section,.sec{
   transition:border-color .3s var(--ease),color .3s var(--ease),translate .3s var(--ease);
 }
 .social svg{width:18px;height:18px}
-/* 名称写进 HTML 的 <span>（便于复制、也兜住图标认不出的情况），但 40×40 的卡面放不下一行字，
+/* 名称写进 HTML 的 <span>（便于复制、也兜住图标认不出的情况），但 44×44 的卡面放不下一行字，
    所以按 .sr-only 的手法只藏视觉、不藏语义；每枚 <a> 另带 aria-label，读屏仍有完整名称。 */
 .social a span,.social button span{
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;
@@ -517,8 +518,10 @@ main>section,.sec{
 .reveal{
   opacity:0;translate:0 var(--lift);
   transition:opacity var(--dur) var(--ease),translate var(--dur) var(--ease);
-  /* 错峰时延：main.js 按同级序号写 --d（已带 ms 单位）；没有脚本时退回 --i 自算 */
-  transition-delay:var(--d,calc(var(--i,0) * 60ms));
+  /* 错峰时延：main.js 按同级序号写 --d（已带 ms 单位）。
+     没有脚本时这条整体不生效——html.no-js 与 @media (scripting:none) 都会把 transition 关掉，
+     所以不需要「自己算序号」的后备；早先写的 var(--i) 从来没有任何地方赋值过。 */
+  transition-delay:var(--d,0ms);
 }
 .reveal.is-in,.reveal.visible,.is-in .reveal{opacity:1;translate:none}
 /* 无 JS 降级：所有内容可读可点（粒子与动效只是增强，不是内容） */
@@ -602,6 +605,10 @@ html.no-js .lang-menu a{padding:8px 10px}
   *,*::before,*::after{
     animation-duration:.001ms!important;animation-iteration-count:1!important;
     transition-duration:.001ms!important;scroll-behavior:auto!important;
+    /* 时延也必须一起归零：只归零 duration 的话，入场动画虽然"瞬间完成"但**仍然要等**，
+       于是首屏文字会先按各自的 --d（最大 280ms）保持 opacity:0 再突然出现——
+       对 prefers-reduced-motion 的访客来说，这不是"没有动画"，是"内容迟到了 280ms"。 */
+    animation-delay:0s!important;transition-delay:0s!important;
   }
   .reveal,.reveal.is-in{opacity:1;translate:none;transition:none}
   .hero .avatar,.hero h1,.hero .motto,.hero .hero-sub,.hero-cta,.scroll-cue{animation:none}

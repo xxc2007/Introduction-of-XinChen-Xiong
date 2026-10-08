@@ -30,15 +30,18 @@
 .nf-links a:hover .zh,.nf-links a:focus-visible .zh{color:var(--terra-ink,#A8492A)}
 @media (max-width:420px){.nf-links a{gap:2px 10px;padding:13px 2px}}
 </style>
-<link rel="stylesheet" href="./assets/fonts/noto-serif-sc/wght.css?v=a1b2">
-<link rel="stylesheet" href="./assets/css/style.css?v=a1b2">
+<!-- 这一页是全仓唯一**不许用相对路径**的文件：nginx 用 error_page 把它内部重写到任意不存在的地址上，
+     访客真正请求的是 /foo/bar 这种带目录的 URL，相对 ./assets/... 会被解析成 /foo/assets/... 而 404——
+     于是错误页丢掉样式、四个出口里两个点不动。所以这里一律写根绝对路径。 -->
+<link rel="stylesheet" href="/assets/fonts/noto-serif-sc/wght.css?v=7450a8">
+<link rel="stylesheet" href="/assets/css/style.css?v=7450a8">
 </head>
 <body>
 
 <a class="skip" href="#main">跳到主要内容</a>
 
 <header class="topbar">
-  <a class="brand" href="./"><b>熊鑫晨</b><span>Xiong Xinchen</span></a>
+  <a class="brand" href="/"><b>熊鑫晨</b><span>Xiong Xinchen</span></a>
 </header>
 
 <main id="main">
@@ -48,8 +51,8 @@
     <p class="nf-note">这一页我没有写过，所以这里确实没有东西可读；下面几个地址是我已经放上线的，从哪一个进去都一样。</p>
 
     <ul class="nf-links">
-      <li><a href="./" hreflang="zh-Hans"><span class="zh">首页</span><span class="en" lang="en">The Chinese page you meant to open.</span></a></li>
-      <li><a href="./en/" hreflang="en"><span class="zh">English</span><span class="en" lang="en">The same page in English.</span></a></li>
+      <li><a href="/" hreflang="zh-Hans"><span class="zh">首页</span><span class="en" lang="en">The Chinese page you meant to open.</span></a></li>
+      <li><a href="/en/" hreflang="en"><span class="zh" lang="en">English</span><span class="en" lang="en">The same page in English.</span></a></li>
       <li><a href="/nc15/"><span class="zh">纪念册</span><span class="en" lang="en">The memorial site for my old school.</span></a></li>
       <li><a href="/geohot/"><span class="zh">地理热点</span><span class="en" lang="en">GEOHOT, a daily geography digest.</span></a></li>
     </ul>

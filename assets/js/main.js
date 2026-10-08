@@ -15,7 +15,7 @@ const LANG = (root.lang || 'zh').toLowerCase().indexOf('en') === 0 ? 'en' : 'zh'
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
 const tok = (n, fb) => { const v = getComputedStyle(root).getPropertyValue(n).trim(); return v || fb; };
 
-/* ---------- 全站唯一的 rAF 链：滚动/墨点/磁吸/音量斜坡都搭这条 ---------- */
+/* ---------- 全站唯一的 rAF 链：滚动进度、磁吸、卡片倾斜都搭这条 ---------- */
 const updaters = [];
 let queued = false, redo = false;
 function frame() {
@@ -80,7 +80,7 @@ let scene = null;
   try {
     const mod = await import('./scene.js?v=' + VER);
     if (typeof mod.initField !== 'function') throw new TypeError('scene.js 未导出 initField');
-    scene = mod.initField(canvas);   /* setEnergy 在返回的句柄上，不在模块命名空间上 */
+    scene = mod.initField(canvas, { reducedMotion: RM, energy: FIELD_BASE });   /* 句柄上有 setEnergy */
   } catch (e) {
     const hero = $('.hero');
     if (hero) hero.dataset.field = 'off';   /* CSS 据 data-field=off 退回静态发丝底纹 */
@@ -91,27 +91,28 @@ let scene = null;
 /* ---------- 场强跟随滚动：滑得越快纸屑越活跃，停下后回落到基准 ---------- */
 const FIELD_BASE = .34;
 (function fieldDrive() {
-  let cur = FIELD_BASE, target = FIELD_BASE, raf = 0, idle = 0;
+  if (RM) return;                    /* 减弱动效：既不绑滚动，也不该被驱动——见 scene.js 的 setEnergy */
+  let cur = FIELD_BASE, target = FIELD_BASE, idle = 0;
   let lastY = window.scrollY, lastT = performance.now();
 
-  function push(v) {
-    if (scene && typeof scene.setEnergy === 'function') { try { scene.setEnergy(v); } catch (e) { } }
-  }
-  function ease() {
-    cur += (target - cur) * .12;
-    push(cur);
-    if (Math.abs(target - cur) < .004) { cur = target; raf = 0; return; }
-    raf = requestAnimationFrame(ease);
-  }
   window.addEventListener('scroll', () => {
     const now = performance.now(), dt = Math.max(8, now - lastT);
     const speed = Math.abs(window.scrollY - lastY) / dt;   /* px/ms */
     lastY = window.scrollY; lastT = now;
     target = Math.min(1, FIELD_BASE + speed * .62);
     clearTimeout(idle);
-    idle = setTimeout(() => { target = FIELD_BASE; if (!raf) raf = requestAnimationFrame(ease); }, 90);
-    if (!raf) raf = requestAnimationFrame(ease);
+    idle = setTimeout(() => { target = FIELD_BASE; }, 90);
+    schedule();
   }, { passive: true });
+
+  /* 缓动搭全站那条 rAF 链，不再自己开第二个 requestAnimationFrame 循环。 */
+  updaters.push(() => {
+    const d = target - cur;
+    if (Math.abs(d) < .004) { cur = target; }
+    else cur += d * .12;
+    if (scene && typeof scene.setEnergy === 'function') { try { scene.setEnergy(cur); } catch (e) { } }
+    if (cur !== target) keep();
+  });
 })();
 
 
@@ -155,32 +156,34 @@ if (HOVER && !RM) $$('[data-magnetic]').forEach((el) => spring(el, (ev, r) => [
 if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev, r) => {
   const nx = clamp((ev.clientX - r.left) / (r.width || 1) - .5, -.5, .5);
   const ny = clamp((ev.clientY - r.top) / (r.height || 1) - .5, -.5, .5);
-  /* 高光的跟随量用独立变量名：早先这里写的是 --mx/--my（百分比），
-     而同名变量会被卡内的按钮继承去当 translate 用，指针移开后按钮就跑位。 */
-  card.style.setProperty('--hl-x', ((nx + .5) * 100).toFixed(1) + '%');
-  card.style.setProperty('--hl-y', ((ny + .5) * 100).toFixed(1) + '%');
   return [-ny * 10, nx * 10];
-}, (node, a, b) => {
-  node.style.transform = a || b
-    ? 'perspective(720px) rotateX(' + a.toFixed(2) + 'deg) rotateY(' + b.toFixed(2) + 'deg)' : '';
-  node.style.setProperty('--hl-x', '50%'); node.style.setProperty('--hl-y', '50%');
+}, (node, x, y) => {
+  /* 只写 --rx/--ry，透视交给 #works{perspective:1200px} 提供。
+     早先这里是直接覆盖 style.transform、还自带一个 perspective(720px)——
+     于是 CSS 里那条 rotateX(var(--rx)) 永远不生效，卡片同时受三份透视，
+     而 --rx/--ry 成了没人写的死变量。 */
+  node.style.setProperty('--rx', x.toFixed(2) + 'deg');
+  node.style.setProperty('--ry', y.toFixed(2) + 'deg');
 }));
 
 /* ---------- 语言菜单：menu/menuitem 语义（与纪念册一致）+ 记忆，但绝不自动跳转 ---------- */
 (function langMenu() {
+  /* 只认这一种结构：.lang > button[aria-haspopup] + ul[role=menu]，两页都是这么写的。
+     早先这里还兜着 listbox / option / .lang-item 几套别名，而且后两个是**全文档**查询——
+     一旦 .lang 被改名，脚本就会去劫持页面上另一个不相干的下拉控件。
+     结构对不上就整块不启用（这是渐进增强，不是失败），比猜错目标安全。 */
   const box = $('.lang');
-  let btn = (box && $('[aria-haspopup]', box)) || $('[aria-haspopup="listbox"]') || $('.lang-btn');
-  let menu = (box && ($('.lang-menu', box) || $('[role="listbox"]', box))) || $('.lang-menu') || $('[role="listbox"]');
-  if (btn && !menu && btn.nextElementSibling) menu = btn.nextElementSibling;
+  if (!box) return;
+  const btn = $('[aria-haspopup]', box);
+  const menu = $('.lang-menu', box) || (btn && btn.nextElementSibling);
   if (!btn || !menu) return;
-  const wrap = box || btn.parentElement || document.body;
-  let items = $$('[role="menuitem"], [role="option"]', menu);
-  if (!items.length) items = $$('.lang-item, a[href]', menu);
+  const wrap = box;
+  const items = $$('[role="menuitem"]', menu);
   if (!items.length) return;
 
   const optionOf = (node) => {
     if (!node || !node.closest) return null;
-    return node.matches('[role="menuitem"], [role="option"]') ? node : node.closest('[role="menuitem"], [role="option"]');
+    return node.matches('[role="menuitem"]') ? node : node.closest('[role="menuitem"]');
   };
   const anchorOf = (o) => (o.matches && o.matches('a[href]')) ? o : $('a[href]', o);
   const isOpen = () => !menu.hidden;
@@ -223,12 +226,18 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') {
       ev.preventDefault();
       if (!isOpen()) { open(ev.key === 'ArrowDown' ? 0 : items.length - 1); return; }
-      const i = items.indexOf(optionOf(ev.target));
-      const n = (i + (ev.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      const cur = items.indexOf(optionOf(ev.target));
+      /* 焦点还在触发按钮上时 indexOf 是 -1：早先这里算成 (-1-1+2)%2 === 0，
+         于是从按钮按 ArrowUp 会跳到**第一项**而不是最后一项。 */
+      const n = cur < 0
+        ? (ev.key === 'ArrowDown' ? 0 : items.length - 1)
+        : (cur + (ev.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
       focusItem(items[n]);
     } else if (ev.key === 'Home') { if (isOpen()) { ev.preventDefault(); focusItem(items[0]); } }
     else if (ev.key === 'End') { if (isOpen()) { ev.preventDefault(); focusItem(items[items.length - 1]); } }
-    else if (ev.key === 'Enter' && isOpen()) {
+    else if (ev.key === 'Enter' || ev.key === ' ') {
+      /* role="menuitem" 的键盘约定是 Enter **和** Space；链接原生只认 Enter。 */
+      if (!isOpen()) return;
       const o = optionOf(ev.target);
       if (o) { ev.preventDefault(); select(o); }
     }
@@ -286,7 +295,11 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     'min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center';
   off.addEventListener('click', () => hint.remove());
   hint.appendChild(say); hint.appendChild(go); hint.appendChild(off);
-  document.body.appendChild(hint);
+  /* 插在语言控件**之后**而不是 </body> 之前：这块横幅画在页面顶部，
+     若 DOM 顺序排到最后，键盘用户要 Tab 完整张页才够到它的「切过去」链接（WCAG 2.4.3）。
+     用 insertAdjacentElement 搬的是已建好的节点，不解析 HTML。 */
+  if (wrap.insertAdjacentElement) wrap.insertAdjacentElement('afterend', hint);
+  else document.body.appendChild(hint);
   requestAnimationFrame(() => {
     const r = btn.getBoundingClientRect();
     const w = hint.offsetWidth || 240;
