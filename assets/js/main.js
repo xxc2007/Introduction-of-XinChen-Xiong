@@ -138,7 +138,10 @@ updaters.push(() => {
       if (Math.abs(d) > .05) { it.c[i] += d * .2; moving = true; } else it.c[i] = it.t[i];
     }
     if (moving) { it.write(it.el, it.c[0], it.c[1]); keep(); }
-    else { it.live = false; it.write(it.el, 0, 0); }
+    /* 收敛之后必须写**当前值**而不是 0。原来这里写死 (0,0)，于是弹簧一停下就把
+       元素弹回原点：鼠标还停在卡片上，倾斜却已经塌平——实测 --rx/--ry 稳定在 0.00deg。
+       pointerleave 时目标本来就是 [0,0]，所以离开归零仍然成立。 */
+    else { it.live = false; it.write(it.el, it.c[0], it.c[1]); }
   }
 });
 
