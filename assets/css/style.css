@@ -274,6 +274,25 @@ code{
   max-width:100%;background:var(--terra);pointer-events:none;
 }
 
+/* ---------- 语言偏好横幅（只在访客换过语言时由 main.js 建出来） ----------
+   静态样式全部在这里；JS 只写 left/top 两个跟随顶栏算出来的动态值。
+   早先整块样式是 main.js 里的 cssText 字符串，把 --line / --paper / --muted / --terra-ink
+   四个令牌的值又各抄了一份当 fallback——改令牌时那一处不会跟着变，是第二个真相来源。 */
+.lang-hint{
+  position:fixed;z-index:9;display:flex;gap:.6rem;align-items:center;
+  max-width:min(92vw,30rem);padding:.4rem .7rem;
+  border:1px solid var(--line);border-radius:2px;
+  background:var(--paper);color:var(--muted);font:14px/1.5 var(--sans);
+}
+.lang-hint a{
+  color:var(--terra-ink);text-decoration:underline;white-space:nowrap;
+  display:inline-flex;align-items:center;min-height:24px;   /* WCAG 2.5.8：命中区不矮于 24px */
+}
+.lang-hint button{
+  border:0;background:none;color:inherit;cursor:pointer;font-size:16px;line-height:1;
+  min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center;
+}
+
 /* ── 06 · 首屏 hero ── */
 .hero{
   position:relative;

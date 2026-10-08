@@ -727,6 +727,22 @@ test("文档不许用行号指向本仓库的文件", () => {
   assert.deepEqual(hits, [], `这些地方在用行号引用本仓库文件，改一次代码就会指错：\n  ${hits.join("\n  ")}`);
 });
 
+/* design.md 把等宽栈逐字符抄了一遍。抄来的东西会烂——同一轮里令牌表就是这么错的。
+   不要求它抄，只要求「抄了就必须对」。 */
+test("文档里逐字抄的 CSS 片段必须仍在 CSS 里", () => {
+  const cssPlain = CSS.replace(/\s+/g, "");
+  const DOCS = { "design.md": read("docs/design.md"), "site-spec.md": SPEC_MD, "build-contract.md": CONTRACT_MD };
+  const bad = [], quoted = [];
+  for (const [name, doc] of Object.entries(DOCS))
+    for (const m of doc.matchAll(/`([^`]*ui-monospace[^`]*)`/g)) {
+      quoted.push(name);
+      if (!cssPlain.includes(m[1].replace(/\s+/g, ""))) bad.push(`${name} 抄的等宽栈在 style.css 里已找不到：${m[1]}`);
+    }
+  // 一处都没抄的时候这条等于没跑——它保护的是「抄了就得对」，不是「可以不抄」。
+  assert.ok(quoted.length > 0, "三份文档里没有任何一处逐字抄等宽栈，这条断言是空的");
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
 test("404.html 必须只用根绝对路径（它会被重写到任意深度）", () => {
   const rel = [...read("404.html").matchAll(/(?:href|src)="(\.\/[^"]*|\.\.\/[^"]*)"/g)].map((m) => m[1]);
   assert.deepEqual(rel, [], `错误页里出现了相对路径，嵌套 URL 下会解析错：${rel.join(", ")}`);

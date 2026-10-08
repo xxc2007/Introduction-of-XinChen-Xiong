@@ -13,7 +13,6 @@ const FINE = mq('(hover: hover) and (pointer: fine)').matches;
 const COARSE = mq('(pointer: coarse)').matches;
 const LANG = (root.lang || 'zh').toLowerCase().indexOf('en') === 0 ? 'en' : 'zh';
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
-const tok = (n, fb) => { const v = getComputedStyle(root).getPropertyValue(n).trim(); return v || fb; };
 
 /* ---------- 全站唯一的 rAF 链：滚动进度、磁吸、卡片倾斜都搭这条 ---------- */
 const updaters = [];
@@ -289,22 +288,15 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   const hint = document.createElement('div');
   hint.className = 'lang-hint';
   hint.setAttribute('role', 'status');   /* 事后出现的横幅：播报给读屏，但不抢焦点 */
-  hint.style.cssText = 'position:fixed;z-index:9;left:0;bottom:0;display:flex;gap:.6rem;align-items:center;' +
-    'max-width:min(92vw,30rem);padding:.4rem .7rem;border:1px solid ' + tok('--line', '#E4DFD3') + ';' +
-    'border-radius:2px;background:' + tok('--paper', '#FAF9F5') + ';color:' + tok('--muted', '#6E6A5E') + ';' +
-    'font:14px/1.5 ' + tok('--sans', 'system-ui,sans-serif');
   const say = document.createElement('span');
   say.textContent = LANG === 'en' ? 'You last read this site in Chinese.' : '你上次看的是中文版。';
   const go = document.createElement('a');
   go.textContent = LANG === 'en' ? 'Switch →' : '切过去 →';
   go.href = link.href;
-  go.style.cssText = 'color:' + tok('--terra-ink', '#A8492A') + ';text-decoration:underline;white-space:nowrap';
   go.addEventListener('click', () => remember(saved));
   const off = document.createElement('button');
   off.type = 'button'; off.setAttribute('aria-label', LANG === 'en' ? 'Dismiss' : '关闭提示');
   off.textContent = '×';
-  off.style.cssText = 'border:0;background:none;color:inherit;font:16px/1 sans-serif;cursor:pointer;' +
-    'min-width:24px;min-height:24px;display:inline-flex;align-items:center;justify-content:center';
   off.addEventListener('click', () => hint.remove());
   hint.appendChild(say); hint.appendChild(go); hint.appendChild(off);
   /* 插在语言控件**之后**而不是 </body> 之前：这块横幅画在页面顶部，
@@ -324,7 +316,6 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     const w = hint.offsetWidth || 240;
     hint.style.left = clamp(r.left + w > window.innerWidth - 8 ? window.innerWidth - w - 8 : r.left, 8, window.innerWidth - w - 8) + 'px';
     hint.style.top = (bar.bottom + 6) + 'px';
-    hint.style.bottom = 'auto';
   });
 })();
 

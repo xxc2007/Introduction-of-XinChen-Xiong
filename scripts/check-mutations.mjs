@@ -233,6 +233,9 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     to: `\n注入演示：透视见 \`style.css:12\`。\n`, expect: /行号引用本仓库文件/ },
   { name: "一条资源引用丢了 ?v=（favicon 那次事故）", file: ZH,
     from: `favicon.ico?v=`, to: `favicon.ico?x=`, expect: /没带指纹/ },
+  { name: "文档抄的等宽栈与 CSS 脱节", file: "docs/design.md",
+    re: /(ui-monospace),SFMono-Regular/, to: "$1,SFMonoRenamed",
+    expect: /等宽栈在 style\.css 里已找不到/ },
 ];
 
 /* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，
