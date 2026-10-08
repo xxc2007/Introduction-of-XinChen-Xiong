@@ -408,6 +408,15 @@ test("HTML 上挂的每个 class 都必须有出处（style.css 或本页内联 
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
+test("英文页的缩写用印刷体撇号（’），不用直撇号（'）", () => {
+  /* 中文页全角标点本来就是对的；英文页早先混着直撇号（haven't / I'm / site's），
+     与整站的排版取向不一致。这条只盯英文页，不碰属性分隔用的引号。 */
+  const straight = [...HTML_EN.matchAll(/[A-Za-z]'[A-Za-z]/g)].map(m => m[0]);
+  assert.deepEqual(straight, [], `英文页还有 ${straight.length} 处直撇号：${straight.join(", ")}`);
+  const curly = [...HTML_EN.matchAll(/[A-Za-z]’[A-Za-z]/g)].map(m => m[0]);
+  assert.ok(curly.length >= 3, `只找到 ${curly.length} 处印刷体撇号，正则或页面大概脱节了`);
+});
+
 test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 会加上去）", () => {
   /* .sr-only 定义了却没有任何元素用它；.lang-menu 的 [aria-selected] 那一半也是死的——
      菜单只写 aria-current（main.js:233/344），从没写过 aria-selected。

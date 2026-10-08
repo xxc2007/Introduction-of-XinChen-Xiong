@@ -75,6 +75,8 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "reduced-motion 后面又追加普通规则（反压）", file: CSS, append: true,
     from: "", to: `\n.late-rule{color:var(--ink);animation:bogus 2s}\n`,
     expect: /盖掉它/ },
+  { name: "英文页改回直撇号", file: EN,
+    from: `I haven’t written code`, to: `I haven't written code`, expect: /直撇号/ },
   { name: "新增一条没人使用的 CSS 规则（死规则）", file: CSS, insert: true,
     from: `@media (prefers-reduced-motion:reduce)`,
     to: `.unused-orphan{color:var(--ink);border:1px solid var(--line)}\n`,
