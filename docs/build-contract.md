@@ -59,7 +59,7 @@ import * as THREE from "../vendor/three.module.min.js";
 配色纪律：文字用赤陶橙**必须** `--terra-ink`；`--terra`/`--terra-deep` 只作填充、描边、装饰。
 但这条有**两条不可协商的下修例外**（比值都由 `tests/quality.test.mjs` 从 CSS 反推核对，别在文档里抄数）：
 1. **凡把底色染上赤陶橙（`background:rgba(217,119,87,.NN)`）的规则，文字一律降到 `--terra-ink-2`**——染色底会吃掉约 0.3–0.6 档对比，`--terra-ink` 在 12% 染色的 cream 上只剩 4.443:1，掉出 AA。命中处：导航当前项、语言 pill 的 hover/展开态、hero CTA / btn-live / btn-repo / copy-mail 的 hover。
-2. **任何赤陶橙文字都不许直接压在 WebGL 粒子场上**——一颗 12% 墨色纸屑落到字下，`--terra-ink` 掉到 3.916、`--terra-ink-2` 也只有 4.495，都够不着 4.5。所以：压在场上的 `hero-sub`、`scroll-cue` 用 `--ink`；`.hero-cta` 自带一张不透光的 `--paper` 底把文字与画布解耦；`.scroll-cue:hover` 因此**改用下划线而不是变色**（`text-decoration` 用 `--terra`，不是把文字染成赤陶橙）。
+2. **任何赤陶橙文字都不许直接压在 WebGL 粒子场上**——一颗 12% 墨色纸屑落到字下，`--terra-ink` 掉到 3.916、`--terra-ink-2` 也只有 4.495，都够不着 4.5。所以：压在场上的 `hero-sub`、`scroll-cue` 用 `--ink`；`.hero-cta` 自带一张不透光的 `--paper` 底把文字与画布解耦；`.scroll-cue` 是 `aria-hidden` 的装饰，**不许有任何 hover 态**（早先给过一条下划线当反馈，实测点下去什么都不做，那是假的「我可点」暗示）。
 分层只靠 `1px solid var(--line)` 发丝线，**不用 box-shadow、不用渐变、不用圆角大于 2px**。
 
 ### §1 之后新增的两个令牌，与一条圆角例外（2026-10-08 补记）

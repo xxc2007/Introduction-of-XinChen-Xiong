@@ -345,14 +345,15 @@ code{
   position:absolute;left:var(--gut);bottom:26px;z-index:1;
   display:flex;flex-direction:column;align-items:center;gap:12px;
   font-family:var(--sans);font-size:14px;letter-spacing:.26em;text-transform:uppercase;
-  color:var(--ink);text-decoration:none;      /* 同样压在画布上，不用 --muted，见 .hero-sub 那条 */
+  color:var(--ink);                         /* 压在画布上：粒子场上除 --ink 外没有任何一档赤陶橙能稳住 4.5
+                                               （--terra-ink 最差 3.916、--terra-ink-2 也只有 4.495，
+                                               比值由 tests/quality.test.mjs 反推），所以也不用 --muted */
   animation:rise 1s .6s var(--ease) both;
 }
-/* 悬停不换文字色：粒子场上除 --ink 外没有任何一档赤陶橙能稳住 4.5
-   （--terra-ink 最差 3.916、--terra-ink-2 也只有 4.495，见 tests/quality.test.mjs），
-   所以反馈改用下划线——线色是装饰色 --terra，不参与对比度要求。 */
-.scroll-cue:hover{text-decoration:underline;text-decoration-color:var(--terra);
-  text-underline-offset:6px;text-decoration-thickness:1px}
+/* 这里原先有一条把悬停反馈做成下划线的规则：变色过不了对比度，就改成下划线。
+   但 <p class="scroll-cue" aria-hidden="true"> 不是链接、点下去什么都不做（实测点击后 scrollY 仍是 0），
+   给它任何悬停反馈都是假的「我可点」暗示。装饰就不该有交互态，整条删掉；
+   "往下"这件事由那根会生长的发丝线自己说。 */
 .scroll-cue::after{
   content:"";width:1px;height:46px;background:var(--terra);
   transform-origin:0 0;animation:cue 2.4s var(--ease) infinite;

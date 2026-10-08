@@ -55,7 +55,7 @@ terra-deep / cream = 0.90388 / 0.24848 = 3.638:1     ← 只够 1.4.11 非文本
 
 1. **赤陶橙要做文字，落在 `--cream` / `--paper` 这类没被染过的底上，用 `--terra-ink`（#A8492A，4.951 / 5.459）。** 亮两档的 `--terra`（2.687）与 `--terra-deep` 够不着 4.5:1，所以它们的权限被写死成"填充、描边、装饰"。
 2. **凡把底色染上赤陶橙（`background:rgba(217,119,87,.NN)`）的规则，文字一律降到 `--terra-ink-2`（#9A4226，对 cream 5.682）。** 染色底本身吃掉 0.3–0.6 档对比：`--terra-ink` 对 cream 是 4.951，对 `cream+12% 赤陶`只剩 **4.443**，掉出 AA。代码里命中这条的：`#nav a[aria-current="true"]`、`.lang-btn:hover` / `[aria-expanded="true"]`、`.lang-menu a:hover` / 选中项、`.hero-cta:hover` / `.btn-live:hover`、`.btn-repo:hover` / `.copy-mail:hover`——它们都是 `--terra-ink-2` 文字 + 染色底，**不是** `--terra-ink`。基态的 `a`、`.sec-index`、`.brand:hover span`、`.mail`、`.social a` 承的是没染过的 cream/paper，仍是 `--terra-ink`。
-3. **任何赤陶橙文字都不许直接压在 WebGL 粒子场上。** 一颗 12% 墨色纸屑落到字下，`--terra-ink` 只剩 **3.916**、`--terra-ink-2` 也只有 **4.495**，两档都够不着 4.5。所以：压在场上的 `hero-sub`、`scroll-cue` 用 `--ink`；`.hero-cta` 自带一张不透光的 `--paper` 底把文字与画布解耦（`--terra-ink` 对 `--paper` 是 5.459）；**`.scroll-cue:hover` 因此改用下划线而不是变色**（`text-decoration` 用 `--terra`，不占用文字色）。
+3. **任何赤陶橙文字都不许直接压在 WebGL 粒子场上。** 一颗 12% 墨色纸屑落到字下，`--terra-ink` 只剩 **3.916**、`--terra-ink-2` 也只有 **4.495**，两档都够不着 4.5。所以：压在场上的 `hero-sub`、`scroll-cue` 用 `--ink`；`.hero-cta` 自带一张不透光的 `--paper` 底把文字与画布解耦（`--terra-ink` 对 `--paper` 是 5.459）；`.scroll-cue` 干脆**不给 hover 态**——它是 `aria-hidden` 的装饰，实测点下去什么都不做，任何 hover 反馈都是假的「我可点」暗示。
 
 这三条都由 `tests/quality.test.mjs` 从 CSS 反推核对——它扫每条"染色底 + 赤陶文字"的组合并逐个量比值，写成 `--terra-ink` 放在染色底上会直接判红。`--terra` 只出现在 `background:rgba(217,119,87,…)`、`border-color`、`.progress` 的填充、`.scroll-cue::after` 的 1px 竖线、`blockquote` 的 2px 左竖线这些地方。
 
