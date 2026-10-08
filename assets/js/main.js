@@ -199,7 +199,7 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   const anchorOf = (o) => (o.matches && o.matches('a[href]')) ? o : $('a[href]', o);
   const isOpen = () => !menu.hidden;
   function open(idx) {
-    menu.hidden = false; menu.classList.add('is-open');
+    menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
     if (typeof idx === 'number') focusItem(items[idx]);
   }
@@ -222,7 +222,7 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     return /(^|[/#.])en([/.#]|$)/i.test(href) ? 'en' : 'zh';
   };
 
-  items.forEach((o) => { if (!o.setAttribute) return; const on = codeOf(o) === LANG; o.setAttribute('aria-current', on ? 'true' : 'false'); o.classList.toggle('is-current', on); });
+  items.forEach((o) => { if (!o.setAttribute) return; const on = codeOf(o) === LANG; o.setAttribute('aria-current', on ? 'true' : 'false'); });
 
   btn.addEventListener('click', () => { isOpen() ? close(false) : open(); });
   items.forEach((o) => {

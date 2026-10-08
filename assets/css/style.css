@@ -21,6 +21,10 @@
   --cream:#F0EEE6; --paper:#FAF9F5; --ink:#1F1E1D; --muted:#6E6A5E;
   --terra:#D97757; --terra-deep:#C15F3C; --terra-ink:#A8492A; --terra-ink-2:#9A4226; --line:#E4DFD3;
   --line-strong:#DCD5C6;              /* 悬停时重一档的发丝线；仍是「线」，不是新主色 */
+  --terra-wash:#F6E9E2;              /* = --paper 上盖 12% --terra 的不透光合成值。
+                                        首屏那颗按钮压在 WebGL 画布上，hover 若用半透明染色，
+                                        画布会透上来：实测最坏情况（一颗 12% 墨色纸屑在字下）
+                                        --terra-ink-2 只剩 4.248:1，掉出 AA。用这条不透光的底是 5.801:1。 */
   --serif:'Noto Serif SC Variable','Noto Serif SC',Georgia,"Times New Roman","Songti SC","STSong","Noto Serif CJK SC","SimSun",serif;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
   --ease:cubic-bezier(.16,.84,.28,1);
@@ -119,9 +123,13 @@ html[lang^="en"] .motto{font-style:italic}
 /* .hero-cta 压在粒子场上，透明底会让 --terra-ink 掉到 3.813:1；
    给它一张不透光的纸当底，文字基线就与画布无关了（--terra-ink 对 --paper 是 5.459:1）。 */
 .hero-cta{background:var(--paper)}
-.hero-cta:hover,.hero-cta:focus-visible,.btn-live:hover,.btn-live:focus-visible{
+.btn-live:hover,.btn-live:focus-visible{
   color:var(--terra-ink-2);background:rgba(217,119,87,.12);border-color:var(--terra-deep);
 }
+/* 同一件悬停态在首屏那颗按钮上必须换一种底：.btn-live 在 --paper 卡片里，染色底不透画布；
+   .hero-cta 直接压在粒子场上，半透明染色会让画布透上来（4.248:1，掉出 AA，而且随粒子漂移忽过忽不过）。
+   所以它用不透光的 --terra-wash——视觉上是同一个 peach 色，文字色保持 --terra-ink（对 wash 是 5.041:1）。 */
+.hero-cta:hover,.hero-cta:focus-visible{background:var(--terra-wash);border-color:var(--terra-deep)}
 .btn-repo,.copy-mail{color:var(--ink);border-color:var(--line)}
 /* 凡是把底染上赤陶橙（rgba(217,119,87,.NN)）的规则，文字一律降一到 --terra-ink-2。
    染色底本身会吃掉 0.3–0.6 的对比度：--terra-ink 对 cream 是 4.951，
@@ -214,8 +222,12 @@ code{
   stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.88;
 }
 .lang-current{font-size:14px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+/* 这里原先还写着 width/height:12px——但上面 `.lang-btn svg{width:15px}` 的特异度是
+   (0,1,1)，压过 `.lang-caret` 的 (0,1,0)，所以那两行从来没生效过，实测箭头一直是 15px。
+   删掉这两行而不是提高特异度：站点按 15px 的样子被验收过，不该借"修死代码"偷偷改视觉。
+   真要 12px 就写 `.lang-btn .lang-caret{…}`，那是一次可见改动，得单独决定。 */
 .lang-caret{
-  width:12px;height:12px;flex:none;fill:none;stroke:currentColor;
+  flex:none;fill:none;stroke:currentColor;
   stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
   transition:transform .25s var(--ease);
 }
@@ -408,7 +420,12 @@ main>section{
 }
 .contours path{stroke:currentColor;stroke-width:1;stroke-linecap:round}
 /* stroke-dasharray 揭示（§3-8）：静止态=完整描出，JS 进场时才回放到起点 */
-.is-in .contours path{animation:contourDraw 2.6s var(--ease) both}
+/* 等高线在「贰 · WORKS」的节标题被揭示时开始画。
+   原先写的是 `.is-in .contours path`（后代选择器），但 <svg class="contours"> 的父级是
+   section#works，`.is-in` 只加在 .reveal 上（main.js 的 reveal()），而这一节里带 .reveal 的
+   是它的**兄弟**（.sec-head / .sec-rule）——所以那条规则从来没匹配上过，动画一次也没跑过
+   （实测 computed animation-name 恒为 none）。改成兄弟选择器。 */
+.reveal.is-in ~ .contours path{animation:contourDraw 2.6s var(--ease) both}
 @keyframes contourDraw{from{stroke-dasharray:2600;stroke-dashoffset:2600}to{stroke-dasharray:2600;stroke-dashoffset:0}}
 .work-card{
   position:relative;z-index:1;
@@ -689,6 +706,6 @@ html.no-js .lang-menu a{padding:8px 10px}
   .social a:hover{translate:none}
   .hero-cta:hover,.btn-live:hover,.btn-repo:hover,.copy-mail:hover{translate:none}
   .mail::after{transition:none;transform:scaleX(1)}
-  .contours path,.is-in .contours path{animation:none;stroke-dasharray:none;stroke-dashoffset:0}
+  .contours path,.reveal.is-in ~ .contours path{animation:none;stroke-dasharray:none;stroke-dashoffset:0}
   .lang-menu{animation:none}
 }

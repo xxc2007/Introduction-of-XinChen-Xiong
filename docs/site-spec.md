@@ -26,6 +26,7 @@
 --terra-ink   #A8492A  文字专用赤陶橙（承 cream / paper 时）
 --terra-ink-2 #9A4226  文字专用赤陶橙（承被赤陶橙染过的底时）
 --line  #E4DFD3   发丝线          --line-strong #DCD5C6  hover 发丝线
+--terra-wash #F6E9E2  = paper 上盖 12% terra 的不透光底（首屏按钮 hover 专用，半透明会让画布透上来掉出 AA）
 --serif  Noto Serif SC Variable（自托管切片）→ Georgia → 宋体族
 --sans   系统无衬线（标签、eyebrow、按钮）
 ```
@@ -57,9 +58,9 @@
 | # | 效果 | 实现 | 预算 / 降级 |
 | --- | --- | --- | --- |
 | 1 | 纸屑粒子场（首屏） | Three.js `Points` + 自定义 `ShaderMaterial`，米白底、赤陶橙少量点缀，指针视差 + 滚动缓慢推移 | 桌面 ≤1200 粒、移动 ≤400 粒；DPR 上限 1.75；无 WebGL 时退化为静态 CSS 发丝纹理 |
-| 2 | 滚动逐节揭示 | `IntersectionObserver` + `--reveal` 变量，位移 ≤14px、时长 520ms、错峰 60ms | `prefers-reduced-motion` 下直接呈现 |
+| 2 | 滚动逐节揭示 | `IntersectionObserver` + `.is-in`，逐元素 `--d` 时延变量，位移 ≤14px、时长 520ms、错峰 60ms | `prefers-reduced-motion` 下直接呈现 |
 | 3 | 磁吸按钮 / 链接下划线扫过 | pointermove 位移 ≤6px，缓出；纯 CSS 下划线 `scaleX` | 触屏不绑定 |
-| 4 | 作品卡 3D 倾斜 | `rotateX/Y ≤ 5deg` + 发丝高光边，`transform-style: preserve-3d` | 触屏/reduced-motion 关闭 |
+| 4 | 作品卡 3D 倾斜 | `rotateX/Y ≤ 5deg` + 发丝高光边（`#works` 给 `perspective`，卡片自己不设 `transform-style`） | 触屏/reduced-motion 关闭 |
 | 5 | 语言切换 pill | 复刻纪念册：地球图标 + 当前语言名 + chevron，展开列表，选中项赤陶橙 + ✓；`localStorage` 记忆；键盘可达（Esc 关闭、焦点归位） | 无 JS 时是两个可点链接 |
 | 6 | 滚动进度条 | 顶部 2px 赤陶橙进度条 | 纯 CSS 可降级 |
 | 7 | 等高线装饰（贰 节背景） | 内联 SVG `stroke-dasharray` 揭示动画，单色 `--line` | 静态显示 |

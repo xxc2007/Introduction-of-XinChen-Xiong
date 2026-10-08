@@ -19,18 +19,27 @@ KH="${DEPLOY_KNOWN_HOSTS:-$HOME/.ssh/known_hosts}"
 SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=accept-new -i $SSH_KEY -o UserKnownHostsFile=$KH"
 ssh_run() { ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" "$@"; }
 
-echo "== 0/5 资源指纹（?v=）自动跟随 HEAD =="
+echo "== 0/5 资源指纹（?v=）与 sitemap 的 lastmod 自动跟随 HEAD =="
 # CSS/JS 走的是 max-age=1 年 + immutable，只有 ?v= 变了浏览器才会重新取。
 # 手工改容易漏，这里在跑闸门之前先按 HEAD 统一一次。
 V="$(git rev-parse --short=6 HEAD)"
-node - "$V" <<'NODE'
+# sitemap 的 lastmod 同理：手抄的日期一定会过期（2026-10-08 实测它还写着 10-07，
+# 而两页 HTML 那天刚改过）。取「最后一次真的动了这两页的提交日期」，
+# 不是 HEAD 的日期——只改文档或脚本的一次提交不该让爬虫以为内容变了。
+D="$(git log -1 --format=%cd --date=short -- index.html en/index.html)"
+node - "$V" "$D" <<'NODE'
 const fs = require("fs");
-const v = process.argv[2];
+const [v, d] = process.argv.slice(2);
 for (const p of ["index.html", "en/index.html", "404.html"]) {
   if (!fs.existsSync(p)) continue;
   const t = fs.readFileSync(p, "utf8");
   const n = t.replace(/\?v=[0-9a-z]{4,8}/g, "?v=" + v);
   if (n !== t) { fs.writeFileSync(p, n); console.log(`  ${p} → ?v=${v}`); }
+}
+if (fs.existsSync("sitemap.xml")) {
+  const t = fs.readFileSync("sitemap.xml", "utf8");
+  const n = t.replace(/<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/g, `<lastmod>${d}</lastmod>`);
+  if (n !== t) { fs.writeFileSync("sitemap.xml", n); console.log(`  sitemap.xml → lastmod=${d}`); }
 }
 NODE
 

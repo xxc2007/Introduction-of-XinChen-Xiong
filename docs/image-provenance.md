@@ -27,9 +27,9 @@
 | `og-card.svg` | 1200×630（viewBox `0 0 1200 630`） | 1,663 | 手写 SVG，没有任何外链资源 | 不被任何页面引用，是 `og-card.png` 的母文件 |
 | `og-card.png` | 1200×630 | 74,866 | `og-card.svg` 在 Chrome 里 1:1 栅格化，再经 ffmpeg 封装（**逐字节复现成功**，见「五」） | `og:image`：index.html、en/index.html |
 | `banner.svg` | 1200×400（viewBox `0 0 1200 400`） | 1,803 | 手写 SVG，同上 | **不被任何 HTML 引用**，仓库横幅素材 |
-| `readme-hero-desktop.png` | 2880×1800 | 321,551 | 本地预览实拍（1440×900 @2），Chrome 154 headless 走 CDP `Page.captureScreenshot` | `README.md:59` |
-| `readme-works-desktop.png` | 2880×1800 | 434,385 | 同上，滚到 `#works` | `README.md:66` |
-| `readme-hero-mobile.png` | 1170×2532 | 243,352 | 本地预览移动仿真实拍（390×844 @3） | `README.md:73` |
+| `readme-hero-desktop.png` | 2880×1800 | 321,551 | 本地预览实拍（1440×900 @2），Chrome 154 headless 走 CDP `Page.captureScreenshot` | README.md |
+| `readme-works-desktop.png` | 2880×1800 | 434,385 | 同上，滚到 `#works` | README.md |
+| `readme-hero-mobile.png` | 1170×2532 | 243,352 | 本地预览移动仿真实拍（390×844 @3） | README.md |
 
 `404.html` 不引用任何图片。
 
@@ -143,9 +143,9 @@ Playwright 驱动本机 Chrome，`viewport 1280×800`、`deviceScaleFactor 1`、
   它与 `crop-geohot.png` 缩到 1000×626 的结果 MAD 1.740 / 255 ⇒ 母图就是那次实拍的 1200×750。
   但按 `-quality 72` 跑出来是 37,710 B，我从 q70 一路试到 q40（37,006 / 36,340 / … / 29,112），
   没有一个命中 32,500 B。缩放算法与质量参数都没记录。**这张的编码参数：provenance unknown。**
-- ⚠️ **`shot-geohot.webp` 实际是 1000×626，index.html 与 en/index.html 上写的却是 `width="1200" height="750"`。**
-  宽高比 1.5974 对 1.6000，差 0.2%，肉眼看不出来，但声明与实物不符，浏览器只能靠 `aspect-ratio` 兜。
-  改 `index.html` 不在我这次的动手范围，留给站长。
+- ✅ **`shot-geohot.webp` 实际是 1000×626；两页 HTML 的声明已经改成 1000×626。**
+  原先写的是母图尺寸 1200×750（宽高比 1.6000 对实物 1.5974，差 0.2%）。
+  现在这条由 `tests/quality.test.mjs` 的「每个 <img> 声明的 width/height 与文件真实尺寸一致」钉住，改回去会直接判红。
 - 裁切口径修正一条：旧清单说纪念册取 `x=40`、GEOHOT 取 `x=0`。用 `cap-geohot.png` 分别按 x=40 和 x=0 裁出 1200×750
   再和 `crop-geohot.png` 比：**x=0 差值 0.000，x=40 差值 10.059** ⇒ GEOHOT 确实是 x=0，那句是对的；
   而 `shot.cjs` 里写死的 `CLIP.x` 是 40，对两张图都成立——说明 `crop-geohot.png` 不是 `shot.cjs` 直接产的那张，
@@ -186,7 +186,7 @@ Playwright 驱动本机 Chrome，`viewport 1280×800`、`deviceScaleFactor 1`、
 2. ~~`docs/build-contract.md` §0 那行还写着 `avatar.jpg (9.8 KB) / avatar.webp (5.3 KB)`，两个数字都是旧版；
    同一文件 `.avatar(圆框)` 那句与「不加圆框」相冲。~~ **现已改到 §0**：`avatar.jpg` 26,762 B、`avatar.webp 已删`、
    `.avatar(原图直出，无圆框/描边/底色)`，与 style.css 那条注释一致——本文这条账已了结。
-3. `README.md:156` / `README.en.md:157` 的目录树注释还写着「另有实测清单 README.md」/ "a measured asset manifest"，
+3. README.md / README.en.md 的目录树注释还写着「另有实测清单 README.md」/ "a measured asset manifest"，
    指的是本文搬走之前的那份。
 4. **线上还有个缓存尾巴**：`avatar.webp` 与 `favicon.svg` 早已从仓库删除，公网
    `https://xxc2007.me/assets/images/avatar.webp` 却仍然返回 200——那是 Cloudflare 边缘缓存的旧副本。
@@ -201,7 +201,7 @@ Playwright 驱动本机 Chrome，`viewport 1280×800`、`deviceScaleFactor 1`、
 2026-10-07 处理：文件从仓库删除（本文取代它），服务器上的那一份单独删掉，实测
 源站 `http://127.0.0.1/assets/images/README.md`（带 `Host` 头）与公网
 `https://xxc2007.me/assets/images/README.md` 都是 **404**，同期 `/assets/images/avatar.jpg` 仍是 **200**。
-机制上真正的闸门是 `scripts/deploy.sh:60` 的归档清单——它只打 `index.html en 404.html robots.txt sitemap.xml assets`，
+机制上真正的闸门是 `scripts/deploy.sh` 的归档清单 的归档清单——它只打 `index.html en 404.html robots.txt sitemap.xml assets`，
 `docs` 从来不在里面，所以本文（以及 `docs/` 下其它内部文档）不会被部署到公网。**要往 `docs/` 放东西，不要往 `assets/` 放。**
 
 ## 十一 · 这台机器上当前的工具版本

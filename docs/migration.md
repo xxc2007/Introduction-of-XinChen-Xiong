@@ -16,8 +16,8 @@
 
 | 前提 | 为什么必须 | 怎么确认 |
 |---|---|---|
-| Cloudflare 托管 DNS，且**代理在前**，回源走明文 `:80` | 站点自己不管证书；任何跳转必须写死 `https://$host…`，相对 Location 会被拼成明文 `http://` 把访客送走 | 示例配置第 9–10 行的注释解释了这条；`:80` 那个 server 只做一件事——`return 301 https://$host$request_uri` |
-| Let's Encrypt 证书 + certbot webroot `/var/www/certbot` | `:443` 上那份 `fullchain` / `privkey` 的路径在示例配置第 27–28 行；续签走 `/.well-known/acme-challenge/`，那个 location **不能**被重定向吞掉 | `nginx -t` 通过就说明证书路径存在且可读 |
+| Cloudflare 托管 DNS，且**代理在前**，回源走明文 `:80` | 站点自己不管证书；任何跳转必须写死 `https://$host…`，相对 Location 会被拼成明文 `http://` 把访客送走 | 示例配置开头那段「CF Flexible」注释解释了这条；`:80` 那个 server **不是**只做一次跳转：它 `return 301 https://xxc2007.me$request_uri`（写死域名，不用 `$host`），另外还带 `absolute_redirect off`、`root /var/www/intro` 与 `error_page 404 /404.html`。删掉后两项会让 CF 回源到明文 :80 时拿不到站点 |
+| Let's Encrypt 证书 + certbot webroot `/var/www/certbot` | `:443` 上那份 `fullchain` / `privkey` 的路径见 `grep -n "fullchain|privkey" deploy/nginx.conf.example`；续签走 `/.well-known/acme-challenge/`，那个 location **不能**被重定向吞掉 | `nginx -t` 通过就说明证书路径存在且可读 |
 | nginx（带 `alias`、`proxy_pass`、`error_page` 内部跳转） | 四个前缀的归属和优先级只在 nginx 配置里说得清 | `nginx -v` |
 | Node（本次核对 `v24.19.0`）、`bash`、`git`、`curl`、`ssh`、`gh` CLI | `check-*.mjs` 与 `tools/*.mjs` 都是 Node；`verify-sync.sh` 的 B 段和备用发布通道都调 `gh api` | `node --version && git --version && gh --version` |
 | 服务器上有 `www-data` 与 `sudo`；邻站已在原位 | `deploy.sh` 收尾会 `chown -R www-data:www-data $DEPLOY_ROOT`；纪念册目录 `/var/www/nc15`、GEOHOT 的本机 Node 服务 `:3000`、Artalk `:23366` 必须还活着 | `curl -s -o /dev/null -w '%{http_code}\n' -H 'Host: xxc2007.me' http://127.0.0.1/geohot/` |

@@ -243,6 +243,16 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     re: /(`\.work-card` = )2/, to: "$13", expect: /契约写 3/ },
   { name: "往契约的数量表里加一项、测试却没有量法", file: "docs/build-contract.md",
     re: /(`ol\.steps li` = 4)/, to: "$1、`.not-measured` = 9", expect: /没有这一项的量法/ },
+  { name: "新令牌只写进 CSS、没进契约（--terra-wash 那一类）", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`,
+    to: `:root{--demo-undoc:#123456}\n.brand b{color:var(--demo-undoc)}\n`,
+    expect: /没写进 .* 的令牌表/ },
+  { name: "sitemap 的 lastmod 停在旧日期", file: "sitemap.xml",
+    re: /<lastmod>\d{4}-\d{2}-\d{2}<\/lastmod>/, to: "<lastmod>2020-01-01</lastmod>",
+    expect: /lastmod/ },
+  { name: "等高线动画挂回后代选择器（那个从没匹配上的写法）", file: CSS,
+    re: /\.reveal\.is-in ~ \.contours path/, to: ".is-in .contours path",
+    expect: /永远匹配不上|没有带 \.reveal 的兄弟/ },
 ];
 
 /* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，

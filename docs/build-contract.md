@@ -69,6 +69,7 @@ import * as THREE from "../vendor/three.module.min.js";
 | 令牌 | 值 | 为什么必须有 |
 |---|---|---|
 | `--terra-ink-2` | `#9A4226` | 赤陶橙文字**落在被赤陶橙染过的底上**时（导航当前项、语言 pill 的 hover/展开态、hero CTA hover），`--terra-ink` 只剩 4.443:1，14px 的字不够 AA。这一档实测 5.682:1。**具体比值一律以 `tests/quality.test.mjs` 为准，本表只说明为什么需要这一档。** |
+| `--terra-wash` | `#F6E9E2` | 首屏那颗按钮压在 WebGL 画布上，hover 若用半透明染色（`rgba(217,119,87,.12)`），画布会透上来：实测最坏情况（一颗 12% 墨色纸屑落在字下）`--terra-ink-2` 只剩 **4.248:1**，掉出 AA，而且随粒子漂移忽过忽不过。这条是 `--paper` 上盖 12% `--terra` 的**不透光**合成值，视觉上是同一个 peach 色，比值回到 5.041:1（`--terra-ink`）/ 5.801:1（`--terra-ink-2`）。 |
 | `--line-strong` | `#DCD5C6` | 悬停时重一档的发丝线。它此前是一个直接写在 `.work-card:hover` 里的裸十六进制——等于偷偷存在第二种"线"的颜色。 |
 
 **圆角的唯一例外是 `border-radius:50%`**，只出现在 WebGL 失败时 hero 的那两圈同心发丝环上。
@@ -131,7 +132,7 @@ body
 | --- | --- |
 | `assets/css/style.css` | 全部样式与组件、响应式（≥1200 / 768 / ≤420 三档）、`prefers-reduced-motion` 降级、发丝线图标卡 |
 | `assets/js/scene.js` | Three.js 首屏粒子场（导出 `initField(canvas)`），无 WebGL 时抛错由 main.js 兜底 |
-| `assets/js/main.js` | 揭示动画、磁吸、卡片倾斜、语言菜单、进度条、复制邮箱、光标墨点 |
+| `assets/js/main.js` | 揭示动画、磁吸、卡片倾斜、语言菜单、进度条、复制邮箱 |
 | `index.html` / `en/index.html` | 结构与文案 |
 | `404.html`、`robots.txt`、`sitemap.xml`、`assets/images/*` | 配套页与图 |
 | `README*.md`、`docs/*` | 仓库展示与迁移文档 |
@@ -139,7 +140,7 @@ body
 ## 6. 无障碍硬指标
 
 - 语言菜单：`button[aria-haspopup=menu][aria-expanded]` + `ul[role=menu]` + `li > a[role=menuitem]`（选中项标 `aria-current=true`，与纪念册同一套语义）；Esc 关闭并把焦点还给按钮；无 JS 时 `.lang-menu` 里两个 `<a>` 仍可点。
-- `canvas#field`：`role="img"` + `aria-label`（中文页写装饰性说明，英文页对应翻译）。
+- `canvas#field`：`aria-hidden="true"`，**不带 `role="img"` 也不带 `aria-label`**——它是纯装饰，读屏应当整块跳过（骨架那节 §2 同一条）。
 - 焦点：`:focus-visible{outline:2px solid var(--terra-ink);outline-offset:3px}`。
 - 正文对比度 ≥ 7:1；`--muted` 只用于 ≥14px 的辅助文字（对 cream 实测 4.652:1，过 AA 但只余一档）。
   **对比度的唯一出处是 `tests/quality.test.mjs` 的断言**——本文件与 `style.css` 的注释都不再各自抄数，

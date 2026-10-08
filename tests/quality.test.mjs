@@ -266,6 +266,11 @@ test("文档里的令牌表必须与 CSS 一致：不许点名一个已删除的
       if (!TOKENS[token]) bad.push(`${all.trim()} —— CSS 里没有这个令牌`);
       else if (TOKENS[token].toLowerCase() !== hex.toLowerCase()) bad.push(`${token} 文档写 ${hex}，CSS 是 ${TOKENS[token]}`);
     }
+    /* 反方向也要查：契约 §1 的标题就是「设计令牌」，漏记一个新令牌等于它不在契约里，
+       而下一个人只会读契约。上一版只查「文档超售」，于是新增 --terra-wash 时全绿。 */
+    for (const t of Object.keys(TOKENS)) {
+      if (!doc.includes(t)) bad.push(`${t}（${TOKENS[t]}）在 CSS 里被 var() 读取，却没写进 ${name} 的令牌表`);
+    }
     assert.deepEqual(bad, [], `${name} 的令牌表与 CSS 不符：\n  ${bad.join("\n  ")}`);
   }
 });
@@ -566,6 +571,26 @@ test("CSS 里想把 [hidden] 的元素显出来，display 就必须带 !importan
   assert.deepEqual(offenders, [], `这些规则会被 [hidden]{{display:none!important}} 盖掉：${offenders.join(" | ")}`);
 });
 
+/* 等高线的画入动画原先挂在 `.is-in .contours path` 上——后代选择器。
+   但 .is-in 只加在 .reveal 上，而这一节里带 .reveal 的是 .contours 的**兄弟**
+   （.sec-head / .sec-rule），父级 section#works 自己没有 .reveal。
+   于是那条规则一次也没匹配上，实测 computed animation-name 恒为 none，
+   而 docs/design.md 把这个效果当成已上线的行为写了下来。 */
+test("等高线画入动画的挂载点必须真的能匹配上", () => {
+  const anim = (CSS_CODE.match(/([^.{}][^{}]*?)\{[^}]*animation\s*:\s*contourDraw/) || []);
+  const sel = (anim[1] || "").trim();
+  assert.ok(sel, "找不到给 .contours path 挂 contourDraw 的规则——动画整个没了");
+  assert.ok(/[+~]/.test(sel), `选择器 "${sel}" 用的是后代/子选择器，而 .contours 没有任何 .reveal 祖先，永远匹配不上`);
+  for (const [name, html] of Object.entries(PAGES)) {
+    const works = (html.match(/<section[^>]*id="works"[\s\S]*?<\/section>/) || [""])[0];
+    assert.ok(works, `${name} 找不到 #works 这一节`);
+    const contourIdx = works.indexOf('class="contours"');
+    assert.ok(contourIdx > 0, `${name} 的 #works 里没有 svg.contours`);
+    assert.ok(/class="[^"]*\breveal\b[^"]*"[^>]*>/.test(works.slice(0, contourIdx)),
+      `${name}：.contours 之前没有带 .reveal 的兄弟元素，兄弟选择器会落空`);
+  }
+});
+
 test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
   /* prefersReducedMotion 曾经挂着 export 却没人 import：main.js 自己算 RM 再传进来。
      两个模块各自读同一个媒体查询、还各留一个导出口，就会有「谁负责判断 reduced」的歧义。
@@ -733,18 +758,25 @@ test("每个被 HTML 直接取用的资源都带 ?v=，且全站只有同一个�
    上游仓库（profile / 纪念册 / GeoHot 的 README）的行号允许保留——那些是**带日期的取证快照**，
    本仓库里的文件则要求按引文或 `grep -n` 定位。 */
 test("文档不许用行号指向本仓库的文件", () => {
-  const OWN = /`((?:en\/)?index\.html|404\.html|assets\/[a-z0-9./-]+\.(?:js|css)|docs\/[a-z0-9.-]+\.md|[a-z-]+\.(?:md|sh|mjs|json|example)|LICENSE|style\.css|main\.js|scene\.js):\d+(?:[–-]\d+)?`/g;
-  /* 中文那一式「`scripts/deploy.sh` 第 60 行」同一种病。这一式必须再验一步路径是否真的在本仓库里——
-     「纪念册 `assets/map.js` 第 324–327 行」「`assets/style.css` 第 25 行」那些是**别的产品**的取证快照，
-     行号钉在对方那天的字节上，本来就不该被本站的编辑冲掉。 */
-  const CN = /`(\/?[a-z0-9./_-]+\/[a-z0-9._-]+|[a-z0-9._-]+\.(?:md|sh|mjs|js|css|json|example|html))`\s*第\s*\d+(?:[–-]\d+)?\s*行/g;
+  /* 一律按「反引号里的路径 + :行号」抓，再要求这个路径真的在本仓库里——
+     上游仓库（profile / 纪念册 / GeoHot 的 README）的行号是**带日期的取证快照**，
+     那些路径在本地不存在，因此天然被放过；而 `README.md:156`、`scripts/deploy.sh:60`
+     这种本站文件必须判红。上一版的名单是手写的，漏了 README.md 与带目录前缀的路径，
+     评审代理一次就数出六条漏网的。 */
+  const OWN = /`([a-zA-Z0-9._/-]+\.(?:md|sh|mjs|c?js|css|json|example|html|xml|txt|pem))(?::(\d+))(?:[–-](\d+))?`/g;
   const hits = [];
   for (const f of [...readdirSync(join(ROOT, "docs")).filter((x) => x.endsWith(".md")).map((x) => `docs/${x}`), "README.md", "README.en.md"]) {
     const doc = read(f);
-    for (const m of doc.matchAll(OWN)) hits.push(`${f} → ${m[0]}`);
+    for (const m of doc.matchAll(OWN)) {
+      if (!existsSync(join(ROOT, m[1]))) continue;
+      const lines = read(m[1]).split("\n").length;
+      hits.push(`${f} → ${m[0]}（该文件只有 ${lines} 行；就算行号还对，也会在下一次编辑后指错）`);
+    }
+    /* 中文那一式：「`scripts/deploy.sh` 第 60 行」。同样要求路径存在。 */
+    const CN = /`(\/?[a-z0-9./_-]+\/[a-z0-9._-]+|[a-z0-9._-]+\.(?:md|sh|mjs|js|css|json|example|html))`\s*第\s*\d+(?:[–-]\d+)?\s*行/g;
     for (const m of doc.matchAll(CN)) if (existsSync(join(ROOT, m[1]))) hits.push(`${f} → ${m[0]}`);
   }
-  assert.deepEqual(hits, [], `这些地方在用行号引用本仓库文件，改一次代码就会指错：\n  ${hits.join("\n  ")}`);
+  assert.deepEqual(hits, [], `这些地方在用行号引用本仓库文件：\n  ${hits.join("\n  ")}`);
 });
 
 /* design.md 把等宽栈逐字符抄了一遍。抄来的东西会烂——同一轮里令牌表就是这么错的。
@@ -799,6 +831,18 @@ test("build-contract 的「数量断言」表必须逐项等于 HTML 实测", ()
     }
   }
   assert.deepEqual(bad, [], bad.join("\n  "));
+});
+
+/* sitemap 的 lastmod 是手抄日期，一定会过期：2026-10-08 实测它还写着 10-07，
+   而两页 HTML 那天刚改过。deploy.sh 第 0 步现在按「最后一次真的动了这两页的提交」重写它，
+   这条断言就是钉住那个等式——只改文档的一次提交不该让爬虫以为内容变了，所以取的是 HTML 的日期不是 HEAD。 */
+test("sitemap.xml 的 lastmod 必须等于最后一次改动两页 HTML 的提交日期", () => {
+  const want = execFileSync("git", ["log", "-1", "--format=%cd", "--date=short", "--", "index.html", "en/index.html"],
+    { cwd: ROOT, encoding: "utf8" }).trim();
+  const got = [...read("sitemap.xml").matchAll(/<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>/g)].map((m) => m[1]);
+  assert.ok(got.length > 0, "sitemap.xml 里一个 <lastmod> 都没有，这条断言是空的");
+  assert.deepEqual([...new Set(got)], [want],
+    `sitemap 写的是 ${[...new Set(got)].join(", ")}，最后一次动 HTML 的提交是 ${want}（跑一次 deploy.sh 会自动对齐）`);
 });
 
 test("404.html 必须只用根绝对路径（它会被重写到任意深度）", () => {
