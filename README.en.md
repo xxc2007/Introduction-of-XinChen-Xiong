@@ -105,7 +105,7 @@ Play the film directly in the player below.
 
 https://github.com/user-attachments/assets/dcc5e666-2019-4937-b110-1f25e4c18b0c
 
-[Watch in 1080p](https://xxc2007.me/assets/promo/) · [Source MP4](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo.mp4) · [SFX-only version](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo-nobgm.mp4) · [Production notes](docs/promo/PRODUCTION.md)
+[Watch in 1080p](https://xxc2007.me/assets/promo/) · [Source MP4](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo.mp4)
 
 The native README preview is 1920×1080; the standalone player and source link use the full 1080p film.
 

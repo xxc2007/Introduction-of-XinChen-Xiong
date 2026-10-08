@@ -105,9 +105,9 @@
 
 https://github.com/user-attachments/assets/dcc5e666-2019-4937-b110-1f25e4c18b0c
 
-▶️ [打开 1080p 高清播放器](https://xxc2007.me/assets/promo/) · [直接打开 1080p 源视频](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo.mp4) · [无 BGM 版（保留音效）](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo-nobgm.mp4)
+▶️ [打开 1080p 高清播放器](https://xxc2007.me/assets/promo/) · [直接打开 1080p 源视频](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo.mp4)
 
-<sub>使用 Video Shotcraft 制作，运镜与展示结构参考[青山湖畔的纪念册](https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School#-宣传片展示)。[素材与制作记录](docs/promo/PRODUCTION.md)</sub>
+<sub>使用 Video Shotcraft 制作，运镜与展示结构参考[青山湖畔的纪念册](https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School#-宣传片展示)。</sub>
 
 README 原生预览保持 1920×1080 分辨率；独立播放器与源视频链接继续使用仓库中的 1080p 完整片。
 
