@@ -82,8 +82,10 @@ h1,h2,h3{text-wrap:balance}
   letter-spacing:.3em;text-transform:uppercase;
   color:var(--muted);
 }
-/* --muted 只允许出现在 ≥14px 的辅助文字上（对 cream 只有 5.0:1，
-   低于 14px 会掉出 WCAG AA；再小的字必须换 --ink）。 */
+/* --muted 只允许出现在 ≥14px 的辅助文字上。
+   对 cream 实测 **4.652:1**（旧注释写的 5.0:1 是在 --paper 上量的，5.129 才是那个数）；
+   仍然过 AA 的 4.5，但余量只有一档，所以小字号一律换 --ink。
+   这些比值不再手抄进文档——唯一出处是 tests/quality.test.mjs 的对比度断言，改令牌就会红。 */
 .hero h1{
   font-family:var(--serif);font-weight:900;
   font-size:clamp(40px,7.4vw,86px);line-height:1.14;letter-spacing:.02em;
@@ -184,7 +186,7 @@ code{
   transition:color .25s var(--ease),background-color .25s var(--ease);
 }
 #nav a:hover{color:var(--ink);background:rgba(217,119,87,.10)}
-#nav a.active,#nav a[aria-current="true"]{color:var(--terra-ink-2);background:rgba(217,119,87,.13)}
+#nav a[aria-current="true"]{color:var(--terra-ink-2);background:rgba(217,119,87,.13)}
 .controls{display:flex;align-items:center;gap:9px;flex:none;margin-left:auto}
 .controls>*{position:relative}         /* .lang-menu 相对各自的包裹层定位 */
 
@@ -208,13 +210,12 @@ code{
   stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.88;
 }
 .lang-current{font-size:14px;font-weight:600;letter-spacing:.04em;white-space:nowrap}
-.lang-caret,.lang-chev{
+.lang-caret{
   width:12px;height:12px;flex:none;fill:none;stroke:currentColor;
   stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
   transition:transform .25s var(--ease);
 }
-.lang-btn[aria-expanded="true"] .lang-caret,
-.lang-btn[aria-expanded="true"] .lang-chev{transform:rotate(180deg)}
+.lang-btn[aria-expanded="true"] .lang-caret{transform:rotate(180deg)}
 .lang-menu{
   position:absolute;top:calc(100% + 10px);right:0;z-index:90;
   min-width:178px;max-width:calc(100vw - var(--gut) * 2);   /* 390px 上永不越界（契约 §6） */
@@ -302,7 +303,6 @@ code{
   animation:rise .9s var(--ease) both;      /* 原图直出：不加圆框、不加外环、不加描边 */
 }
 @keyframes rise{from{opacity:0;translate:0 20px}to{opacity:1;translate:none}}
-.hero-body{display:flex;flex-direction:column;align-items:flex-start;gap:0;max-width:66ch}
 .hero h1{margin-bottom:clamp(14px,2vw,22px);animation:rise .95s .12s var(--ease) both}
 .hero .motto{margin-bottom:18px;animation:rise .95s .2s var(--ease) both}
 .hero .hero-sub{animation:rise .95s .28s var(--ease) both}
@@ -343,7 +343,6 @@ main>section,.sec{
 }
 .sec-rule.is-in{animation:ruleIn 1.1s .1s var(--ease) both}
 @keyframes ruleIn{from{scale:0 1}to{scale:1 1}}
-.sec-lede{color:var(--muted);max-width:46em;margin-bottom:clamp(26px,3.4vw,40px)}
 
 /* ── 08 · 壹 · ABOUT（dl.facts 四行发丝分隔） ── */
 #about p{margin-bottom:1.5em;max-width:44em}
@@ -369,7 +368,6 @@ main>section,.sec{
 /* stroke-dasharray 揭示（§3-8）：静止态=完整描出，JS 进场时才回放到起点 */
 .is-in .contours path{animation:contourDraw 2.6s var(--ease) both}
 @keyframes contourDraw{from{stroke-dasharray:2600;stroke-dashoffset:2600}to{stroke-dasharray:2600;stroke-dashoffset:0}}
-.works-stack{position:relative;z-index:1;display:flex;flex-direction:column;gap:clamp(26px,3.6vw,42px)}
 .work-card{
   position:relative;z-index:1;
   background:var(--paper);border:1px solid var(--line);
@@ -413,7 +411,6 @@ main>section,.sec{
 .work-card ul.facts li::before{
   content:"";position:absolute;left:0;top:23px;width:6px;height:1px;background:var(--terra);
 }
-.work-card .btn-row,.card-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(22px,2.8vw,30px)}
 .btn-live,.btn-repo{padding:11px 22px}
 /* 两枚按钮在 HTML 里是 .work-card 的直接子元素（没有 wrapper 也无妨）：
    同为 inline-flex，天然并排；给相邻的那一枚补上间距，靠 .work-card>*+* 撑行距。 */
@@ -459,28 +456,27 @@ main>section,.sec{
 }
 
 /* ── 12 · 伍 · CONTACT（mail / copy / 7 张发丝图标卡） ── */
-.contact-line{display:flex;flex-wrap:wrap;align-items:center;gap:14px 20px;margin-top:clamp(8px,1.6vw,18px)}
 .mail{font-size:clamp(24px,4vw,44px);font-weight:900;letter-spacing:.02em;line-height:1.5}
-.contact-note{color:var(--muted);max-width:44em;margin-bottom:clamp(24px,3.2vw,36px)}
 /* mail 与 Copy 是并列的直接子元素（没有 .contact-line 包一层也要成一行）：
    两者同为 inline 级，靠基线站齐；按钮只作配角，字号不变。 */
 #contact .copy-mail{margin-left:14px;vertical-align:middle}
-/* 复制回显：JS 在按钮后插入 .copy-status（span, aria-live），中文页另留了 .copy-hint。
-   空文本一律不占位，出现时也只是 14px 辅助行（--muted 的下限字号）。 */
-.copy-status,.copy-hint{
+/* 复制回显：JS 在按钮后插入 .copy-status（span, aria-live）。
+   空文本一律不占位，出现时也只是 14px 辅助行（--muted 的下限字号）。
+   原来这里还有一条 .copy-hint——两页都留了个空的 <p role="status">，
+   JS 从不往里写，于是它既是一个永远安静的第二 live region，又是死标记，已随 HTML 一起删掉。 */
+.copy-status{
   font-size:14px;font-weight:600;letter-spacing:.08em;color:var(--muted);
   white-space:normal;
 }
 .copy-status{margin-left:12px}
-.copy-hint{display:block;margin-top:12px;max-width:44em}
-.copy-status:empty,.copy-hint:empty{display:none}
+.copy-status:empty{display:none}
 .social{
   list-style:none;display:flex;flex-wrap:wrap;gap:10px;
   margin-top:clamp(30px,4vw,44px);
 }
 .social li{display:flex}
 /* 44×44 发丝图标卡：与母本页脚 .f-social 同一套尺寸、边框与 hover 语言（母本实测 44×44） */
-.social a,.social button{
+.social a{
   position:relative;
   width:44px;height:44px;
   display:flex;align-items:center;justify-content:center;
@@ -490,11 +486,11 @@ main>section,.sec{
 .social svg{width:18px;height:18px}
 /* 名称写进 HTML 的 <span>（便于复制、也兜住图标认不出的情况），但 44×44 的卡面放不下一行字，
    所以按 .sr-only 的手法只藏视觉、不藏语义；每枚 <a> 另带 aria-label，读屏仍有完整名称。 */
-.social a span,.social button span{
+.social a span{
   position:absolute;width:1px;height:1px;padding:0;margin:-1px;
   overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;
 }
-.social a:hover,.social button:hover{
+.social a:hover{
   border-color:var(--terra);color:var(--terra-ink);translate:0 -2px;
 }
 .social a:focus-visible{color:var(--terra-ink)}
@@ -528,6 +524,10 @@ main>section,.sec{
 html.no-js .reveal,html.no-js .sec-rule{opacity:1;translate:none;scale:1;transition:none;animation:none}
 html.no-js .progress{display:none}
 html.no-js .lang-btn{display:none}
+/* 复制邮箱按钮没有脚本就是纯摆设（剪贴板 API 本身就是脚本），所以无 JS 时藏起来，
+   和下面 @media (scripting:none) 那条同一口径——Safari 17.4 以前不支持 scripting 媒体特性，
+   只靠那一条会漏。 */
+html.no-js .copy-mail{display:none}
 html.no-js .lang-menu,html.no-js .lang-menu[hidden]{
   display:flex;position:static;min-width:0;padding:0;border:0;background:transparent;animation:none;
 }
@@ -582,7 +582,9 @@ html.no-js .lang-menu a{padding:8px 10px}
      保证「Xiong Xinchen」不换行、也不把语言菜单挤过 390px 边界。 */
   .topbar{gap:8px}
   .lang-current,.lang-caret{display:none}
-  .lang-btn{padding:8px 10px}
+  /* 文字收掉之后只剩两个小图形，pill 实测塌到 37×33——全站唯一一处低于 44 的点击目标，
+     而社交图标卡在这个宽度下仍然钉死 44×44。补最小尺寸，让"桌面/手机一致"这条要求真的成立。 */
+  .lang-btn{padding:8px 10px;min-width:44px;min-height:44px}
   .controls{gap:7px}
   .brand{font-size:15px;letter-spacing:.01em;max-width:none}
   .hero .avatar{width:96px}
@@ -614,7 +616,7 @@ html.no-js .lang-menu a{padding:8px 10px}
   .hero .avatar,.hero h1,.hero .motto,.hero .hero-sub,.hero-cta,.scroll-cue{animation:none}
   .scroll-cue::after{animation:none;transform:none;opacity:1}
   .work-card{transform:none}
-  .social a:hover,.social button:hover{translate:none}
+  .social a:hover{translate:none}
   .hero-cta:hover,.btn-live:hover,.btn-repo:hover,.copy-mail:hover{translate:none}
   .mail::after{transition:none;transform:scaleX(1)}
   .contours path,.is-in .contours path{animation:none;stroke-dasharray:none;stroke-dashoffset:0}

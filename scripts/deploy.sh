@@ -11,7 +11,10 @@ ROOT="$PWD"
 set -a; . ./.deploy.env; set +a
 : "${DEPLOY_HOST:?}"; : "${DEPLOY_USER:?}"; : "${DEPLOY_ROOT:?}"; : "${SITE_URL:?}"
 DEPLOY_SITE="${DEPLOY_SITE:-xxc2007.me}"
-SSH_KEY="$(cygpath -w "$DEPLOY_KEY" 2>/dev/null || echo "$DEPLOY_KEY")"
+# 必须和 verify-sync.sh / switch-routes.sh 同一套展开：`.deploy.env.example` 教人写
+# DEPLOY_KEY=~/.ssh/<key>.pem，而 shell 在赋值时不会展开波浪号——少了这一步，
+# 换一台机器照示例填好就只会得到 "Identity file ~/.ssh/... not accessible"。
+SSH_KEY="$(cygpath -w "${DEPLOY_KEY/#\~/$HOME}" 2>/dev/null || echo "$DEPLOY_KEY")"
 KH="${DEPLOY_KNOWN_HOSTS:-$HOME/.ssh/known_hosts}"
 SSH_OPTS="-o BatchMode=yes -o StrictHostKeyChecking=accept-new -i $SSH_KEY -o UserKnownHostsFile=$KH"
 ssh_run() { ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" "$@"; }
@@ -35,7 +38,9 @@ echo "== 1/5 质量闸门 =="
 node scripts/check-parity.mjs
 node scripts/check-links.mjs
 node scripts/check-bytes.mjs
-node --test tests/                 # 结构与约定断言，见 tests/quality.test.mjs
+node --test "tests/*.test.mjs"   # 结构与约定断言，见 tests/quality.test.mjs
+                                 # 必须带 glob：`node --test tests` 与 `tests/` 在 Node 24/Windows 下
+                                 # 会把目录当模块去找，报 MODULE_NOT_FOUND 而不是跑测试。
 for s in scripts/*.sh tools/*.mjs; do [ -f "$s" ] && case "$s" in *.sh) bash -n "$s";; *) node --check "$s";; esac; done
 echo "  ✓ 闸门通过"
 

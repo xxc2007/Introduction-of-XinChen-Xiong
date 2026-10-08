@@ -60,6 +60,19 @@ import * as THREE from "../vendor/three.module.min.js";
 配色纪律：文字用赤陶橙**必须** `--terra-ink`；`--terra`/`--terra-deep` 只作填充、描边、装饰。
 分层只靠 `1px solid var(--line)` 发丝线，**不用 box-shadow、不用渐变、不用圆角大于 2px**。
 
+### §1 之后新增的两个令牌，与一条圆角例外（2026-10-08 补记）
+
+上面那句「值未改动」一度不再成立——代码里多了两个 §1 没有的令牌，注释却还声称照抄。现在补进契约：
+
+| 令牌 | 值 | 为什么必须有 |
+|---|---|---|
+| `--terra-ink-2` | `#9A4226` | 赤陶橙文字**落在被赤陶橙染过的底上**时（导航当前项、语言 pill 的 hover/展开态、hero CTA hover），`--terra-ink` 只剩 4.437:1，14px 的字不够 AA。这一档实测 5.682:1。 |
+| `--line-strong` | `#DCD5C6` | 悬停时重一档的发丝线。它此前是一个直接写在 `.work-card:hover` 里的裸十六进制——等于偷偷存在第二种"线"的颜色。 |
+
+**圆角的唯一例外是 `border-radius:50%`**，只出现在 WebGL 失败时 hero 的那两圈同心发丝环上。
+那是要画一个**圆**，不是给方块倒角，"全站唯一圆角值 2px"这条纪律管不到它；
+`tests/quality.test.mjs` 的圆角断言因此显式放行 `50%` 与 `0`。
+
 ## 2. 页面骨架（中英两页必须逐一对应）
 
 ```
@@ -125,5 +138,7 @@ body
 - 语言菜单：`button[aria-haspopup=menu][aria-expanded]` + `ul[role=menu]` + `li > a[role=menuitem]`（选中项标 `aria-current=true`，与纪念册同一套语义）；Esc 关闭并把焦点还给按钮；无 JS 时 `.lang-menu` 里两个 `<a>` 仍可点。
 - `canvas#field`：`role="img"` + `aria-label`（中文页写装饰性说明，英文页对应翻译）。
 - 焦点：`:focus-visible{outline:2px solid var(--terra-ink);outline-offset:3px}`。
-- 正文对比度 ≥ 7:1；`--muted` 只用于 ≥14px 的辅助文字（对 cream 5.0:1）。
+- 正文对比度 ≥ 7:1；`--muted` 只用于 ≥14px 的辅助文字（对 cream 实测 4.652:1，过 AA 但只余一档）。
+  **对比度的唯一出处是 `tests/quality.test.mjs` 的断言**——本文件与 `style.css` 的注释都不再各自抄数，
+  抄过一次就错了一次（旧版这里写 5.0:1，那是在 `--paper` 上量的）。
 - 移动端：≤420px 无横向滚动；`.social` 换行成 4+3；语言菜单不溢出。

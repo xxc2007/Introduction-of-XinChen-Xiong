@@ -154,6 +154,61 @@ test("标题层级不许跳级", () => {
   }
 });
 
+test("无障碍名必须包含可见文字（WCAG 2.5.3）", () => {
+  const bad = [];
+  for (const [page, html] of Object.entries(PAGES)) {
+    for (const m of html.matchAll(/<a\b[^>]*aria-label="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)) {
+      const name = m[1];
+      for (const t of m[2].matchAll(/<span>([^<]+)<\/span>/g)) {
+        const visible = t[1].trim();
+        if (visible && !name.includes(visible)) bad.push(`${page}: aria-label「${name}」不含可见文字「${visible}」`);
+      }
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
+test("不许留下 JS 从不写入的空 live region", () => {
+  // 空的 role="status" / aria-live 容器是第二个安静播报区：读屏会为其存在而等待，
+  // 而它永远不会被填。上一轮那个 .copy-hint 就是这么个东西。
+  const bad = [];
+  for (const [page, html] of Object.entries(PAGES)) {
+    for (const m of html.matchAll(/<(p|div|span)\b[^>]*(?:role="status"|aria-live="[^"]+")[^>]*>\s*<\/\1>/g)) {
+      const cls = (m[0].match(/class="([^"]*)"/) || [])[1] || "(无 class)";
+      bad.push(`${page}: 空的 live region .${cls}`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join("\n"));
+});
+
+/* ── 对比度：数字只有一个出处，就是这条断言。
+   文档里以前写着「--muted 对 cream 有 5.0:1」，实测是 4.652:1——5.129 是对 --paper 的值，
+   也就是说那句话是在错误的底色上量的。所以这里把 WCAG 相对亮度公式实现一遍，
+   让 docs 只许指向本文件，不许再各自抄一份数。 */
+function relLum(hex) {
+  const h = hex.replace("#", "");
+  const c = [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16) / 255)
+    .map(v => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function ratio(a, b) { const [x, y] = [relLum(a), relLum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); }
+/* 从 style.css 的 :root 里读令牌实际值——文档说「值未改动」，那就用代码验一次。 */
+const TOKENS = {};
+for (const m of CSS_CODE.matchAll(/(--[a-z0-9-]+)\s*:\s*(#[0-9a-fA-F]{6})/g)) TOKENS[m[1]] = m[2];
+
+test("令牌对比度：承载正文的色档必须过 AA，装饰色档必须被识别为不可承载文字", () => {
+  for (const t of ["--ink", "--muted", "--terra-ink", "--terra-ink-2"]) {
+    assert.ok(TOKENS[t], `style.css 的 :root 里找不到 ${t}`);
+    for (const bg of ["--cream", "--paper"]) {
+      const r = ratio(TOKENS[t], TOKENS[bg]);
+      assert.ok(r >= 4.5, `${t}(${TOKENS[t]}) 对 ${bg} 只有 ${r.toFixed(3)}:1，低于 AA 的 4.5`);
+    }
+  }
+  // 亮赤陶橙只能当线、点、底色用；它当文字一定不达标，这条把「为什么另设 --terra-ink」钉住。
+  const rt = ratio(TOKENS["--terra"], TOKENS["--cream"]);
+  assert.ok(rt < 3, `--terra 对 cream 有 ${rt.toFixed(3)}:1，与「不可承载文字」的约定不再一致，注释要重写`);
+});
+
 test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡）", () => {
   const dead = ["墨点", "环境音", "音量斜坡", "sound-toggle", "ambient(", "fieldEnergy", "inkDot"];
   const hits = [];

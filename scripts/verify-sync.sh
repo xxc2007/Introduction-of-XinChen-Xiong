@@ -64,14 +64,26 @@ UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126 Safari/537.36"
 # 归一化只有 tools/normalize-cf.mjs 这一份实现：这里以前另写了一串 sed，
 # 结果是「脚本说公网不一致、手工比对说一致」——两份规则各自漂移，谁也不知道该信谁。
 cf_norm() { node tools/normalize-cf.mjs --diff -; }
+# 两侧都过 cf_norm 有个致命后果：万一 normalize-cf.mjs 或 node 本身坏了，
+# 两边都变成 sha256("") ——同一个值，于是无论 CDN 服务什么内容都报「一致」。
+# 所以先自证归一化器是活的：给它一段确定含 mailto 的输入，必须吐出非空且不同于空串哈希的结果。
+NORM_PROBE="$(printf 'mailto:a@b' | cf_norm | tr -d '\n')"
+if [ -z "$NORM_PROBE" ]; then
+  echo "  ✗ 归一化器 tools/normalize-cf.mjs 没有输出——D 段无从判断，本次不判绿"
+  FAIL=1
+else
 for f in index.html en/index.html; do
   [ -f "$f" ] || continue
   case "$f" in index.html) u="/";; *) u="/en/";; esac
   l="$(cf_norm < "$f" | tr -d '\n' | sha256sum | cut -d' ' -f1)"
-  r="$(curl -sL -A "$UA" "https://$DEPLOY_SITE$u" | cf_norm | tr -d '\n' | sha256sum | cut -d' ' -f1)"
+  net="$(curl -sL --max-time 25 -A "$UA" "https://$DEPLOY_SITE$u")"
+  # 空响应既可能是网络死了也可能是 CDN 真给了空页；两种都不该被哈希成「一致」。
+  if [ -z "$net" ]; then echo "  ✗ $u 公网取回为空（网络或 CDN 故障，不能判一致）"; FAIL=1; continue; fi
+  r="$(printf '%s' "$net" | cf_norm | tr -d '\n' | sha256sum | cut -d' ' -f1)"
   if [ "$l" = "$r" ]; then echo "  ✓ $u 公网取回与仓库一致（已忽略 CF 邮箱混淆）"
   else echo "  ✗ $u 公网与仓库不一致（CDN 命中旧副本）"; FAIL=1; fi
 done
+fi
 
 echo "── E. 公网逐个取回「浏览器真正会去取的那些资源 URL」"
 # 这一段是补出来的洞：原来 D 只比两份 HTML，assets 一条都不查，于是 favicon 少了 ?v=
@@ -81,10 +93,11 @@ echo "── E. 公网逐个取回「浏览器真正会去取的那些资源 URL
 ASSETS="$(node -e '
 const fs = require("fs");
 const out = new Set();
-for (const p of ["index.html", "en/index.html"]) {
+for (const p of ["index.html", "en/index.html", "404.html"]) {
   const t = fs.readFileSync(p, "utf8");
-  for (const m of t.matchAll(/(?:href|src)="(\.\.?\/(assets\/[^"?]+)(\?v=[0-9a-z]+)?)"/g)) {
-    out.add("/" + m[2] + (m[3] || ""));
+  // 三种前缀都要认：./ ../ 以及 404.html 专用的根绝对 /assets/
+  for (const m of t.matchAll(/(?:href|src)="(?:\.\.?\/|\/)(assets\/[^"?]+)(\?v=[0-9a-z]+)?"/g)) {
+    out.add("/" + m[1] + (m[2] || ""));
   }
 }
 for (const v of ["three.module.min.js", "three.core.min.js"]) out.add("/assets/vendor/" + v);
@@ -92,6 +105,11 @@ process.stdout.write([...out].sort().join("\n"));
 ')"
 NA=$(printf '%s\n' "$ASSETS" | grep -c .)
 BADASSET=0
+# 空清单必须判红：上一版 ASSETS 为空时循环一次都不走，照样打印「✓ 0 条资源引用逐个对上」。
+if [ "$NA" -eq 0 ]; then
+  echo "  ✗ 一条资源引用都没抽到——要么 HTML 改名了，要么抽取用的 node 挂了；这一段等于没跑"
+  FAIL=1
+else
 while IFS= read -r u; do
   [ -n "$u" ] || continue
   lp="${u%%\?*}"; lp="${lp#/}"
@@ -110,6 +128,7 @@ while IFS= read -r u; do
   else printf '  ✗ %-52s 公网与仓库不一致（取回 %s 次仍不同，边缘命中旧副本）\n' "$u" "$n"; BADASSET=1; fi
 done <<< "$ASSETS"
 [ "$BADASSET" = 0 ] && echo "  ✓ $NA 条资源引用逐个对上" || FAIL=1
+fi
 
 echo "── F. 邻站未受影响"
 for u in "/nc15/" "/geohot/"; do

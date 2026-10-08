@@ -15,6 +15,7 @@ const pages = { ZH: load("index.html"), EN: load("en/index.html") };
 /* 404.html 也带资源引用，也必须带指纹——上一版漏了它，它的 ?v= 永远停在 a1b2。 */
 const NOTFOUND = load("404.html");
 const CSS_TEXT = load("assets/css/style.css");
+const JS_TEXT = load("assets/js/main.js");
 
 const grab = (h, re) => [...h.matchAll(re.global ? re : new RegExp(re.source, re.flags + "g"))].map(m => m[1]);
 const base = u => u.replace(/[?#].*$/, "").split("/").filter(Boolean).pop() || "/";
@@ -109,7 +110,13 @@ function count(h, re) { return (h.match(re) || []).length; }
 const zs = shape(pages.ZH), es = shape(pages.EN);
 for (const k of Object.keys(zs)) {
   if (zs[k] !== es[k]) bad("数量一致", `${k} ZH=${zs[k]} EN=${es[k]}`);
-  else nonzero(k, zs[k]);
+  else if (k === "live region") {
+    /* 复制回显那块 aria-live 是 main.js 运行时建的，HTML 里本来就可以是 0；
+       所以这条要跨文件判「至少存在一个 live region」，而不是死盯 markup 里的计数。 */
+    const jsHas = /aria-live/.test(JS_TEXT);
+    (zs[k] > 0 || jsHas) ? ok(`live region（HTML ${zs[k]} 处${jsHas ? " + JS 建一处" : ""}）`)
+      : bad("live region", "HTML 与 main.js 里都没有 aria-live——复制/语言提示不会再播报了");
+  } else nonzero(k, zs[k]);
 }
 
 /* 承重的类名必须三处同时存在：CSS 里定义过、两页里都用着。

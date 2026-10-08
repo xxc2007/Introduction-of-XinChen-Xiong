@@ -52,18 +52,20 @@ terra-deep / cream = 0.90388 / 0.24848 = 3.638:1     ← 只够 1.4.11 非文本
 
 结论只有一句：**赤陶橙要做文字，就必须是 `#A8492A`。** 亮两档的 `--terra` 与 `--terra-deep` 都够不着
 4.5:1，所以它们的权限被写死成"填充、描边、装饰"。代码里这条纪律是看得见的：
-`.hero-cta`、`.btn-live`、`.lang-btn`、`#nav a.active`、`.sec-title .num`、`a`、`:focus-visible`
+`.hero-cta`、`.btn-live`、`.lang-btn`、`#nav a[aria-current="true"]`、`.sec-index`、`a`、`:focus-visible`
 全部用 `color:var(--terra-ink)`，而 `--terra` 只出现在 `background:rgba(217,119,87,.07–.14)`、
 `border-color`、`.progress` 的填充、`.scroll-cue::after` 的 1px 竖线、`blockquote` 的 2px 左竖线这些地方。
 
 焦点环同理：`::focus-visible{outline:2px solid var(--terra-ink)}`——注释里写得很直白，
 亮 `--terra` 只有 **2.687:1**，低视力读者看不见它，所以环也用文字级的那个橙。
 
-### 已知一处注释与算术不符
+### 一处注释与算术不符（已修）
 
-`assets/css/style.css` 第 85–86 行的注释、以及 `docs/site-spec.md` 都写 `--muted` 对 cream「5.0:1」。
-实测算得 **4.652:1**——仍然过 AA 的 4.5:1，但比注释低。所以代码里"`--muted` 只用于 ≥14px 辅助文字"
-这条限制比它自己声称的理由更必要，而不是更宽松。<!-- 待核对：改注释为 4.65:1，还是把 --muted 调深到真的 5:1？需站长定，两者都会改视觉 -->
+`assets/css/style.css` 的注释、以及 `docs/site-spec.md` 曾写 `--muted` 对 cream「5.0:1」。
+实测算得 **4.652:1**——5.129 是对 `--paper` 的值，那句话是在错误的底色上量的。
+仍然过 AA 的 4.5:1，所以**没有改令牌值**：`--muted` 是从纪念册母本继承的语言，为一个写错的注释去动它、
+顺带改变全站观感，是拿视觉去迁就笔误。改的是注释与契约文本，并且把对比度的**唯一出处**
+移进 `tests/quality.test.mjs`——今后改任何令牌，只要跌破 4.5 就直接红，不再靠人抄数。
 
 ---
 
@@ -79,7 +81,7 @@ body{ font-family:var(--sans); … }                    /* style.css 第 48–49
 本站没有另起一套：`--sans` 与 `--serif` 两条栈与母本逐字符相同。
 
 `--serif` 只被点名给了这些元素（每条都在 `style.css` 里能 grep 到）：
-`.hero h1`、`.motto`、`.sec-title .zh`、`.work-card h3`、`.steps li::before` 的节号、`.steps li strong/b`、
+`.hero h1`、`.motto`、`.sec-head h2`、`.work-card h3`、`.steps li::before` 的节号、`.steps li strong/b`、
 `.closing`、`#beliefs blockquote p`、`.mail`、`.foot-sign`、`.brand`、`.lang-menu a`。
 标签类一律回 `--sans` 并加大字距：`.eyebrow`（`font-size:14px; letter-spacing:.3em; text-transform:uppercase`）、
 `#nav a`、各按钮（`font-size:15px; letter-spacing:.04em`）、`.facts dt`、`cite`、`.scroll-cue`。
@@ -130,24 +132,31 @@ hover 也不引入阴影：`.work-card:hover` 只把边框从 `#E4DFD3` 收到 `
 
 ## 肆 · SECTIONS 壹/贰/叁 节标系统
 
-DOM 结构三件套，中英两页同一形状，只有节号字符不同：
+> 本节 2026-10-08 重写。旧版写的 `<h2 class="sec-title"><span class="num">…</span><span class="eyebrow">…</span><span class="zh">…</span></h2>`
+> 这套 DOM **在 CSS 与两页 HTML 里一处都不存在**（`.sec-title`/`.num`/`.zh` 只在 `404.html` 自带的 `<style>` 里活着），
+> 还声称 `check-parity.mjs` 断言 `h2.sec-title=5`——那也不成立。描述一份不存在的实现，比不写更容易误导改代码的人。
+
+真实结构是**两行**：节标行 + 一根独立的发丝线。
 
 ```html
-<h2 class="sec-title reveal">
-  <span class="num">壹</span><span class="eyebrow">ABOUT</span><span class="zh">关于我</span>
-</h2>
+<div class="sec-head reveal"><span class="sec-index">壹 · ABOUT</span><h2>关于我</h2></div>
+<hr class="sec-rule reveal">
 ```
 
-中文页是 `壹 贰 叁 肆 伍`，英文页是 `I II III IV V`（`grep -o '<span class="num">…'` 各 **5** 个，
-`check-parity.mjs` 断言 `h2.sec-title=5`、`section=6` 两页相等）。
-`.num` 是衬线 700、`color:var(--terra-ink)`、`letter-spacing:.2em`；`.eyebrow` 是无衬线大写 `letter-spacing:.34em`；
-`.zh` 是衬线 900 大字。三条排成一行、`align-items:baseline`、允许 `flex-wrap`。
+- `.sec-index` 装的是**整串**「壹 · ABOUT」——节号与眉标不再拆成两个元素。
+  衬线 700、`color:var(--terra-ink)`、`letter-spacing:.18em`、`white-space:nowrap`。
+  这一串与纪念册母本同一度量，是两站看着像同一套系统的直接原因。
+- `h2` 只放标题本身：衬线 900、`clamp(27px,3.6vw,44px)`。
+- `.sec-head` 是 `display:flex; align-items:baseline; flex-wrap:wrap; gap:6px 18px`。
+- 发丝线是**兄弟元素** `<hr class="sec-rule">`，不是 `::after`。
+  它用 `@keyframes ruleIn`（`scale:0 1 → 1 1`，`1.1s .1s`）画出来；
+  **静止态是"已画完"**：`html.no-js` 与 `@media (scripting:none)` 都不播放动画，线直接在那儿——
+  这是这套系统的通用做法（等高线 `contourDraw` 同理：`from{stroke-dasharray:2600;stroke-dashoffset:2600}`，
+  无脚本时直接显示终态）。
 
-每条 `.sec-title::after` 是一根 `flex:1 1 90px; height:1px; background:var(--line)` 的发丝线，
-`.is-in` 时用 `@keyframes ruleIn`（`scaleX(0) → 1`，`1.1s .1s`）画出来。
-**静止态是"已画完"**：`html.no-js` 与 `@media (scripting:none)` 都不播放动画，线直接在那儿——
-这是这套系统的通用做法（等高线 `contourDraw` 同理：`from{stroke-dasharray:2600;stroke-dashoffset:2600}`，
-无脚本时直接显示终态）。
+节数不抄在这里，当场数：`grep -c 'class="sec-head' index.html`。
+`check-parity.mjs` 实际断言的是 `sec-head`、`sec-index`、`sec-rule`、`h2` 四项在两页相等且都非零，
+外加一条「承重类名必须同时出现在 CSS 与两页 HTML」——把 `sec-head` 改名成 `sec-heading` 也会红。
 
 锚点跳转不被 sticky 顶栏压住，靠 `html{scroll-padding-top:calc(var(--bar) + 24px)}`；
 `--bar` 在 ≤768px 变 **104px**（顶栏折成两行）、≤420px 变 **112px**，留白跟着走。
