@@ -546,6 +546,26 @@ test("不挂脚本的页面必须带 html.no-js，否则 .reveal 会永久隐形
   }
 });
 
+/* 2026-10-08 实测出来的：`html.no-js .lang-menu[hidden]{display:flex}` 从来没生效过——
+   §01 的 [hidden]{display:none!important} 会盖掉任何不带 !important 的 display。
+   文档却把这条记成 html.no-js 的职责（design.md「三重兜底」），也就是说被记下来的那道兜底是假的。
+   通则：谁想「让一个 hidden 的元素显示出来」，就必须打赢那条 !important。 */
+test("CSS 里想把 [hidden] 的元素显出来，display 就必须带 !important", () => {
+  const offenders = [];
+  let considered = 0;
+  for (const m of CSS_CODE.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const sel = m[1].trim();
+    if (!sel.includes("[hidden]")) continue;
+    const decl = m[2];
+    const disp = (decl.match(/(?:^|;)\s*display\s*:\s*([^;]+)/) || [])[1];
+    if (!disp || disp.trim() === "none") continue;   // 全局兜底自己，和「本来就藏起来」的规则
+    considered++;
+    if (!/!important/.test(disp)) offenders.push(sel);
+  }
+  assert.ok(considered > 0, "一条「让 [hidden] 显出来」的规则都没扫到——写法大概变了，这条等于没跑");
+  assert.deepEqual(offenders, [], `这些规则会被 [hidden]{{display:none!important}} 盖掉：${offenders.join(" | ")}`);
+});
+
 test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
   /* prefersReducedMotion 曾经挂着 export 却没人 import：main.js 自己算 RM 再传进来。
      两个模块各自读同一个媒体查询、还各留一个导出口，就会有「谁负责判断 reduced」的歧义。

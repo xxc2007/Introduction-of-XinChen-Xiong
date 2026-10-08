@@ -225,6 +225,12 @@ node --test "tests/*.test.mjs"    # 质量闸门；必须带 glob，`node --test
 - [ ] `bash scripts/switch-routes.sh --dry-run` 的四条计数符合预期，再 `apply`
 - [ ] 线上 `/`、`/en/`、`/404.html`、`/nc15/`、`/nc15/en/`、`/geohot/`、`/comment/` 各回一次状态码
 - [ ] 手机上 ≤420px 与 390px 无横向滚动：DevTools 调到 390×844 后在控制台执行 `document.documentElement.scrollWidth - innerWidth`，**必须是 0**（原先这条靠 `main.js` 往 `<html>` 挂 `data-overflow="1"`，但没有任何脚本或 CSS 读它，已于 2026-10-08 删掉——量一次布局宽度不需要常驻哨兵）
+- [ ] 320×650 下所有可点目标 ≥24px：控制台执行
+      `[...document.querySelectorAll('a,button')].filter(e=>{const r=e.getBoundingClientRect();return r.height>0&&(r.height<24||r.width<24)}).map(e=>e.textContent.trim().slice(0,12))`，
+      **必须返回 `[]`**。2026-10-08 实测抓到一条：`dl.facts` 邮箱那行的 `<a>` 是内联盒，
+      命中区按字体盒量到 152×20；它是 `<dd>` 的全部内容而不是句子里的一个词，拿不到 WCAG 2.5.8 的句内豁免，
+      改成 `display:block` 后按行盒量到 284×29（`.facts` 整块高度 464 未变，桌面零视觉位移）。
+      **Lighthouse 的 target-size 审计查不到这一条**——它按内联链接豁免，100 分那次就是带着这个 20px 目标过的。
 - [ ] 仓库里没有真实主机信息：`.deploy.env` 仍是未跟踪状态（`git ls-files | grep -c deploy.env` 应为 **1**，即只有 `.deploy.env.example`）
 
 ## 九 · 迁移后第一件事

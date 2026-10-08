@@ -393,7 +393,11 @@ main>section{
 .facts>div:last-child{border-bottom:1px solid var(--line)}
 .facts dt{font-size:14px;font-weight:600;letter-spacing:.2em;color:var(--muted)}
 .facts dd{font-size:clamp(16px,.6vw + 15px,18px);color:var(--ink);overflow-wrap:anywhere}
-.facts dd a{color:var(--terra-ink);word-break:break-all}
+/* display:block 是为了命中区：内联的 <a> 只按字体盒量到 20px 高，低于 WCAG 2.5.8 的 24px；
+   这个链接就是 <dd> 的全部内容（不是句子里的一个词，拿不到句内链接的豁免），
+   改成块级后它按行盒量到 28.5px，父元素本来就那么多高，所以视觉零位移。
+   不用 inline-block——那会让整条邮箱变成一个不可断行的原子盒，320px 下反而撑出横向滚动。 */
+.facts dd a{display:block;color:var(--terra-ink);word-break:break-all}
 
 /* ── 09 · 贰 · WORKS（work-card ×2 + 等高线背景） ── */
 #works{padding-bottom:clamp(20px,4vw,40px)}
@@ -583,8 +587,12 @@ html.no-js .lang-btn{display:none}
    和下面 @media (scripting:none) 那条同一口径——Safari 17.4 以前不支持 scripting 媒体特性，
    只靠那一条会漏。 */
 html.no-js .copy-mail{display:none}
+/* 兜底第一条：脚本被关掉时 <html> 仍是 .no-js，语言菜单摊平成两个可点的链接。
+   display 必须带 !important——§01 那条 [hidden]{display:none!important} 的全局兜底
+   会盖掉任何不带 !important 的 display，少了这个词这条规则就是死的（实测：
+   只改 class 不关脚本时菜单 computed display 仍是 none）。 */
 html.no-js .lang-menu,html.no-js .lang-menu[hidden]{
-  display:flex;position:static;min-width:0;padding:0;border:0;background:transparent;animation:none;
+  display:flex!important;position:static;min-width:0;padding:0;border:0;background:transparent;animation:none;
 }
 html.no-js .lang-menu a{padding:8px 10px}
 /* 兜底第二条：支持 scripting 媒体特性的浏览器即使漏写 .no-js 也能直接呈现 */

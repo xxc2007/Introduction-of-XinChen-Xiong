@@ -236,6 +236,9 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "文档抄的等宽栈与 CSS 脱节", file: "docs/design.md",
     re: /(ui-monospace),SFMono-Regular/, to: "$1,SFMonoRenamed",
     expect: /等宽栈在 style\.css 里已找不到/ },
+  { name: "html.no-js 摊平菜单的 display 丢了 !important（实测过的假兜底）", file: CSS,
+    re: /(\.lang-menu\[hidden\]\{[^{}]{0,60}?display:\s*flex)!important/, to: "$1",
+    expect: /会被 \[hidden\]/ },
 ];
 
 /* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，
