@@ -45,8 +45,11 @@
 </header>
 
 <main id="main">
-  <section class="nf">
-    <h1 class="sec-title"><span class="num">肆零肆</span><span class="eyebrow">NOT FOUND</span><span class="zh">这个地址下没有东西</span></h1>
+  <section>
+    <!-- 节标结构与首页同一份度量。这里不用 .sec-title/.num——
+         那两个类从来没有在任何样式表里定义过，写上去只会得到一个裸的 h1。 -->
+    <div class="sec-head"><span class="sec-index">肆零肆 · <span lang="en">NOT FOUND</span></span><h1>这个地址下没有东西</h1></div>
+    <hr class="sec-rule">
 
     <p class="nf-note">这一页我没有写过，所以这里确实没有东西可读；下面几个地址是我已经放上线的，从哪一个进去都一样。</p>
 

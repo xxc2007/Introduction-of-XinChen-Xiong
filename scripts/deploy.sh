@@ -38,9 +38,21 @@ echo "== 1/5 质量闸门 =="
 node scripts/check-parity.mjs
 node scripts/check-links.mjs
 node scripts/check-bytes.mjs
-node --test "tests/*.test.mjs"   # 结构与约定断言，见 tests/quality.test.mjs
-                                 # 必须带 glob：`node --test tests` 与 `tests/` 在 Node 24/Windows 下
+# 断言本身也可能失效（正则与写法脱节、匹配集为空），所以既要求「跑过 N 条」，
+# 也要求每条断言都能被打红——后者是 check-mutations.mjs 唯一的职责。
+node --test "tests/*.test.mjs"   # 必须带 glob：`node --test tests` 与 `tests/` 在 Node 24/Windows 下
                                  # 会把目录当模块去找，报 MODULE_NOT_FOUND 而不是跑测试。
+NTEST="$(node --test --test-reporter=tap "tests/*.test.mjs" 2>/dev/null | grep -c '^ok ' || true)"
+# 这条是 glob 失效的兜闸，不是覆盖率断言：Node 在匹配不到文件时退出码是 0，
+# 「闸门通过」于是可能被读成「一条测试都没跑」。所以数一下实际执行了多少条。
+# 下限定在 10：删测试不该拦部署，但「几乎没跑」必须拦。
+if [ "${NTEST:-0}" -lt 10 ]; then
+  echo "  ✗ 只跑了 ${NTEST:-0} 条断言。glob 匹配不到文件时 node --test 是退出 0 的，"
+  echo "    也就是说「闸门通过」可能只是「一条测试都没跑」。停止部署。"
+  exit 1
+fi
+echo "  ✓ ${NTEST} 条断言已执行"
+node scripts/check-mutations.mjs
 for s in scripts/*.sh tools/*.mjs; do [ -f "$s" ] && case "$s" in *.sh) bash -n "$s";; *) node --check "$s";; esac; done
 echo "  ✓ 闸门通过"
 
@@ -92,8 +104,16 @@ echo "== 4/5 四方逐字节核验 =="
 bash scripts/verify-sync.sh
 
 echo "== 5/5 线上可达性 =="
-for u in "/" "/en/" "/404.html" "/assets/css/style.css" "/assets/js/main.js" "/robots.txt" "/sitemap.xml" "/nc15/" "/geohot/"; do
+# 只打印状态码等于没检查：以前这一段把 404/500 也一并 ✅ 掉了。
+# /404.html 期望 404（error_page ... =404 正是为了让它别返回 200），其余期望 200。
+PATHS=("/" "/en/" "/404.html" "/assets/css/style.css" "/assets/js/main.js" "/robots.txt" "/sitemap.xml" "/nc15/" "/geohot/")
+WANT=(200 200 404 200 200 200 200 200 200)
+FAIL5=0
+for idx in "${!PATHS[@]}"; do
+  u="${PATHS[$idx]}"; want="${WANT[$idx]}"
   code=$(ssh_run "curl -s -o /dev/null -w '%{http_code}' -H 'Host: $DEPLOY_SITE' 'http://127.0.0.1$u'")
-  printf '  %-22s HTTP %s\n' "$u" "$code"
+  if [ "$code" = "$want" ]; then printf '  %-22s HTTP %s\n' "$u" "$code"
+  else printf '  %-22s HTTP %s  (期望 %s)\n' "$u" "$code" "$want"; FAIL5=$((FAIL5+1)); fi
 done
+[ "$FAIL5" = 0 ] || { echo "  ✗ $FAIL5 条线上可达性不符，部署未成功"; exit 1; }
 echo "完成 ✅"

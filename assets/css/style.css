@@ -98,8 +98,11 @@ h1,h2,h3{text-wrap:balance}
 /* 中文没有真正的斜体字面，font-style:italic 只会得到机器伪斜、笔画发糊；
    所以「斜体感」只给拉丁页，中文页靠衬线与字号拉开层次。 */
 html[lang^="en"] .motto{font-style:italic}
-.hero-sub{font-size:clamp(16px,1.1vw + 14px,19px);color:var(--muted);max-width:42em}
-.sec-head h2{font-family:var(--serif);font-weight:900;letter-spacing:.03em}
+/* hero-sub 与 scroll-cue 不用 --muted：这两行压在 WebGL 粒子场之上，
+   而 --muted 是中间调——实测一颗墨色纸屑落在字下就把对比压到 4.286:1（三颗 3.086:1），
+   14–19px 的文字直接掉出 AA。层次改由字号与字重承担，颜色回到 --ink（最坏情况仍有 ~12.9:1）。 */
+.hero-sub{font-size:clamp(16px,1.1vw + 14px,19px);color:var(--ink);max-width:42em}
+.sec-head h1,.sec-head h2{font-family:var(--serif);font-weight:900;letter-spacing:.03em}
 .work-card h3,.steps li strong,.mail{font-family:var(--serif)}
 
 /* ── 03 · 组件基元（发丝线是唯一分层手段：无投影、无渐变、圆角 ≤2px） ── */
@@ -119,12 +122,18 @@ html[lang^="en"] .motto{font-style:italic}
    刻意用独立的 translate 属性、把 transform 留给卡片倾斜，两者互不打架。 */
 .hero-cta,.btn-live,.btn-repo,.copy-mail{translate:var(--mx,0px) var(--my,0px)}
 .hero-cta,.btn-live{color:var(--terra-ink);border-color:rgba(217,119,87,.55)}
+/* .hero-cta 压在粒子场上，透明底会让 --terra-ink 掉到 3.813:1；
+   给它一张不透光的纸当底，文字基线就与画布无关了（--terra-ink 对 --paper 是 5.459:1）。 */
+.hero-cta{background:var(--paper)}
 .hero-cta:hover,.hero-cta:focus-visible,.btn-live:hover,.btn-live:focus-visible{
   color:var(--terra-ink-2);background:rgba(217,119,87,.12);border-color:var(--terra-deep);
 }
 .btn-repo,.copy-mail{color:var(--ink);border-color:var(--line)}
+/* 凡是把底染上赤陶橙（rgba(217,119,87,.NN)）的规则，文字一律降一到 --terra-ink-2。
+   染色底本身会吃掉 0.3–0.6 的对比度：--terra-ink 对 cream 是 4.951，
+   对 cream+12% 染色只剩 4.443——掉出 AA。这条由 tests/quality.test.mjs 从 CSS 反推核对。 */
 .btn-repo:hover,.btn-repo:focus-visible,.copy-mail:hover,.copy-mail:focus-visible{
-  color:var(--terra-ink);border-color:var(--terra);background:rgba(217,119,87,.07);
+  color:var(--terra-ink-2);border-color:var(--terra);background:rgba(217,119,87,.07);
 }
 /* 只保留 JS 真正写的那一条：copyMail() 设的是 data-state。
    .is-copied 与 [data-copied] 两个别名从来没有被任何代码产生过，留着只会让人以为还有别的路径。 */
@@ -234,12 +243,12 @@ code{
   color:var(--ink);text-decoration:none;
   transition:background-color .2s var(--ease),color .2s var(--ease);
 }
-.lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink)}
-/* 选中态：--terra-ink 文字 + 一挡极淡的赤陶底色 + 尾部 ✓。
+.lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink-2)}
+/* 选中态：--terra-ink-2 文字 + 一挡极淡的赤陶底色 + 尾部 ✓（染色底必须配 ink-2，见 §按钮那条注释）。
    ✓ 优先用 HTML 自带的 .lang-check；下面的 CSS 生成勾是兜底，两页结构因此可互校（parity 好核对）。 */
 .lang-menu [aria-selected="true"]>a,.lang-menu a[aria-selected="true"],
 .lang-menu [aria-current="true"]>a,.lang-menu a[aria-current="true"]{
-  color:var(--terra-ink);font-weight:900;background:rgba(217,119,87,.09);
+  color:var(--terra-ink-2);font-weight:900;background:rgba(217,119,87,.09);
 }
 .lang-menu [aria-selected="true"]>a::after,.lang-menu a[aria-selected="true"]::after,
 .lang-menu [aria-current="true"]>a::after,.lang-menu a[aria-current="true"]::after{
@@ -318,10 +327,14 @@ code{
   position:absolute;left:var(--gut);bottom:26px;z-index:1;
   display:flex;flex-direction:column;align-items:center;gap:12px;
   font-family:var(--sans);font-size:14px;letter-spacing:.26em;text-transform:uppercase;
-  color:var(--muted);text-decoration:none;
+  color:var(--ink);text-decoration:none;      /* 同样压在画布上，不用 --muted，见 .hero-sub 那条 */
   animation:rise 1s .6s var(--ease) both;
 }
-.scroll-cue:hover{color:var(--terra-ink)}
+/* 悬停不换文字色：粒子场上除 --ink 外没有任何一档赤陶橙能稳住 4.5
+   （--terra-ink 最差 3.916、--terra-ink-2 也只有 4.495，见 tests/quality.test.mjs），
+   所以反馈改用下划线——线色是装饰色 --terra，不参与对比度要求。 */
+.scroll-cue:hover{text-decoration:underline;text-decoration-color:var(--terra);
+  text-underline-offset:6px;text-decoration-thickness:1px}
 .scroll-cue::after{
   content:"";width:1px;height:46px;background:var(--terra);
   transform-origin:0 0;animation:cue 2.4s var(--ease) infinite;
@@ -341,7 +354,7 @@ main>section,.sec{
   font-family:var(--serif);font-size:clamp(15px,1.1vw + 12px,19px);font-weight:700;
   color:var(--terra-ink);letter-spacing:.18em;white-space:nowrap;
 }
-.sec-head h2{font-size:clamp(27px,3.6vw,44px);line-height:1.3;min-width:0;overflow-wrap:anywhere;text-wrap:balance}
+.sec-head h1,.sec-head h2{font-size:clamp(27px,3.6vw,44px);line-height:1.3;min-width:0;overflow-wrap:anywhere;text-wrap:balance}
 /* 发丝线画入：静止态是「已画完」，所以 JS 缺席时内容一样完整可读 */
 .sec-rule{
   border:none;border-top:1px solid var(--line);
@@ -378,17 +391,24 @@ main>section,.sec{
   position:relative;z-index:1;
   background:var(--paper);border:1px solid var(--line);
   padding:clamp(22px,3vw,40px) clamp(20px,3vw,42px) clamp(24px,3vw,40px);
-  /* 3D 倾斜（§3-4）：main.js 写 --rx/--ry，幅度 ≤5deg；perspective 挂在 #works 上，
-     这样卡片自身的 transform 不被祖先裁切，也不与 .reveal 的 translate 抢属性 */
-  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
-  transition:transform .5s var(--ease),border-color .35s var(--ease);
+  /* 3D 倾斜（§3-4）：main.js 写 --rx/--ry，幅度 ≤5deg。
+     透视必须挂在卡片自己的 transform 里、不能靠祖先 #works{perspective}：
+     实测换成祖先透视之后，消失点从卡片中心跑到整节中心，
+     纵深缩短弱了 1.69 倍（角点缩放 1.0584 → 1.0343），投影盒还会整体平移（顶卡约 10px），
+     于是两张 --rx/--ry 完全相同的卡片看起来不一样，而 main.js 又去读这个正在移动的 rect。 */
+  transform:perspective(1200px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
   will-change:transform;
 }
+/* 过渡必须写在 #works .work-card 上，不能留在 .work-card 里。
+   卡片同时带 class="work-card reveal"，两条规则特异度相同(0,1,0)，
+   而 §14 的 .reveal 在后面——它那条 `transition:opacity…,translate…` 简写
+   会把卡片这一整条 transition 全部覆盖掉：不仅 transform 不再有 .5s，
+   连 `:hover` 的 border-color 也悄悄失去了 .35s 缓动。抬一级特异度即可。 */
+#works .work-card{transition:transform .5s var(--ease),border-color .35s var(--ease)}
 .work-card+.work-card{margin-top:clamp(26px,3.6vw,42px)}
 /* 卡内元素间距兜底：契约里 h3 / .lede / .shot / ul.facts / 两枚按钮是平级子元素，
    任何一层没被下面显式 margin 覆盖的（或多套了一层 wrapper）都靠这条撑开 */
 .work-card>*+*{margin-top:clamp(18px,2.4vw,26px)}
-#works{perspective:1200px}
 .work-card:hover{border-color:var(--line-strong)}
 .work-card h3{
   font-size:clamp(21px,2.3vw,30px);font-weight:900;letter-spacing:.03em;line-height:1.42;
@@ -428,11 +448,12 @@ main>section,.sec{
   counter-increment:step;position:relative;
   padding:clamp(22px,3vw,32px) clamp(16px,2.4vw,34px) clamp(22px,3vw,32px) 0;
   border-top:1px solid var(--line);
-  /* 解释文字是 <li> 下的**裸文本节点**（HTML 里没有 <p>），所以样式必须挂在 li 自己身上。
-     原来这里写的是一条 `.steps li p` 规则——它一次都没匹配过，
-     于是整段说明既没拿到 --muted 也没拿到 44em 限宽，比设计意图重一档、也更长。 */
-  color:var(--muted);font-size:clamp(15.5px,.55vw + 14px,17px);max-width:44em;
 }
+/* 说明文字的排版挂在 <p> 上。曾经这里没有可匹配的 <p>（说明是 <li> 下的裸文本），
+   所以这条规则一次都没生效过；当时的临时修法是把 max-width 抬到 .steps li 上，
+   结果在 820–1199px 之间把 <li> 的盒子也夹到 748px——发丝线比区块窄一截，
+   而同一节里其他规则的线是满宽的。现在改的是 HTML：说明已经包进 <p>。 */
+.steps li p{color:var(--muted);font-size:clamp(15.5px,.55vw + 14px,17px);max-width:44em}
 .steps li:last-child{border-bottom:1px solid var(--line)}
 .steps li::before{
   content:counter(step,decimal-leading-zero);
@@ -443,7 +464,6 @@ main>section,.sec{
 .steps li strong,.steps li b,.steps li h3{
   display:block;font-family:var(--serif);font-size:clamp(18px,1.6vw,23px);font-weight:700;
   letter-spacing:.03em;line-height:1.6;margin-bottom:8px;
-  color:var(--ink);                    /* li 现在是 --muted，小标题要自己抬回 --ink */
 }
 .closing{
   margin-top:clamp(34px,4.4vw,52px);padding-top:clamp(24px,3vw,34px);border-top:1px solid var(--line);

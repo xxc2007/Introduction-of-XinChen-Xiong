@@ -145,8 +145,19 @@ for (const cls of LOAD_BEARING) {
   dup(pages.ZH, "ZH"); dup(pages.EN, "EN");
 }
 setEq("data-* 属性名集合", grab(pages.ZH, /\b(data-[a-z-]+)=/g), grab(pages.EN, /\b(data-[a-z-]+)=/g));
-setEq("每个 <img> 都有 alt", grab(pages.ZH, /<img[^>]*>/g).map(t => /alt="/.test(t) ? "有" : "缺"),
-  grab(pages.EN, /<img[^>]*>/g).map(t => /alt="/.test(t) ? "有" : "缺"));
+/* 每个 <img> 都必须有 alt。
+   上一版把 /<img[^>]*>/g（没有捕获组）交给 grab()，而 grab 一律取 m[1] ——
+   于是两页每一项都是 undefined，映射后都是「缺」，两个「全都缺」的列表永远相等：
+   把两页所有 alt 删光它照样打印 ✓。这里改成自己匹配、取整条标签。 */
+{
+  // 前界定成「行首或空白」：`-` 也算词边界，/alt="…"/ 会把 data-alt= 读成有 alt。
+  const altOf = h => [...h.matchAll(/<img\b[^>]*>/g)].map(m => (/(?:^|\s)alt="[^"]*"/.test(m[0]) ? "有" : "缺"));
+  const zhImgs = [...pages.ZH.matchAll(/<img\b[^>]*>/g)], enImgs = [...pages.EN.matchAll(/<img\b[^>]*>/g)];
+  if (!zhImgs.length || !enImgs.length) bad("<img> 数量", `抓到 ZH=${zhImgs.length} EN=${enImgs.length}，正则失效了`);
+  else seqEq("每个 <img> 都有 alt", altOf(pages.ZH), altOf(pages.EN));
+  const missing = altOf(pages.ZH).map((v, i) => v === "缺" ? i + 1 : 0).filter(Boolean);
+  if (missing.length) bad("alt 非空", `中文页第 ${missing.join("/")} 张图没有 alt`);
+}
 
 /* 链接：按**顺序**比，不看去重后的集合——上一版可以让社交图标任意换序。 */
 const social = h => (h.match(/<ul class="social[\s\S]*?<\/ul>/) || [""])[0].match(/href="([^"]+)"/g)?.map(s => s.slice(6, -1)) || [];

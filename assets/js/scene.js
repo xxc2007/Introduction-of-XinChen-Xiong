@@ -293,26 +293,34 @@ export function initField(canvas, opts = {}) {
     }, { threshold: 0 });
     io.observe(host);
   } catch (e) { io = null; }
+  let roSeen = false;
+  /* ResizeObserver 缺席时的兜底。必须是有名字的处理函数：
+     写成匿名箭头就结构上不可能在 teardown 里摘掉，
+     那等于把整张场景图和一个已 dispose 的 renderer 泄漏在 window 上。 */
+  const onWinResize = () => {
+    if (destroyed || resizeTimer) return;
+    resizeTimer = setTimeout(applySize, 120);
+  };
   try {
     ro = new ResizeObserver(() => {
       if (destroyed || resizeTimer) return;
+      /* 按规范 ResizeObserver 必定先回调一次、报的就是当前尺寸，而那份启动时已经
+         applySize 过了。不跳过，减弱动效下启动会连画三帧，和文件头承诺的「只出一帧」不符。 */
+      if (!roSeen) { roSeen = true; return; }
       resizeTimer = setTimeout(applySize, 120); /* 合并连续 resize，绝不逐帧 setSize */
     });
     ro.observe(host);
   } catch (e) { ro = null; }
   /* ResizeObserver 缺席时（ro === null）原来没有任何东西会重算尺寸：
      换外接屏、改窗口缩放、横竖屏切换都会让画布停在旧尺寸上，
-     而 reduced 模式下那更是永久停在一张拉伸的静止帧。补一条同规则的兜底。 */
-  if (!ro) {
-    window.addEventListener("resize", () => {
-      if (destroyed || resizeTimer) return;
-      resizeTimer = setTimeout(applySize, 120);
-    }, { passive: true });
-  }
+     而 reduced 模式下那更是永久停在一张拉伸的静止帧。 */
+  if (!ro) window.addEventListener("resize", onWinResize, { passive: true });
 
   function frame(now) {
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000) || 0;
+    /* now 可能早于 start() 里取的 performance.now()（rAF 的时间戳是帧起始时刻），
+       那样 dt 为负、uTime 会往回跳一步，降级采样器也会把负值累进均值里。夹到 0。 */
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)) || 0;
     last = now;
     t += dt;
 
@@ -372,6 +380,8 @@ export function initField(canvas, opts = {}) {
     window.removeEventListener("scroll", onScroll);
     window.removeEventListener("pointermove", onPointer);
     document.removeEventListener("visibilitychange", onVis);
+    // 兜底那条 resize 监听是绑在 window 上的，teardown 不摘掉它就永远不会回收
+    window.removeEventListener("resize", onWinResize);
     if (resizeTimer) { clearTimeout(resizeTimer); resizeTimer = 0; }
     if (io) { io.disconnect(); io = null; }
     if (ro) { ro.disconnect(); ro = null; }

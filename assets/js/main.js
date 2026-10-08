@@ -145,6 +145,21 @@ updaters.push(() => {
   }
 });
 
+/* 边界事件会漏，而漏一次就永久停在旧倾角上。
+   锚点平滑滚动会把页面从一只静止的光标底下抽走（本文件末尾那条 #nav 跳转就会）；
+   指针也可能从窗口外离开而收不到 pointerleave。收敛之后 it.live=false，
+   这个元素再也不会被写第二次——旧的 (0,0) 写法虽然有其他毛病，却会自愈。
+   所以显式补一个复位：滚动与失焦时把所有弹簧的目标压回原点。 */
+function releaseSprings() {
+  let any = false;
+  for (const it of springs) {
+    if (it.live || it.c[0] || it.c[1]) { it.t = [0, 0]; it.live = true; any = true; }
+  }
+  if (any) schedule();
+}
+window.addEventListener('scroll', releaseSprings, { passive: true });
+window.addEventListener('blur', releaseSprings);
+
 /* 磁吸：只写 --mx/--my（px），交给 CSS 的独立 translate 属性去用，
    这样卡片的 transform 倾斜可以各自占着自己的通道、互不覆盖。 */
 if (HOVER && !RM) $$('[data-magnetic]').forEach((el) => spring(el, (ev, r) => [
@@ -161,7 +176,8 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   const ny = clamp((ev.clientY - r.top) / (r.height || 1) - .5, -.5, .5);
   return [-ny * 10, nx * 10];
 }, (node, x, y) => {
-  /* 只写 --rx/--ry，透视交给 #works{perspective:1200px} 提供。
+  /* 只写 --rx/--ry；透视写在 CSS 的 .work-card 的 transform 里（perspective(1200px) rotateX…），
+     不放 #works 那一层：给祖先设 perspective 会让位移被放大 1.69 倍、还顺带平移整张卡。
      早先这里是直接覆盖 style.transform、还自带一个 perspective(720px)——
      于是 CSS 里那条 rotateX(var(--rx)) 永远不生效，卡片同时受三份透视，
      而 --rx/--ry 成了没人写的死变量。 */
