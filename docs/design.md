@@ -104,6 +104,13 @@ body{ font-family:var(--sans); … }                    /* style.css 第 48–49
 `h1` `clamp(40px,7.4vw,86px)`，节标题 `.sec-head h1,.sec-head h2` `clamp(27px,3.6vw,44px)`，≤420px 再钉死小档
 （`h1` `clamp(32px,10.5vw,44px)`、`.motto` `21px`）。`p{text-wrap:pretty}`、`h1,h2,h3{text-wrap:balance}`。
 
+**冷加载时有一次 0.078 的 CLS，这是 `font-display: swap` 的代价，不是缺陷。**
+101 个可变字体切片全部 `swap`：先用 Georgia/宋体画出来，Noto Serif SC 到位后换字——首屏那行 `clamp(40px,7.4vw,86px)` 的
+`h1` 因此会重排一次。Lighthouse 移动跑的 `cumulative-layout-shift` 就是这个数（0.078 < 0.1，Google 判"良好"，
+是它 57 项里唯一没拿满分的一项；桌面与热加载实测为 0 次位移）。
+改成 `optional` 或给回退字加度量覆盖能把这个数压下去，但代价分别是"慢网络下这一趟干脆不用他的字体"
+和"要替 101 个切片各写一份 size-adjust"——两者都比 0.078 更贵，所以**不动**。
+
 ---
 
 ## 叁 · HAIRLINE 发丝线，不是投影
