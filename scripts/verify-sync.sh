@@ -152,4 +152,35 @@ for u in "/nc15/" "/geohot/"; do
   [ "$code" = 200 ] && echo "  ✓ $u HTTP 200" || { echo "  ✗ $u HTTP $code"; FAIL=1; }
 done
 
+echo "── G. 响应头：deploy/nginx.conf.example 声明的 vs 线上实际发的"
+# 这一段的由来：migration.md 教人把 nginx.conf.example 拷成生效配置，而 example 里写着
+# CSP / HSTS / Permissions-Policy；实测线上一个都没发。
+# 查下去发现这是**有意的**：裸域在服务器上只有 listen 80 那一个服务块
+# （注释写着「保留直服务，防 CF Flexible 回源被重定向循环」），443 块只管 www→裸域跳转。
+# Cloudflare 处在 Flexible 模式：浏览器↔CF 是 HTTPS，CF↔源站是 HTTP，
+# 于是源站即便写了 HSTS 也送不到——浏览器会忽略非安全来源的 STS 头。
+# 所以本节分两档，不做「示例有、线上没有就一律判红」那种会永久红、很快没人看的闸门：
+#   KNOWN-GAP  线上刻意不发（要改的是 CF 的 SSL 模式，不是这个仓库）→ 只报，不红
+#   REGRESSION 线上本来在发的头不见了 → 判红
+HDRS="$(curl -s -D - -o /dev/null -A "$UA" "https://$DEPLOY_SITE/" | tr -d '\r')"
+# 线上当前确实发出的头（2026-10-08 实测）；这几个掉了就是回归。
+SENT="X-Content-Type-Options Referrer-Policy"
+H_BAD=0
+for h in Strict-Transport-Security Content-Security-Policy X-Content-Type-Options Referrer-Policy Permissions-Policy X-Frame-Options; do
+  want=$(grep -c "add_header $h" deploy/nginx.conf.example)
+  got=$(printf '%s\n' "$HDRS" | grep -ci "^$h:" || true)
+  case " $SENT " in *" $h "*) kind="REGRESSION";; *) kind="KNOWN-GAP";; esac
+  if [ "$got" -eq 0 ] && [ "$kind" = "REGRESSION" ]; then
+    printf '  ✗ %-28s 线上本来在发，现在 0 处（%s）\n' "$h" "$kind"; H_BAD=1
+  elif [ "$want" -gt 0 ] && [ "$got" -eq 0 ]; then
+    printf '  ! %-28s example %2s 处 / 线上 0 处 —— KNOWN-GAP：CF Flexible 下源站发不出去\n' "$h" "$want"
+  else
+    printf '  ✓ %-28s example %2s 处 / 线上 %s 处\n' "$h" "$want" "$got"
+  fi
+done
+if [ "$H_BAD" = 1 ]; then
+  echo "  ✗ 有线上本来在发的安全头消失了——这是回归，不是示例与生产的既有差异。"
+  FAIL=1
+fi
+
 [ "$FAIL" = 0 ] && { echo "ALL CHECKS PASSED"; exit 0; } || { echo "FAILED"; exit 1; }

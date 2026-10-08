@@ -56,7 +56,9 @@ node tools/serve.mjs                     # 默认 8899，只监听 127.0.0.1
 零构建、零依赖安装——这条预览服务器就是"构建产物"。实测过程（2026-10-07，同一台 Windows + Git Bash）：
 
 ```bash
-netstat -ano | grep LISTENING | grep -E ':89[0-9][0-9]'   # 先看谁在听：8890 / 8899 / 8912 都被占着
+netstat -ano | grep LISTENING | grep -E ':8[89][0-9][0-9]'   # 先看谁在听：8890 / 8899 / 8912 都被占着
+# 正则要覆盖 88xx 与 89xx 两段：早先写的是 ':89[0-9][0-9]'，只能看见 8900-8999，
+# 而同一行注释举的例子（8890、8899）恰好都在 88xx——那条命令根本列不出它自己要找的东西。
 node tools/serve.mjs 8907                                  # 挑一个空闲端口，别 kill 别人的进程
 ```
 
@@ -98,8 +100,14 @@ cp .deploy.env.example .deploy.env      # .gitignore 第 10 行排除它，绝�
    `:80` 已经在服务——先只挂一个最小的 `:80` server（root 指向 `/var/www/intro`，留好
    `/.well-known/acme-challenge/`），`certbot certonly --webroot` 拿到证书，再整份替换。
    `deploy/nginx.conf.example` 文件头把这三步顺序写死了，照它做即可。
-3. 把 `deploy/nginx.conf.example` 拷成 `/etc/nginx/sites-available/xxc2007.me`（它就是为这一步准备的，路径与真机一致），
+3. 把 `deploy/nginx.conf.example` 拷成 `/etc/nginx/sites-available/xxc2007.me`（路径与真机一致），
    `ln -s` 进 `sites-enabled`，`nginx -t` 通过后 `systemctl reload nginx`。
+   **注意这份比线上更严**：它是目标配置，不是生效配置的快照。线上裸域只有 `listen 80` 一个服务块、
+   Cloudflare 在 Flexible 模式下回源走 HTTP，所以今天实际只发 `X-Content-Type-Options` 与
+   `Referrer-Policy`；example 里写的 HSTS / CSP / Permissions-Policy 一个都没到浏览器。
+   照它部署会顺手挡掉 Cloudflare 注入的 `beacon.min.js` 与 `email-decode.min.js`，
+   而 HSTS 要真生效得先把 CF 的 SSL 模式换成 Full (strict)。这两件都是边缘侧决策，
+   要人拍板——`verify-sync.sh` 的 G 段会把这份差异按 KNOWN-GAP 列出来。
 4. 一条命令上线：`bash scripts/deploy.sh "首次迁移部署"`。它按五步走——
    闸门（`check-parity` / `check-links` / `check-bytes` + 对所有 `scripts/*.sh` 做 `bash -n`、对 `tools/*.mjs` 做 `node --check`）
    → 提交并 `git push`（重试 3 次）→ `git archive HEAD` 上服务器 → `verify-sync.sh` 四方核验 → 带 `Host` 头逐前缀探活。

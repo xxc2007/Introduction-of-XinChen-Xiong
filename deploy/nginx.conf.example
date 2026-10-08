@@ -1,5 +1,22 @@
 # =============================================================================
-# 迁移到新服务器时用的站点配置参照（2026-10-07 12:12 与线上逐字节一致的快照）
+# 迁移到新服务器时用的站点配置参照
+#
+# ⚠ 这份**不是**线上生效配置的快照，是一份比线上更严的目标配置。
+#   2026-10-08 实测（curl -D 打到源站与公网两侧）：
+#     · 线上裸域只有一个 listen 80 的服务块（443 那块只管 www→裸域跳转），
+#       Cloudflare 处在 Flexible 模式——浏览器↔CF 走 HTTPS，CF↔源站走 HTTP。
+#     · 因此线上实际只发出 X-Content-Type-Options 与 Referrer-Policy 两个安全头；
+#       下面写的 Strict-Transport-Security / Content-Security-Policy / Permissions-Policy
+#       一个都没到浏览器（非安全来源的 STS 头浏览器本来也会忽略）。
+#   照这份部署出来的站点会比今天的线上**更严**，两处可见的行为差异：
+#     ① script-src 'self' 会挡掉 Cloudflare 注入的 beacon.min.js（Web Analytics）
+#        与 email-decode.min.js（邮箱混淆）——今天这两样是实际存在的；
+#     ② HSTS 要真正生效，得先把 CF 的 SSL 模式从 Flexible 换成 Full (strict) 并让源站听 443，
+#        否则写了也是白写。
+#   这两件都属于边缘/生产侧决策，不在本仓库里自动做。verify-sync.sh 的 G 段
+#   会把「示例有、线上没有」按 KNOWN-GAP 报出来（不判红），
+#   而「线上本来在发的头消失了」按 REGRESSION 判红。
+#
 # 用法：拷成 /etc/nginx/sites-available/xxc2007.me → 软链进 sites-enabled → nginx -t → reload
 # 需要你自己填的：证书路径（certbot 出来的那份）、GEOHOT 与 Artalk 的端口、以及 webroot 归属。
 #
