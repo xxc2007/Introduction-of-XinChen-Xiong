@@ -524,6 +524,25 @@ test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
   assert.deepEqual(dead, [], `scene.js 导出了但 main.js 从没用过：${dead.join(", ")}`);
 });
 
+test("带 nowrap 的 flex 项不许被 flex:1 1 0 + min-width:0 压到内容宽度以下", () => {
+  /* 390px 上英文导航五个标签撞成 "How I workWhat I believeFind me" 的成因就是这一组：
+     链接带 white-space:nowrap（文字不许断），却又 flex:1 1 0 + min-width:0
+     （盒子可以被压到比文字还窄）。文字溢出自己的盒子，而 flex 行本身没有溢出，
+     于是旁边配的 overflow-x:auto 兜底永远不触发——量出来 docSW 仍等于视口宽，
+     看起来"没有横向滚动就没有溢出"，实际字都压在一起了。
+     这条是静态代理：真机重叠只能靠浏览器量，但这个组合本身就是碰撞发生器。 */
+  const bad = [];
+  for (const m of CSS_CODE.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    const sel = m[1].trim().replace(/\s+/g, " ");
+    const d = m[2];
+    const nowrap = /white-space\s*:\s*nowrap/.test(d);
+    const shrinkToZero = /flex\s*:\s*1\s+1\s+0\b/.test(d) || /flex-basis\s*:\s*0\b/.test(d);
+    const noMin = /min-width\s*:\s*0\b/.test(d);
+    if (nowrap && shrinkToZero && noMin) bad.push(`${sel}（nowrap + flex:1 1 0 + min-width:0）`);
+  }
+  assert.deepEqual(bad, [], "这些规则能让文字溢出自己的盒子：\n" + bad.join("\n"));
+});
+
 test("CSS 里按属性选中的每个属性都必须真的被写上（aria-selected 那组就是死的）", () => {
   /* .lang-menu 的选中态每个选择器都并列写了 [aria-selected="true"] 和 [aria-current="true"]
      两种口径，但 aria-selected 从来没被任何代码写过——两页与 main.js 只用 aria-current

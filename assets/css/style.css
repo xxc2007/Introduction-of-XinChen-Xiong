@@ -252,6 +252,12 @@ code{
 }
 /* HTML 已经自带勾形 SVG（本项目两页都这么做）时，收回上面那条 CSS 生成的 ✓，避免双勾 */
 .lang-menu a:has(.lang-check)::after{content:none}
+.lang-menu a[aria-current="true"]:hover,.lang-menu a[aria-current="true"]:focus-visible{
+  /* 选中行原本悬停 = 底色 .09→.12、文字色不变、字重不变——实测合成底只差 3/255，
+     悬停完全看不出来，等于这一行没有反馈。把这一档拉开到 .18：
+     --terra-ink-2 对 cream+.18 仍有 4.829:1（基线 .09 是 5.226），AA 有余量。 */
+  background:rgba(217,119,87,.18);
+}
 /* 尾部 ✓：只在当前语言那一项显形，颜色跟随 --terra-ink 的文字色纪律 */
 .lang-check{
   width:14px;height:14px;flex:none;
@@ -532,6 +538,13 @@ main>section{
 .foot-sign{font-family:var(--serif);font-size:16px;letter-spacing:.06em;color:var(--ink)}
 .foot-meta{letter-spacing:.06em;font-variant-numeric:tabular-nums}
 .foot a{color:var(--muted);text-decoration:none}
+/* 页脚那枚「返回顶部」是句内链接（WCAG 2.5.8 对句内目标有豁免），
+   但实测命中框只有 92×19——在触屏上仍然太难点。
+   用 inline-block + 上下 padding + 等量负 margin 把命中区撑到 44px 高，
+   负 margin 把多出来的高度抵消回去，所以行的视觉高度不变、也不会压到邻字。
+   只给 .foot a：.mail 自己有一条按 padding box 定位的 ::after 下划线，
+   给它加 padding-block 会把那条线推离文字。 */
+.foot a{display:inline-block;padding-block:13px;margin-block:-13px}
 .foot a:hover{color:var(--terra-ink);text-decoration-thickness:1px}
 
 /* ── 14 · 滚动揭示 reveal（§3-2：位移 ≤14px / 520ms / 错峰 60ms） ── */
@@ -583,12 +596,18 @@ html.no-js .lang-menu a{padding:8px 10px}
   .brand{order:1;flex:1 1 auto;min-width:0;max-width:none;white-space:normal}
   .brand b{font-size:17px;overflow-wrap:anywhere}
   .controls{order:2;margin-left:auto}
-  /* 导航整行铺开：5 项均分、可横向滚动兜底（母本实测：藏滚动条的窄 nav 会让
-     末位入口彻底消失在屏幕外，这里用 flex 均分保证「看得见 + 键得到」） */
-  #nav{order:3;flex:1 1 100%;justify-content:space-between;gap:0;
-       overflow-x:auto;scrollbar-width:none;overscroll-behavior-x:contain;padding-bottom:6px}
-  #nav::-webkit-scrollbar{display:none}
-  #nav a{flex:1 1 0;min-width:0;text-align:center;padding:11px 4px;min-height:44px;font-size:13.5px;letter-spacing:.02em}
+  /* 导航整行铺开、按内容宽度排、放不下就换行。
+     旧写法是 `#nav a{flex:1 1 0;min-width:0}` 五列均分 + `overflow-x:auto` 兜底，
+     注释说「藏滚动条的窄 nav 会让末位入口消失在屏幕外，所以用均分保证看得见」。
+     但均分恰恰让兜底永远触发不了：390px 上英文五个标签各分到 71px，
+     而 "What I believe" 需要 89px——nowrap 的文字溢出自己的盒子，
+     flex 行本身没有溢出，于是 overflow-x 从不生效、docSW 仍等于 390，
+     结果是文字互相压字（实测相邻标签文字间距 12 / 12 / 0 / **-11px**，
+     渲染成 "How I workWhat I believeFind me"）。
+     改成 flex:0 0 auto + flex-wrap:wrap：盒子至少和内容一样宽，
+     一行装不下就多一行，五个入口在任何宽度下都看得见、点得到。 */
+  #nav{order:3;flex:1 1 100%;justify-content:center;flex-wrap:wrap;gap:2px 4px;padding-bottom:6px}
+  #nav a{flex:0 0 auto;text-align:center;padding:11px 10px;min-height:44px;font-size:13.5px;letter-spacing:.02em}
   .lang-menu{right:0;left:auto}          /* 窄屏 pill 已贴右边缘：菜单必须继续右对齐，
                                             left:0 会把它推过 390px 视口（契约 §6 语言菜单不溢出） */
   .hero{min-height:0;padding-top:clamp(40px,7vw,64px);text-align:left}

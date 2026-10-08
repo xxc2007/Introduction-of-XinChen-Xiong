@@ -99,26 +99,32 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "404 页用相对路径", file: "404.html", from: `href="/`, to: `href="./`,
     expect: /相对路径/ },
   { name: "img 声明尺寸与真实不符", file: ZH,
-    from: `width="300" height="300"`, to: `width="299" height="300"`,
+    re: /(avatar\.jpg[^>]*?width=")\d{3}(")/, to: "$1299$2",
     expect: /声明/ },
   { name: "aria-controls 指向不存在的 id", file: ZH,
     from: `aria-controls="`, to: `aria-controls="nope-`, expect: /不存在的 id/ },
 
   { name: "挂了一个没有样式定义的 class（404 的 .sec-title 就是这个）", file: "404.html",
     from: `<div class="sec-head">`, to: `<div class="sec-title">`, expect: /没有任何样式表定义它/ },
+  { name: "nav 那组「nowrap + flex:1 1 0 + min-width:0」碰撞发生器", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`,
+    to: `.nav-collide{white-space:nowrap;flex:1 1 0;min-width:0}\n`,
+    expect: /溢出自己的盒子/ },
   { name: "CSS 里出现没人写过的属性选择器（aria-selected 那一族）", file: CSS, insert: true,
     from: `@media (prefers-reduced-motion:reduce)`,
     to: `.lang-menu a[aria-pressed="true"]{color:var(--terra-ink-2)}\n`,
     expect: /没有任何地方写上它们/ },
-  { name: "README 显示用的 KB 值算错（352.6 而不是 35.3）", file: "README.md",
-    from: `**35.3 KB**（`, to: `**352.6 KB**（`, expect: /CSS 显示 KB：README 写/ },
-  { name: "只改英文 README 的数字（旧版只查中文那份）", file: "README.en.md",
-    from: `(\`36,107\` bytes)`, to: `(\`36,036\` bytes)`, expect: /README\.en\.md \/ CSS 字节/ },
   { name: "给 verify-sync 再加一段而文档没跟上（段数说法过期）", file: "scripts/verify-sync.sh",
     append: true, to: `\necho "── H. 假想的新段"\n`, expect: /段字母表|但 migration\.md 的表只列了/ },
-  { name: "README 抄的测量值过期了（数字与代码脱节）", file: "README.md",
-    from: "`git ls-files \\| wc -l` = 150", to: "`git ls-files \\| wc -l` = 146",
-    expect: /跟踪文件数：README 写 146/ },
+  { name: "README 抄的跟踪文件数过期了", file: "README.md",
+    re: /(git ls-files \\\| wc -l`? = )\d+/, to: "$11",
+    expect: /跟踪文件数：README 写/ },
+  { name: "README 显示用的 KB 值算错（35.3 写成 352.6 那一类）", file: "README.md",
+    re: /(\| 全站 CSS \| )\*\*[\d.]+ KB\*\*/, to: "$1**999.9 KB**",
+    expect: /CSS 显示 KB：README 写/ },
+  { name: "只改英文 README 的数字（旧版只查中文那份）", file: "README.en.md",
+    re: /(\| Site CSS \| [^|]*\()`\d[\d,]*` bytes/, to: "`1` bytes",
+    expect: /README\.en\.md \/ CSS 字节/ },
   { name: "注释引用了一条不存在的 CSS 规则", file: "assets/js/main.js",
     from: `/* 触屏与 reduced-motion 一律不绑定倾斜`,
     to: `/* 透视由 #works{perspective:1200px} 提供 */\n/* 触屏与 reduced-motion 一律不绑定倾斜`,
@@ -242,21 +248,38 @@ const run = (dir, gate = "test", only = null) => {
   catch (e) { return String((e.stdout || "") + (e.stderr || "")); }
 };
 
-/* 结构自检：注入锚点里不许出现 ?v= 的值。
-   deploy.sh 第 0 步会按 HEAD 统一换掉三页的指纹，锚点一旦钉在指纹上，
-   下一次部署就会「锚点零命中」——而那是算失败的，闸门会把一次正常的指纹轮换
-   读成一次没抓到的攻击。（真发生过。） */
+/* 结构自检：注入锚点不许钉在「会随正常工作改变的值」上。
+   两类都真发生过：
+   ① 钉 ?v=<指纹> —— deploy.sh 第 0 步按 HEAD 换指纹，锚点当场失配；
+   ② 钉 README 里抄的测量值（35.3 KB / 36,107 bytes）—— 我改一行 CSS 它就变，
+      于是两条对照同时「锚点零命中」。
+   零命中算失败，所以这类锚点会把一次正常改动读成一次没抓到的攻击。
+   规则：字面量锚点里不许出现指纹或 3 位以上的数字串；要钉值就用 re: 正则锚点。 */
+/* 只钉真正会漂移的两类值：
+   ① ?v=<指纹> —— deploy.sh 第 0 步按 HEAD 换它；
+   ② README 抄的测量值 —— 写成 `36,107` 这种带反引号的千分位，或 35.3 KB 这种显示值，
+      改一行 CSS 就变。
+   注意别把设计令牌也算进去：rgba(217,119,87,.12) 里的 217/119 是赤陶橙的 RGB 分量，
+   它是常量，钉上去是安全的。第一版用 \d{3,} 一刀切、第二版用「数字,三位数字」，
+   两次都把这条 rgba 误报成漂移值——所以千分位必须连反引号一起认。 */
 {
-  const volatile = MUTS.filter(m => m.from && /\?v=[0-9a-z]{4,8}/.test(m.from));
-  if (volatile.length) {
-    console.log("🛑 这些注入锚点钉在了会随部署漂移的 ?v= 值上，改用稳定文本：");
-    for (const m of volatile) console.log(`   - ${m.name}  →  "${m.from}"`);
+  const VOLATILE = /(\?v=[0-9a-z]{4,8}|`\d{1,3},\d{3}`|[\d.]+ ?KB)/;
+  const bad = MUTS.filter(m => m.from && !m.re && VOLATILE.test(m.from));
+  if (bad.length) {
+    console.log("🛑 这些注入锚点钉在了会随正常工作漂移的值上，改 re: 正则锚点或换成稳定文本：");
+    for (const m of bad) console.log(`   - ${m.name}  →  "${m.from}"`);
     process.exit(1);
   }
   const noop = MUTS.filter(m => m.from && m.from === m.to && m.expect !== null);
   if (noop.length) {
     console.log("🛑 这些用例 from === to 且期望变红，是字面意义上的空操作（不可能注入任何东西）：");
     for (const m of noop) console.log(`   - ${m.name}`);
+    process.exit(1);
+  }
+  const noAnchor = MUTS.filter(m => !m.append && !m.from && !m.re);
+  if (noAnchor.length) {
+    console.log("🛑 这些用例既没有 from 也没有 re，注入无从发生：");
+    for (const m of noAnchor) console.log(`   - ${m.name}`);
     process.exit(1);
   }
 }
@@ -305,9 +328,11 @@ for (const m of MUTS) {
   try {
     const p = join(dir, m.file);
     const src = readFileSync(p, "utf8");
-    if (!m.append && !src.includes(m.from)) { console.log(`⚠️  ${m.name}: 注入锚点零命中 → "${m.from}"`); missed++; continue; }
-    // 四种注入姿势：追加到文件尾 / 插在锚点前 / 只替换第一处 / 替换每一处。
+    if (!m.append && !m.re && !src.includes(m.from)) { console.log(`⚠️  ${m.name}: 注入锚点零命中 → "${m.from}"`); missed++; continue; }
+    if (m.re && !m.re.test(src)) { console.log(`⚠️  ${m.name}: 正则锚点零命中 → ${m.re}`); missed++; continue; }
+    // 注入姿势：追加到文件尾 / 插在锚点前 / 正则替换 / 替换每一处 / 只替换第一处。
     const patched = m.append ? src + m.to
+      : m.re ? src.replace(m.re, m.to)
       : m.insert ? src.replace(m.from, m.to + m.from)
       : m.all ? src.split(m.from).join(m.to)
       : src.replace(m.from, m.to);
