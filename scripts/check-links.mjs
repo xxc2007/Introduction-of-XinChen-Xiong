@@ -11,22 +11,34 @@ const sshUser = (() => {
 })();
 /* 先转义登录名里的正则元字符，再拼出「user@」这条规则。 */
 const sshUserRe = sshUser ? new RegExp(sshUser.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '@') : null;
+/* 扩展名白名单必须含 example/conf：下面那条「.example 文件允许带占位符」的豁免
+   一直落在一个从来没被扫过的文件上——deploy/nginx.conf.example 当时根本不在清单里，
+   豁免是死代码，而那份文件里写个真 IP 或真私钥路径没人看。
+   现在它被扫，豁免才真的只在「占位符形状」这一种情况生效。 */
 const files = execFileSync("git", ["ls-files"], { cwd: ROOT }).toString().trim().split("\n")
-  .filter(f => /\.(html|css|js|mjs|md|xml|json|svg)$/.test(f));
+  .filter(f => /\.(html|css|js|mjs|md|xml|json|svg|conf|example)$/.test(f));
 
 /* 「四段点分数字」不能只按形状匹配：SVG 的 path d 数据里满是 5.243.002.03 这类连写数字，
    上一版的 \b 在点和数字之间也算边界，于是社交图标的 path 被当成公网 IP，
    而且占位符豁免（return）把整行跳过——两边一起漏。
    这里按 IPv4 的字面定义匹配：每段 0-255、不许有前导零、前后不挨数字或点。
-   path 里的 .002 / 893 这种不满足，真被写进正文的地址满足。 */
-const IPISH = /(?:^|[^0-9.])((?!0\d)(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?!0\d)(?:25[0-5]|2[0-4]\d|1?\d?\d)){3})(?![0-9.])/;
+   末尾多允许一个点：FQDN 的绝对写法（四段之后再跟一个点）浏览器照样解析，不该成为藏身处。
+   注：本文件与 check-mutations.mjs 里不写任何完整的点分四段示例地址——
+   写了就会被这条规则命中，而规则不该为「这只是注释」开口子，见下面的 SELF 说明。 */
+const IPISH = /(?:^|[^0-9.])((?!0\d)(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?!0\d)(?:25[0-5]|2[0-4]\d|1?\d?\d)){3})\.?(?![0-9.])/g;
+const LOOPBACK = new Set(["127.0.0.1", "0.0.0.0"]);
+/* 每条规则返回「本行所有命中的串」（数组，可为空），而不是布尔、也不是第一个匹配：
+   只取第一个匹配的话，「本地回环 + 源站公网地址」写在同一行时第一个是回环、
+   被豁免后真 IP 就跟着溜过去了。白名单必须逐串判。 */
+const allOf = (re) => (line) => (line.match(re) || []).slice(0);
+const firstGrp = (re) => (line) => [...line.matchAll(re)].map(m => m[1] ?? m[0]);
 const SECRET = [
-  [(line) => (line.match(IPISH) || [])[1] || null, "疑似源站公网 IP"],
-  [/ssh\s+-i\s+\S+/, "SSH 登录命令"],
+  [firstGrp(IPISH), "疑似源站公网 IP", (v) => LOOPBACK.has(v)],
+  [firstGrp(/ssh\s+-i\s+(\S+)/g), "SSH 登录命令"],
   /* 规则源码里不能出现触发串本身，否则这条规则会命中自己这个文件。
      拆成两个片段拼接：读代码的人一眼能看懂，规则源码里也不含完整触发串。 */
-  [new RegExp("\\.pe" + "m\\b"), "私钥文件名"],
-  [sshUserRe, "SSH 登录名"],
+  [firstGrp(new RegExp("([\\w./-]*\\.pe" + "m)\\b", "g")), "私钥文件名"],
+  sshUserRe ? [allOf(new RegExp(sshUserRe.source + "@?", "g")), "SSH 登录名"] : null,
 ];
 const RESEARCH = [/论文|期刊|开题|毕业论文|文献|课题|青藏高原|气候变化研究|thesis|dissertation|journal|peer-review/i];
 /* 读者会看到的文件：科研红线只管这些（docs/ 里的「不写什么」清单必须点出这些词才管得住后来人）。 */
@@ -35,11 +47,8 @@ const READER_FILES = /^(index\.html|en\/index\.html|404\.html|README\.md|README\
 const DOC_FILES = /(^|\/)(docs|deploy)\//;
 const PLACEHOLDER = /<[a-z][a-z0-9-]*>/;
 /* .deploy.env 不在仓库里：换机器跑时 sshUserRe 会是 null，不过滤掉会让规则循环抛 TypeError */
-/* 规则要么是函数（IP 那条要做数值校验），要么是正则。统一成一个 hit(line) 谓词。 */
-const SECRET_RULES = SECRET.filter((r) => r[0]).map(([re, why]) => ({
-  why,
-  hit: typeof re === "function" ? (line) => !!re(line) : (line) => re.test(line),
-}));
+/* 规则统一成 hit(line) → 命中的串 | null，外加一个可选的 allow(串) 豁免谓词。 */
+const SECRET_RULES = SECRET.filter((r) => r).map(([hit, why, allow]) => ({ why, hit, allow: allow || null }));
 /* 但"过滤掉"不能让这条规则静默消失——那样绿灯会被读成"三条红线都查过"。
    干净克隆里没有登录名可泄（.deploy.env 不随仓库走），所以这里只报状态、不判失败。 */
 if (!sshUser) console.log("  ! 未读到 .deploy.env：SSH 登录名这条红线本次未生效（其余规则照常）。部署机上有这个文件，所以在真正会推上线的那次运行里它是生效的。");
@@ -70,11 +79,15 @@ for (const f of files) {
        要防的是把访客身份绑进仓库——登录命令带着自己的密钥文件名那种。 */
     if (DOC_FILES.test(f) && /\/etc\/letsencrypt\//.test(line)) return;
     for (const rule of SECRET_RULES) {
-      if (!rule.hit(line)) continue;
-      // 允许占位符与 0.0.0.0 / 127.0.0.1 这类回环说明
-      const ip = line.match(IPISH);
-      if (ip && ["127.0.0.1", "0.0.0.0"].includes(ip[1])) continue;
-      bad(f, `第 ${i + 1} 行含${rule.why}（公开仓库不得出现）`);
+      /* 白名单只作用于 IP 这一条，且只豁免它自己那一处匹配。
+         旧写法是「这一行里有 127.0.0.1 就 continue」——放行的是整行：
+         「本地回环 + 源站公网地址」同行时，真 IP 会跟着回环一起被放行，
+         而且 continue 跳的是整行，连私钥文件名、SSH 登录名那两条也不再查。 */
+      for (const hit of rule.hit(line)) {
+        if (rule.allow && rule.allow(hit)) continue;
+        bad(f, `第 ${i + 1} 行含${rule.why}（公开仓库不得出现）`);
+        break;                       // 同一行同一规则只报一次，避免刷屏
+      }
     }
   });
 

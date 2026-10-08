@@ -126,6 +126,14 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "正文出现科研表述", file: ZH, gate: "links",
     from: `写信找我就可以`, to: `写信找我就可以，目前在做青藏高原气候变化研究的文献综述`,
     expect: /科研表述/ },
+  { name: "回环地址同行藏一个真 IP（旧版整行放行）", file: ZH, gate: "links",
+    from: `写信找我就可以`, to: `写信找我就可以（本地 127.0.0.1，源站 ${FAKE_IP}）`,
+    expect: /疑似源站公网 IP/ },
+  { name: "deploy/nginx.conf.example 也要被扫", file: "deploy/nginx.conf.example", gate: "links",
+    from: `server_name`, to: `server_name # ${FAKE_IP}`, expect: /疑似源站公网 IP/ },
+  { name: "真私钥文件名藏在一句带回环的话里", file: ZH, gate: "links",
+    from: `写信找我就可以`, to: `写信找我就可以（127.0.0.1 上还有 ${FAKE_KEY}）`,
+    expect: /私钥文件名/ },
   { name: "文档里的 <server-ip> 占位符不该误报", file: "README.md", gate: "links",
     from: `DEPLOY_HOST=<server-ip>`, to: `DEPLOY_HOST=<server-ip>`, expect: null },
   { name: "SVG path 里的连写数字不该当成 IP", file: ZH, gate: "links",
@@ -133,8 +141,8 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     expect: null },
 
   /* ── check-parity 那道关 ── */
-  { name: "两页 aria-label 全删光（旧版会报「✓ 不重复（0 条）」）", file: ZH, gate: "parity",
-    from: `aria-label="`, to: `data-x="`, expect: /一条 aria-label 都没抓到|不重复/ },
+  { name: "两页 aria-label 全删光（旧版会报「✓ 不重复（0 条）」）", file: ZH, gate: "parity", all: true,
+    from: `aria-label="`, to: `data-removed="`, expect: /一条 aria-label 都没抓到/ },
   { name: "parity 的 data-* 集合两页不对称必须报", file: ZH, gate: "parity", all: true,
     from: `data-magnetic`, to: `dataMag`, expect: /只在|两侧都抽出 0 项/ },
   { name: "英文页漏掉一个资源指纹", file: EN, gate: "parity",
@@ -188,6 +196,25 @@ const run = (dir, gate = "test", only = null) => {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
+/* 归因必须只看「失败区」。
+   直接把 expect 去 match 整段输出是错的：spec reporter 会为每条通过的断言打印
+   「✔ 页面里所有 ?v= 指纹是同一个值」，于是注入一个让**别的**测试变红的缺陷、
+   配一条 expect:/指纹/ 的用例，也会在通过测试的名字里撞上「指纹」两个字——
+   打印「✅ 正确变红」，而真正该红的那条根本没跑。实测 37 条里有 9 条是这种假绿。
+   node --test 的失败全部集中在末尾「✖ failing tests:」之后，切那一刀就干净了；
+   links/parity 是自定义输出，只取带 ✗ 的行。 */
+const failureText = (out, gate) => {
+  if (!out) return "";
+  if (gate === "test") {
+    const i = out.lastIndexOf("failing tests:");
+    return i >= 0 ? out.slice(i) : out;
+  }
+  /* links/parity 是自定义输出：✗ 那行只有断言名，具体判据在下一行的缩进里
+     （`✗ data-* 属性名集合` / `      只在 ZH: …`）。只取带 ✗ 的行会把判据丢掉。 */
+  const i = out.indexOf("✗");
+  return i >= 0 ? out.slice(i) : "";
+};
+
 let red = 0, wrong = 0, missed = 0;
 for (const m of MUTS) {
   if (!existsSync(join(ROOT, m.file))) { console.log(`⚠️  ${m.name}: 文件不在仓库里`); missed++; continue; }
@@ -214,11 +241,14 @@ for (const m of MUTS) {
       continue;
     }
     if (green) { console.log(`🔴 ${m.name}: 注入了缺陷但全绿——这条断言是死的`); red++; }
-    else if (!m.expect.test(out)) {
-      const who = [...out.matchAll(/^✖ (.+?) \(/gm)].map(x => x[1])
-        .concat(out.match(/✗ [^\n]{0,70}/g) || []);
-      console.log(`🟠 ${m.name}: 变红了，但不是该抓的那条（红了：${who.join(" | ") || "解析失败"}）`); wrong++;
-    } else console.log(`✅ ${m.name}: 正确变红 [${gate}]`);
+    else {
+      const ft = failureText(out, gate);
+      if (!m.expect.test(ft)) {
+        const who = [...ft.matchAll(/^✖ (.+?) \(/gm)].map(x => x[1])
+          .concat(ft.match(/✗ [^\n]{0,70}/g) || []);
+        console.log(`🟠 ${m.name}: 变红了，但不是该抓的那条（失败区只有：${[...new Set(who)].join(" | ") || "解析失败"}）`); wrong++;
+      } else console.log(`✅ ${m.name}: 正确变红 [${gate}]`);
+    }
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
