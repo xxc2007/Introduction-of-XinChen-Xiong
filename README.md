@@ -101,16 +101,15 @@
 
 从个人站首屏出发，走过两个已上线作品、四步做事方法、中英双语介绍和公开联系入口。真实页面与克制运镜，把一次个人实践排成 35.4 秒的观看路径。
 
-<p align="center">
-  <a href="https://xxc2007.me/assets/promo/"><img src="docs/promo/poster.jpg" alt="熊鑫晨的个人介绍站宣传片：真实页面截图、品牌字标与公开网址，点击播放" width="100%"></a>
-</p>
-<p align="center"><sub>▲ 熊鑫晨的个人介绍站 · 35.4 秒 · 1920×1080 · 点击封面打开高清播放器</sub></p>
+点击下方播放器即可在线播放。
 
-<!-- PROMO-NATIVE-INTRO -->
+https://github.com/user-attachments/assets/dcc5e666-2019-4937-b110-1f25e4c18b0c
 
 ▶️ [打开 1080p 高清播放器](https://xxc2007.me/assets/promo/) · [直接打开 1080p 源视频](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo.mp4) · [无 BGM 版（保留音效）](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/promo/intro-promo-nobgm.mp4)
 
 <sub>使用 Video Shotcraft 制作，运镜与展示结构参考[青山湖畔的纪念册](https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School#-宣传片展示)。[素材与制作记录](docs/promo/PRODUCTION.md)</sub>
+
+README 原生预览保持 1920×1080 分辨率；独立播放器与源视频链接继续使用仓库中的 1080p 完整片。
 
 ---
 
