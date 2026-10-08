@@ -57,6 +57,18 @@ server {
 
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # 介绍站自己的 CSP。三条注意：
+    #  ① add_header 不被子 location 继承——凡是下面自己写了 add_header 的 location，
+    #     必须把这四行原样再抄一遍，否则那几条响应头会整体消失（不是叠加，是替换）。
+    #     所以这两行在多数 location 里其实是死的，留着只为兜住没有自带 add_header 的路径。
+    #  ② style-src 需要 'unsafe-inline'：两页各有一个 <noscript><style> 兜底块，
+    #     去掉它会把无脚本降级路径一起打死。script-src 保持严格 'self'——
+    #     全站零内联脚本（唯一的 <script type="application/ld+json"> 是数据不是代码，CSP 不管它），
+    #     Cloudflare 注入的 email-decode.min.js 走 /cdn-cgi/... 属同源，'self' 已经放行。
+    #  ③ 这一份只给介绍站。**不要**把它抄到 /geohot 或 /nc15 的 location 里：
+    #     那两个站各自的脚本与样式来源不同，套同一份 CSP 会直接把页面打死。
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()" always;
 
     error_page 404 /404.html;
     # /index.html 直接访问收口到 /：canonical 与 sitemap 都只写 /，两个 URL 都回 200 就是重复内容。
