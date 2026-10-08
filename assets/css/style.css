@@ -126,7 +126,8 @@ html[lang^="en"] .motto{font-style:italic}
 .btn-repo:hover,.btn-repo:focus-visible,.copy-mail:hover,.copy-mail:focus-visible{
   color:var(--terra-ink);border-color:var(--terra);background:rgba(217,119,87,.07);
 }
-.copy-mail.is-copied,.copy-mail[data-copied="true"],
+/* 只保留 JS 真正写的那一条：copyMail() 设的是 data-state。
+   .is-copied 与 [data-copied] 两个别名从来没有被任何代码产生过，留着只会让人以为还有别的路径。 */
 .copy-mail[data-state="copied"]{color:var(--terra-ink);border-color:var(--terra)}
 .copy-mail[data-state="manual"]{color:var(--ink);border-color:var(--terra)}
 /* 行内 <code>（work-card 事实条里的 industry/）：纸白 + 发丝框，圆角仍是全站唯一的 2px */
@@ -427,6 +428,10 @@ main>section,.sec{
   counter-increment:step;position:relative;
   padding:clamp(22px,3vw,32px) clamp(16px,2.4vw,34px) clamp(22px,3vw,32px) 0;
   border-top:1px solid var(--line);
+  /* 解释文字是 <li> 下的**裸文本节点**（HTML 里没有 <p>），所以样式必须挂在 li 自己身上。
+     原来这里写的是一条 `.steps li p` 规则——它一次都没匹配过，
+     于是整段说明既没拿到 --muted 也没拿到 44em 限宽，比设计意图重一档、也更长。 */
+  color:var(--muted);font-size:clamp(15.5px,.55vw + 14px,17px);max-width:44em;
 }
 .steps li:last-child{border-bottom:1px solid var(--line)}
 .steps li::before{
@@ -438,8 +443,8 @@ main>section,.sec{
 .steps li strong,.steps li b,.steps li h3{
   display:block;font-family:var(--serif);font-size:clamp(18px,1.6vw,23px);font-weight:700;
   letter-spacing:.03em;line-height:1.6;margin-bottom:8px;
+  color:var(--ink);                    /* li 现在是 --muted，小标题要自己抬回 --ink */
 }
-.steps li p{color:var(--muted);font-size:clamp(15.5px,.55vw + 14px,17px);max-width:44em}
 .closing{
   margin-top:clamp(34px,4.4vw,52px);padding-top:clamp(24px,3vw,34px);border-top:1px solid var(--line);
   font-family:var(--serif);font-size:clamp(19px,2vw,27px);line-height:1.85;letter-spacing:.02em;max-width:38em;
