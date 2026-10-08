@@ -123,7 +123,7 @@ The full effect → byte cost → fallback inventory lives in [docs/design.md](d
 | Live projects | **2**: the memorial at `/nc15/`, GEOHOT at `/geohot/` | Both entry points are on the page; routing table in [II](#ii--site-map) |
 | Contact entry points | **7** (site / GitHub / Douyin / Xiaohongshu / Bilibili / X / YouTube) | Same command, `social li=7` |
 | HTML size | **20.1 KB / 20.6 KB** (`20,621` / `21,111` bytes) | `wc -c index.html en/index.html` |
-| Site CSS | **40.7 KB** (`41,692` bytes) · gzip **15.7 KB** | `wc -c assets/css/style.css` · `node -e` with `zlib.gzipSync` |
+| Site CSS | **41 KB** (`42,028` bytes) · gzip **15.8 KB** | `wc -c assets/css/style.css` · `node -e` with `zlib.gzipSync` |
 | Hero JS | gzip **192.5 KB** against a 195.3 KB budget | `node scripts/check-bytes.mjs` (own JS gzip + `assets/vendor/` gzip) |
 | Self-hosted Three.js | `three.module.min.js` **338,908** B → gzip **79,328** B; `three.core.min.js` **381,124** B → gzip **101,305** B | `wc -c assets/vendor/*.js` · `node -e` with `zlib.gzipSync` |
 | Self-hosted serif | **101** woff2 slices, **6,027,992** B in total; **101** `@font-face` rules in `wght.css` | `find assets/fonts -name '*.woff2' \| wc -l` (the slices live in `…/noto-serif-sc/files/`, so `ls assets/fonts/noto-serif-sc/*.woff2` counts 0) · `grep -c '@font-face' assets/fonts/noto-serif-sc/wght.css` |

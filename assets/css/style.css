@@ -70,7 +70,6 @@ a{
   text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;
   transition:color .25s var(--ease),background-color .25s var(--ease),border-color .25s var(--ease);
 }
-a:hover{text-decoration-thickness:1px}
 p{text-wrap:pretty}
 h1,h2,h3{text-wrap:balance}
 ::selection{background:rgba(217,119,87,.28);color:var(--ink)}
@@ -186,8 +185,10 @@ code{
   font-family:var(--sans);font-size:14px;font-weight:600;letter-spacing:.16em;
   text-transform:uppercase;color:var(--muted);
 }
-.brand:hover{color:var(--ink)}
-.brand:hover span{color:var(--terra-ink)}
+/* 品牌行只在 404.html 里是 <a>（首页与英文页是 <div>），所以悬停反馈必须挂在 a.brand 上：
+   给一个不能点的 div 做 hover 变色，是假的「我可点」暗示（和 .scroll-cue 那条同形）。
+   原先还有一条同选择器的悬停规则把颜色又写成 --ink，与基础规则同值、等于空声明，已删。 */
+a.brand:hover span{color:var(--terra-ink)}
 #nav{
   display:flex;align-items:center;gap:2px;
   flex:1 1 auto;min-width:0;justify-content:center;
@@ -325,7 +326,7 @@ code{
    同心发丝环——无渐变、无投影，只用 --line 加一点 --terra 描边，hero 依旧站得住。
    环被 hero 自己裁掉一段，读起来像 #works 的等高线；顺带保证 390px 不产生横向滚动。 */
 .hero[data-field="off"],.hero[data-field="lost"]{overflow:clip}
-.hero[data-field="off"] #field,.hero[data-field="lost"] #field{display:none;opacity:0}
+.hero[data-field="off"] #field,.hero[data-field="lost"] #field{display:none}   /* display:none 之后 opacity 无从生效 */
 .hero[data-field="off"]::before,.hero[data-field="lost"]::before,
 .hero[data-field="off"]::after,.hero[data-field="lost"]::after{
   content:"";position:absolute;z-index:0;pointer-events:none;
