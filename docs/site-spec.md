@@ -17,14 +17,16 @@
 
 ## 1. 设计语言（Claude / Anthropic）
 
-令牌直接继承纪念册 `assets/style.css` 的 `:root`，一个都不改：
+令牌承自纪念册 `assets/style.css` 的 `:root`，本站另加两档（见 `docs/build-contract.md` §1 补记）：`--terra-ink-2 #9A4226`（赤陶橙文字落在被赤陶橙染过的底上时用）与 `--line-strong #DCD5C6`（hover 重一档的发丝线）。对比度比值**一律以 `tests/quality.test.mjs` 为准，本文件不各自抄数**：
 
 ```
 --cream #F0EEE6   页面底色        --paper #FAF9F5   卡片白
---ink   #1F1E1D   正文墨色        --muted #6E6A5E   弱文字
---terra #D97757   赤陶橙（填充/描边）  --terra-deep #C15F3C
---terra-ink #A8492A  文字专用赤陶橙（对 cream 4.95:1 / paper 5.46:1，达 WCAG AA）
---line  #E4DFD3   发丝线          --dark  #1F1E1D   深色区
+--ink   #1F1E1D   正文墨色        --muted #6E6A5E   弱文字（只 ≥14px）
+--terra #D97757   赤陶橙（填充/描边/装饰，永不做文字）  --terra-deep #C15F3C
+--terra-ink   #A8492A  文字专用赤陶橙（承 cream / paper 时）
+--terra-ink-2 #9A4226  文字专用赤陶橙（承被赤陶橙染过的底时）
+--line  #E4DFD3   发丝线          --line-strong #DCD5C6  hover 发丝线
+--dark  #1F1E1D   深色区
 --serif  Noto Serif SC Variable（自托管切片）→ Georgia → 宋体族
 --sans   系统无衬线（标签、eyebrow、按钮）
 ```
@@ -60,18 +62,19 @@
 | 3 | 磁吸按钮 / 链接下划线扫过 | pointermove 位移 ≤6px，缓出；纯 CSS 下划线 `scaleX` | 触屏不绑定 |
 | 4 | 作品卡 3D 倾斜 | `rotateX/Y ≤ 5deg` + 发丝高光边，`transform-style: preserve-3d` | 触屏/reduced-motion 关闭 |
 | 5 | 语言切换 pill | 复刻纪念册：地球图标 + 当前语言名 + chevron，展开列表，选中项赤陶橙 + ✓；`localStorage` 记忆；键盘可达（Esc 关闭、焦点归位） | 无 JS 时是两个可点链接 |
-| 6 | 滚动进度条 + 节号计数 | 顶部 2px 赤陶橙进度 + 右侧当前节标 | 纯 CSS 可降级 |
+| 6 | 滚动进度条 | 顶部 2px 赤陶橙进度条 | 纯 CSS 可降级 |
 | 7 | 等高线装饰（贰 节背景） | 内联 SVG `stroke-dasharray` 揭示动画，单色 `--line` | 静态显示 |
-| 8 | 桌面自定义光标墨点 | 仅 `(hover:hover)` 且非 reduced-motion | 触屏不注入 |
 
-总量红线：首屏 JS（含 Three.js）gzip ≤ 200 KB；CSS ≤ 45 KB；HTML ≤ 60 KB/页；首屏图片（头像 + 两张作品截图）≤ 90 KB。分享卡 `og-card.png`、仓库横幅 `banner.svg`、favicon 不进首屏，另计 ≤ 200 KB。
+（清单到 7 为止：早期规格写过的「右侧当前节标 / 节号计数」和「桌面自定义光标墨点」两项**从未实现、代码里也不存在**，已删除，不再作为验收依据。）
+
+总量红线：**预算阈值与当前占用的唯一出处是 `node scripts/check-bytes.mjs`**（分类含 HTML/CSS/自有 JS/含 Three.js/图片/不进首屏分享素材，超限即 `BUDGET FAILED`），本文件不再抄一遍数字；要调阈值就改脚本里的预算表，别改这里。
 
 ## 4. 无障碍与降级（不可协商）
 
 1. 关闭 JavaScript：全部内容与导航仍可读、可点（粒子/动效是增强，不是内容）。
 2. `prefers-reduced-motion: reduce`：停止 RAF、粒子静止、揭示直接完成。
 3. 键盘可达：跳过链接、焦点可见（`--terra-ink` 2px outline）、语言菜单 Esc 关闭并焦点归位。
-4. 对比度：正文 ≥ 7:1（ink/cream 实测）；任何赤陶橙**作为文字**必须用 `--terra-ink`。
+4. 对比度：正文 ≥ 7:1；任何赤陶橙**作为文字**必须用 `--terra-ink`，且**两条下修例外不可省**——文字落在被赤陶橙染过的底（`rgba(217,119,87,.NN)`）上时降到 `--terra-ink-2`；任何赤陶橙文字都不许直接压在 WebGL 粒子场上（`hero-sub`/`scroll-cue` 用 `--ink`，`.hero-cta` 自带不透光 `--paper` 底）。两条不变量的比值与逐选择器核对都由 `tests/quality.test.mjs` 反推，细则见 `docs/build-contract.md` §1 与 `docs/design.md`。
 5. `<canvas>` 给 `role="img"` + `aria-label`（说明这是装饰性粒子场）。
 6. 移动端 ≤420px 与 390px 宽度不得出现横向滚动；语言菜单不超出视口。
 

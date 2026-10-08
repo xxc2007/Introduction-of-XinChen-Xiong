@@ -17,10 +17,22 @@ files() { git ls-tree -r --name-only HEAD | grep -E '^('"$(echo "$DEPLOYED" | tr
 
 echo "── A. 本地 HEAD ↔ 服务器"
 LIST="$(files)"; N=$(printf '%s\n' "$LIST" | grep -c .)
+# 空清单必须判红：LIST 为空时 LOCAL 与 REMOTE 都是空串，下面的等式天然成立，
+# 于是这一段会打印「✓ 0 个文件全部一致」并放绿——E 段早就堵了这个洞，A 段漏了。
+# 触发条件很现实：DEPLOYED 改过一个名字、或部署集被 gitignore 掉，grep 就返回空。
+if [ "$N" -eq 0 ]; then
+  echo "  ✗ 部署集里一个文件都没列出来（DEPLOYED 与仓库结构对不上？），这一段等于没跑"
+  FAIL=1
+else
 LOCAL="$(while read -r f; do printf '%s  %s\n' "$(sha256sum "$f" | cut -d' ' -f1)" "$f"; done <<< "$LIST" | sort -k2)"
 REMOTE="$(ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" "cd $DEPLOY_ROOT && while read -r f; do [ -f \"\$f\" ] && printf '%s  %s\n' \"\$(sha256sum \"\$f\" | cut -d' ' -f1)\" \"\$f\"; done" <<< "$LIST" | sort -k2)"
-if [ "$LOCAL" = "$REMOTE" ]; then echo "  ✓ $N 个文件全部一致"
+# 远端一条都没取回，通常是 ssh 通了但 DEPLOY_ROOT 指错了地方——那也是「没跑」，不是一致
+if [ -z "$(printf '%s' "$REMOTE" | tr -d '[:space:]')" ]; then
+  echo "  ✗ 服务器上没有返回任何文件的哈希（\$DEPLOY_ROOT 是否存在且可读？）"
+  FAIL=1
+elif [ "$LOCAL" = "$REMOTE" ]; then echo "  ✓ $N 个文件全部一致"
 else echo "  ✗ 差异："; diff <(printf '%s\n' "$LOCAL") <(printf '%s\n' "$REMOTE") | head -20; FAIL=1; fi
+fi
 
 echo "── B. 本地 HEAD ↔ GitHub 仓库树"
 # 原来这里比的是「本地 tree 哈希 ↔ gh api git/trees/HEAD 的 .sha」，而那个接口在 HEAD 这种
@@ -48,14 +60,18 @@ if [ -n "$GH_HEAD" ]; then
 fi
 
 echo "── C. 本地 ↔ 源站（绕过 CDN，逐字节）"
+NC=0
 for f in index.html en/index.html assets/css/style.css assets/js/main.js; do
-  [ -f "$f" ] || continue
+  [ -f "$f" ] || { echo "  ✗ 仓库里没有 $f，这一段本该比它"; FAIL=1; continue; }
   l="$(sha256sum "$f" | cut -d' ' -f1)"
   case "$f" in index.html) u="/";; en/index.html) u="/en/";; *) u="/$f";; esac
   r="$(ssh $SSH_OPTS "$DEPLOY_USER@$DEPLOY_HOST" "curl -s -H 'Host: $DEPLOY_SITE' 'http://127.0.0.1$u'" | sha256sum | cut -d' ' -f1)"
+  NC=$((NC+1))
   if [ "$l" = "$r" ]; then echo "  ✓ $u 与仓库字节一致"
   else echo "  ✗ $u 源站取回与仓库不一致"; FAIL=1; fi
 done
+# 同上：一条都没比过就不许算绿
+[ "$NC" -gt 0 ] || { echo "  ✗ C 段一条都没比（文件全不在仓库里）"; FAIL=1; }
 
 echo "── D. 本地 ↔ 公网（经 Cloudflare）"
 UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/126 Safari/537.36"

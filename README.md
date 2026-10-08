@@ -236,18 +236,19 @@ bash scripts/deploy.sh "改了首屏那行 motto"
 
 ### 其二 · PARITY 四方逐字节核验
 
-`verify-sync.sh` 证明的是**四个来源的字节同时成立**（分五段跑），不是"我看到页面能开"：
+`verify-sync.sh` 证明的是**四个来源的字节同时成立**（分**六段** A–F 跑），不是"我看到页面能开"：
 
 | 段 | 比的是 | 怎么比 |
 |---|---|---|
-| A | 本地 HEAD ↔ 服务器文件 | 部署集内每个文件两侧各算 `sha256`，排序后整串相等才算过 |
-| B | 本地 HEAD ↔ GitHub 仓库树 | 先比 tree hash；不同就逐个 blob 比（git blob sha 与 GitHub blob sha 同源可直接对）；README/docs 等非部署文件不计 |
+| A | 本地 HEAD ↔ 服务器文件 | 部署集内每个文件两侧各算 `sha256`，`sort -k2` 后整串相等才算过；不等就 `diff` 出前 20 行 |
+| B | 本地 HEAD ↔ GitHub 远端 | **先比 `git rev-parse HEAD` 与 `gh api .../commits/HEAD` 的远端 HEAD sha**（判等就一句话）；再逐个部署集文件比 git blob sha（与 GitHub blob sha 同源可直接对）；README/docs 等非部署文件不计。旧版比的是 tree hash，那个接口在 `HEAD` 写法下回的是 commit sha，于是恒红——一条恒红的检查等于没有检查 |
 | C | 本地 ↔ **源站**（绕过 CDN） | 在服务器上带 `Host` 头请求本机回环地址，取回再算 `sha256`——**这一条是逐字节的**，不给缓存任何借口 |
-| D | 本地 ↔ 公网（经 Cloudflare） | 抓 `/` 与 `/en/` 两条流，比对前先归一化掉 Cloudflare 的邮箱混淆（它会把 `mailto:` 换成受保护链接并注入 `email-decode.min.js`——那是站点级功能，不是缓存陈旧），再算 `sha256` |
-| E | 邻站未受影响 | `/nc15/` 与 `/geohot/` 必须仍是 200 |
+| D | 本地 ↔ 公网（经 Cloudflare） | 抓 `/` 与 `/en/` 两条流，比对前用 `tools/normalize-cf.mjs`（D 段唯一一份归一化实现，不再另写 `sed`）归一化掉 Cloudflare 的邮箱混淆；**并先自证归一化器是活的**——给它一段确定含 `mailto` 的输入必须吐出非空结果，否则两侧会被同一个坏归一化哈希成空串、把"都坏"读成"都一致"，这种假绿会判红而不是判绿 |
+| E | 本地 ↔ 公网逐个资源 URL | 从三页 HTML 抽出「浏览器真正会去取的那条 URL（含 `?v=`）」逐个 `curl` 回来源站比 `sha256`，**每条最多重试 3 次**（换过 `?v=` 后首取可能撞上 CF 正在填充，一次采样会假红）；`three.core.min.js` 无指纹也单列进来 |
+| F | 邻站未受影响 | `/nc15/` 与 `/geohot/` 必须仍是 200 |
 
 C 与 D 分开是刻意的：**C 抓的是"部署对不对"，D 抓的是"CDN 有没有喂旧副本"**；
-合成一条就会被 Cloudflare 的改写搞出假性差异。归一化规则写在 `tools/normalize-cf.mjs`，与 D 段里的 `sed` 一一对应。
+合成一条就会被 Cloudflare 的改写搞出假性差异。归一化规则**只有 `tools/normalize-cf.mjs` 一份实现**，D 段直接调它，不再有第二处 `sed` 与它各自漂移。
 
 ### 其三 · FALLBACK 备用发布通道
 

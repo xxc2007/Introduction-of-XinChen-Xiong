@@ -157,23 +157,23 @@ bash scripts/switch-routes.sh --rollback   # 还原最近一份 .bak-nc15-* 备�
 
 ---
 
-## 六 · 字节一致性怎么证明（四方来源，分五段跑）
+## 六 · 字节一致性怎么证明（四方来源，分**六段** A–F 跑）
 
 `bash scripts/verify-sync.sh`（单独跑也行，它只读不写）证明**四个来源在同一段字节上对得上**：
 
 | 段 | 比的双方 | 判据 |
 |---|---|---|
-| A | **本地 HEAD ↔ 服务器文件** | 部署集内每个文件两侧各算 `sha256sum`，`sort -k2` 后**整串相等**；不等就 `diff` 出前 20 行 |
-| B | **本地 HEAD ↔ GitHub 仓库树** | 先比 `git rev-parse HEAD^{tree}` 与远端 tree sha；不同则逐个部署集文件比 git blob sha（与 GitHub blob sha 同源，可直接对） |
-| C | **本地 ↔ 源站（绕过 CDN）** | 在服务器本机 `curl -H 'Host: …' http://127.0.0.1…` 取回 `/`、`/en/`、`assets/css/style.css`、`assets/js/main.js` 四条流再算 `sha256`——**这条不经过任何缓存**，问的是"部署到底落没落" |
-| D | **本地 ↔ 公网（经 Cloudflare）** | 只抓 `/` 与 `/en/`，**比对前先归一化 Cloudflare 的邮箱混淆**（`mailto:` 会被换成受保护链接并注入 `email-decode.min.js`；那是站点级功能，不是缓存陈旧），去掉换行后算 `sha256` |
-| E | **邻站未受影响** | `/nc15/` 与 `/geohot/` 必须仍是 200 |
+| A | **本地 HEAD ↔ 服务器文件** | 部署集内每个文件两侧各算 `sha256sum`，`sort -k2` 后**整串相等**；不等就 `diff` 出前 20 行；远端一条哈希都没回来（多半是 `$DEPLOY_ROOT` 指错）判红，不当作"一致" |
+| B | **本地 HEAD ↔ GitHub 远端** | **先比 `git rev-parse HEAD` 与 `gh api repos/…/commits/HEAD` 回来的远端 HEAD sha**；再逐个部署集文件比 git blob sha（与 GitHub blob sha 同源，可直接对）。旧版在这里比的是 tree hash，可那个接口在 `HEAD` 写法下回的是 commit sha，于是恒红——恒红的检查等于没有检查，还会把真差异埋进回退分支 |
+| C | **本地 ↔ 源站（绕过 CDN）** | 在服务器本机 `curl -H 'Host: …' http://127.0.0.1…` 取回 `/`、`/en/`、`assets/css/style.css`、`assets/js/main.js` 四条流再算 `sha256`——**这条不经过任何缓存**，问的是"部署到底落没落"；一条都没比过判红 |
+| D | **本地 ↔ 公网（经 Cloudflare）** | 只抓 `/` 与 `/en/`，**比对前先归一化 Cloudflare 的邮箱混淆**（`mailto:` 会被换成受保护链接并注入 `email-decode.min.js`；那是站点级功能，不是缓存陈旧）。**归一化只有 `tools/normalize-cf.mjs` 一份实现**（旧版这里另写了一串 `sed`，两份规则各自漂移、比出假差异）；且先做一次自证探针——万一 `normalize-cf.mjs` 或 node 坏了，两侧会都被哈希成同一个空串、把"都坏"读成"都一致"，所以归一化器没吐出东西就直接判红、绝不判绿 |
+| E | **逐个资源 URL 取回** | 从三页 HTML 抽出「浏览器真正会去取的那条 URL（含 `?v=`）」逐个 `curl` 回来源站比 `sha256`，**每条最多重试 3 次**（换过一次 `?v=` 后每个 URL 都是全新缓存键，第一次回源可能撞上 Cloudflare 正在填充，一次采样会假红）；`three.core.min.js` 带不上指纹也单列进来比。清单为空判红 |
+| F | **邻站未受影响** | `/nc15/` 与 `/geohot/` 必须仍是 200 |
 
 C 与 D 分开跑是刻意的：合成一条就会被 Cloudflare 的改写制造假性差异。
-归一化口径存在两份且必须一致——D 段里的 `sed`，以及独立脚本 `node tools/normalize-cf.mjs <文件>`
-（它把仓库里真实的 `mailto:` 也归一化成同一个 `MAILTO` 记号）。
+归一化口径只有 `node tools/normalize-cf.mjs` **这一份**实现——D 段直接调它，不再另存一份 `sed`（它把仓库里真实的 `mailto:` 也归一化成同一个 `MAILTO` 记号）。
 
-五段全过才打印 `ALL CHECKS PASSED`（退出码 0），任何一段失败是 `FAILED` + 退出码 1。
+六段全过才打印 `ALL CHECKS PASSED`（退出码 0），任何一段失败是 `FAILED` + 退出码 1。
 非部署文件（README、`docs/`）不参与 A/B 的文件清单——这点 B 段末行注释里写明了"README/docs 等非部署文件不计"。
 
 **为什么坚持走 `git archive HEAD` 而不是 `scp` 工作区**：`.gitattributes` 写着 `* text=auto eol=lf`。
@@ -184,9 +184,10 @@ C 与 D 分开跑是刻意的：合成一条就会被 Cloudflare 的改写制造
 
 ```bash
 git status --short                # 应该是空的；不空说明 deploy.sh 没帮你提交完
-node scripts/check-parity.mjs     # 中英两页 10 项数量 + 5 组集合必须全 ✓
+node scripts/check-parity.mjs     # 中英两页结构数量 + 集合必须全 ✓
 node scripts/check-links.mjs      # 链接可达 + 主机信息红线
-node scripts/check-bytes.mjs      # 逐类字节预算（当前图片行仍在压 → 见下）
+node scripts/check-bytes.mjs      # 逐类字节预算，预算阈值以此脚本为准（跑出来应全是 ✓ / BUDGET OK）
+node --test "tests/*.test.mjs"    # 质量闸门；必须带 glob，`node --test tests/` 在 Node 24/Windows 下报 MODULE_NOT_FOUND
 ```
 
 ---
