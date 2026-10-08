@@ -102,6 +102,8 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
 
   { name: "挂了一个没有样式定义的 class（404 的 .sec-title 就是这个）", file: "404.html",
     from: `<div class="sec-head">`, to: `<div class="sec-title">`, expect: /没有任何样式表定义它/ },
+  { name: "给 verify-sync 再加一段而文档没跟上（段数说法过期）", file: "scripts/verify-sync.sh",
+    append: true, to: `\necho "── H. 假想的新段"\n`, expect: /段字母表|但 migration\.md 的表只列了/ },
   { name: "README 抄的测量值过期了（数字与代码脱节）", file: "README.md",
     from: "`git ls-files \\| wc -l` = 150", to: "`git ls-files \\| wc -l` = 146",
     expect: /跟踪文件数：README 写 146/ },
@@ -144,11 +146,12 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
 
 /* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，
    漏了「本地图都要存在」就会在每个沙箱里先红，把该看的那条盖掉。 */
-const SKIP = /(^|[\\/])(\.git|node_modules|docs|tools)(\b|$)/;
-const sandbox = (withGit = false) => {
+/* 整仓复制，包括 .git：check-links 与 README 数字断言都要跑 git ls-files，
+   少了 .git 它们不是「通过」而是当场崩掉。docs/ 也必须在——断言会读它。 */
+const SKIP = /(^|[\\/])node_modules(\b|$)/;
+const sandbox = () => {
   const dir = mkdtempSync(join(tmpdir(), "qamut-"));
-  const re = withGit ? /(^|[\\/])(node_modules|docs|tools)(\b|$)/ : SKIP;
-  cpSync(ROOT, dir, { recursive: true, filter: (src) => !re.test(src.slice(ROOT.length + 1)) });
+  cpSync(ROOT, dir, { recursive: true, filter: (src) => !SKIP.test(src.slice(ROOT.length + 1)) });
   return dir;
 };
 

@@ -483,6 +483,30 @@ test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 
   assert.deepEqual(dead, [], `这些类在任何样式表里定义了，却没有任何元素使用：${dead.join(", ")}`);
 });
 
+test("文档说 verify-sync 有几段，就必须真的有几段", () => {
+  /* 「六段 A–F」这种话每加一段就会过期一次——本轮就是我自己加了 G 段之后发现的。
+     所以不靠记性：数脚本里真实的 `echo "── X. …"` 段数，和文档里写的字母表、
+     段数中文写法同时对一遍。 */
+  const VS = read("scripts/verify-sync.sh");
+  const letters = [...VS.matchAll(/echo "── ([A-Z])\./g)].map(m => m[1]);
+  assert.ok(letters.length >= 4, `只从 verify-sync.sh 认出 ${letters.length} 段，解析脱节了`);
+  const want = letters.join("–");                       // 例如 A–B-C-D-E-F-G
+  const span = `${letters[0]}–${letters[letters.length - 1]}`;
+  const CN = ["一","二","三","四","五","六","七","八","九","十"];
+  const countWord = `${CN[letters.length - 1]}段`;
+  for (const f of ["docs/migration.md", "README.md"]) {
+    const doc = read(f);
+    if (!/A–[A-Z] 跑|分\*\*[一二三四五六七八九十]段\*\*/.test(doc)) continue;
+    assert.ok(doc.includes(span), `${f} 写的段字母表不是 ${span}（脚本实际是 ${letters.join(", ")}）`);
+    assert.ok(doc.includes(countWord), `${f} 写的段数不是 ${countWord}`);
+  }
+  // migration.md 的表格必须为每一段都留一行，否则「有 G 段」只写在标题里、读的人看不到判据
+  const mig = read("docs/migration.md");
+  const rows = letters.filter(L => new RegExp(`^\\| ${L} \\|`, "m").test(mig));
+  assert.equal(rows.length, letters.length,
+    `verify-sync 有 ${letters.join(",")} 段，但 migration.md 的表只列了 ${rows.join(",") || "无"}`);
+});
+
 test("README 两张现状表里抄下来的数字必须与实测一致", () => {
   /* 这一轮审出的 docs 缺陷几乎全是同一个形状：文档抄了一份测量值，代码继续走，
      数字就悄悄过期（146 个文件、20,110 B、31,806 B、`h2.sec-title=5`）。

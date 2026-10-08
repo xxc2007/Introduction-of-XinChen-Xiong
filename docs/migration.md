@@ -165,7 +165,7 @@ bash scripts/switch-routes.sh --rollback   # 还原最近一份 .bak-nc15-* 备�
 
 ---
 
-## 六 · 字节一致性怎么证明（四方来源，分**六段** A–F 跑）
+## 六 · 字节一致性怎么证明（四方来源加分项，分**七段** A–G 跑）
 
 `bash scripts/verify-sync.sh`（单独跑也行，它只读不写）证明**四个来源在同一段字节上对得上**：
 
@@ -177,11 +177,12 @@ bash scripts/switch-routes.sh --rollback   # 还原最近一份 .bak-nc15-* 备�
 | D | **本地 ↔ 公网（经 Cloudflare）** | 只抓 `/` 与 `/en/`，**比对前先归一化 Cloudflare 的邮箱混淆**（`mailto:` 会被换成受保护链接并注入 `email-decode.min.js`；那是站点级功能，不是缓存陈旧）。**归一化只有 `tools/normalize-cf.mjs` 一份实现**（旧版这里另写了一串 `sed`，两份规则各自漂移、比出假差异）；且先做一次自证探针——万一 `normalize-cf.mjs` 或 node 坏了，两侧会都被哈希成同一个空串、把"都坏"读成"都一致"，所以归一化器没吐出东西就直接判红、绝不判绿 |
 | E | **逐个资源 URL 取回** | 从三页 HTML 抽出「浏览器真正会去取的那条 URL（含 `?v=`）」逐个 `curl` 回来源站比 `sha256`，**每条最多重试 3 次**（换过一次 `?v=` 后每个 URL 都是全新缓存键，第一次回源可能撞上 Cloudflare 正在填充，一次采样会假红）；`three.core.min.js` 带不上指纹也单列进来比。清单为空判红 |
 | F | **邻站未受影响** | `/nc15/` 与 `/geohot/` 必须仍是 200 |
+| G | **响应头：example 声明的 vs 线上实发的** | 逐个头比 `deploy/nginx.conf.example` 里的 `add_header` 次数与公网响应头出现与否。分两档，**不做「示例有、线上没有就一律判红」**——那种闸门两天后就没人看：`KNOWN-GAP`（HSTS / CSP / Permissions-Policy，线上刻意发不出去，因为裸域只有 `listen 80` 且 CF 在 Flexible 模式回源走 HTTP）只报不红；`REGRESSION`（今天确实在发的 `X-Content-Type-Options` / `Referrer-Policy` 消失）判红 |
 
 C 与 D 分开跑是刻意的：合成一条就会被 Cloudflare 的改写制造假性差异。
 归一化口径只有 `node tools/normalize-cf.mjs` **这一份**实现——D 段直接调它，不再另存一份 `sed`（它把仓库里真实的 `mailto:` 也归一化成同一个 `MAILTO` 记号）。
 
-六段全过才打印 `ALL CHECKS PASSED`（退出码 0），任何一段失败是 `FAILED` + 退出码 1。
+七段全过才打印 `ALL CHECKS PASSED`（退出码 0），任何一段失败是 `FAILED` + 退出码 1。
 非部署文件（README、`docs/`）不参与 A/B 的文件清单——这点 B 段末行注释里写明了"README/docs 等非部署文件不计"。
 
 **为什么坚持走 `git archive HEAD` 而不是 `scp` 工作区**：`.gitattributes` 写着 `* text=auto eol=lf`。
