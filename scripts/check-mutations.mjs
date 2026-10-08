@@ -112,6 +112,55 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     to: `/* 透视由 #works{perspective:1200px} 提供 */\n/* 触屏与 reduced-motion 一律不绑定倾斜`,
     expect: /引用的 CSS 规则必须真的存在|不存在的规则/ },
 
+  /* ── round-4 攻门代理证出的洞，逐条钉住（这些先必须是红的，修完才允许变绿） ── */
+  { name: "行注释里的假 CSS 引用（旧版只扫块注释）", file: "assets/js/main.js",
+    from: `const root = document.documentElement;`,
+    to: `// 透视交给 #gallery{perspective:1200px} 提供\nconst root = document.documentElement;`,
+    expect: /引用的 CSS 规则必须真的存在|不存在的规则/ },
+  { name: "只写 [data-magnetic] 不提任何磁吸类名", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`,
+    to: `@keyframes magpin{from{translate:none}to{translate:0 6px}}\n[data-magnetic]{animation:magpin .5s both}\n`,
+    expect: /覆盖磁吸的 translate/ },
+  /* 跨文件的一族：往 CSS 加一条没人用的规则，再到别处的**注释**里提一句那个类名。
+     使用侧不剥注释的话，这句注释就把死规则「救活」了——旧版因此全绿。
+     只改一个文件测不到，所以用 also 同时打两处。 */
+  { name: "HTML 注释里提一句就救活一条死规则", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`,
+    to: `.zombie-html{color:var(--ink);border:1px solid var(--line)}\n`,
+    also: { file: ZH, from: `<section class="hero" id="top">`,
+      to: `<!-- <p class="zombie-html"> -->\n  <section class="hero" id="top">` },
+    expect: /没有任何元素使用/ },
+  { name: "JS 注释里写一句 classList.add 就救活死规则", file: CSS, insert: true,
+    from: `@media (prefers-reduced-motion:reduce)`,
+    to: `.zombie-js{color:var(--ink);border:1px solid var(--line)}\n`,
+    also: { file: "assets/js/main.js", from: `const root = document.documentElement;`,
+      to: `/* 以前这里跑过 root.classList.add("zombie-js") */\nconst root = document.documentElement;` },
+    expect: /没有任何元素使用/ },
+  { name: "class 用单引号写就不被扫", file: ZH,
+    from: `<section class="hero" id="top">`,
+    to: `<section class='not-defined-single' id="top">`,
+    expect: /没有任何样式表定义它/ },
+  { name: "跨页借用内联样式里定义的类", file: ZH,
+    from: `<section class="hero" id="top">`,
+    to: `<section class="nf-links" id="top">`,
+    expect: /没有任何样式表定义它/ },
+  { name: "染色底 alpha 写成 0.28（旧版解析成 0）", file: CSS,
+    from: `.lang-btn:hover{color:var(--terra-ink-2);background:rgba(217,119,87,.12)}`,
+    to: `.lang-btn:hover{color:var(--terra-ink);background:rgba(217,119,87,0.28)}`,
+    expect: /赤陶橙底|掉出 AA/ },
+  { name: "染色底用 background-color 就不被认", file: CSS,
+    from: `.lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink-2)}`,
+    to: `.lang-menu a:hover{background-color:rgba(217,119,87,.12);color:var(--terra-ink)}`,
+    expect: /赤陶橙底|掉出 AA/ },
+  { name: "首屏 .motto 用 --muted（不在 .hero 前缀下）", file: CSS,
+    from: `.hero .motto{margin-bottom:18px`,
+    to: `.hero .motto{color:var(--muted);margin-bottom:18px`,
+    expect: /画布上的文字掉出 AA/ },
+  { name: "同一条规则里后写的 color 压过前写的", file: CSS,
+    from: `.hero-sub{font-size:clamp(16px,1.1vw + 14px,19px);color:var(--ink)`,
+    to: `.hero-sub{font-size:clamp(16px,1.1vw + 14px,19px);color:var(--ink);color:var(--muted)`,
+    expect: /画布上的文字掉出 AA/ },
+
   /* ── check-links 那道关：上一轮攻门测出「行里有尖括号就整行免检」，
       HTML 因此有 71/222 行根本没被扫过。下面四条就是那个洞的正反对照。 */
   { name: "正文里写死一个可路由 IP", file: ZH, gate: "links",
@@ -232,6 +281,17 @@ for (const m of MUTS) {
       : m.all ? src.split(m.from).join(m.to)
       : src.replace(m.from, m.to);
     writeFileSync(p, patched);
+
+    /* 有些洞是跨文件的：「注释救活死规则」要同时往 CSS 加一条没人用的规则、
+       再往 HTML/JS 的注释里提一句那个类名。只改一个文件永远测不到它。 */
+    if (m.also) {
+      for (const a of (Array.isArray(m.also) ? m.also : [m.also])) {
+        const ap = join(dir, a.file);
+        const asrc = readFileSync(ap, "utf8");
+        if (!asrc.includes(a.from)) { console.log(`⚠️  ${m.name}: 第二处锚点零命中 → ${a.file}`); missed++; continue; }
+        writeFileSync(ap, a.all ? asrc.split(a.from).join(a.to) : asrc.replace(a.from, a.to));
+      }
+    }
 
     const out = run(dir, gate, m.only), green = out === null;
 

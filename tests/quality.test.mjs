@@ -49,7 +49,6 @@ test("reduced-motion 块必须真的把动画与迟到都压掉", () => {
   const at = CSS_CODE.indexOf("@media (prefers-reduced-motion:reduce)");
   assert.ok(at > 0, "找不到 prefers-reduced-motion 块");
   const body = CSS_CODE.slice(at);
-  const before = CSS_CODE.slice(0, at);
   // ① 对所有元素生效的总兜底
   assert.ok(/\*\s*,[^{]*\{[^}]*animation-duration\s*:\s*\.?0/.test(body),
     "块里没有 *{animation-duration:0} 这一类总兜底");
@@ -70,18 +69,18 @@ test("reduced-motion 块必须真的把动画与迟到都压掉", () => {
   const laterRule = after.match(/([^{}]+)\{[^}]*\}/);
   assert.ok(!laterRule,
     `reduced-motion 块之后还有规则，同特异度的会反过来盖掉它：${(laterRule ? laterRule[1] : "").trim()}`);
-  // ④ 每个被使用的动画名，都要么被显式 animation:none，要么落进总兜底
-  const names = [...new Set([...before.matchAll(/@keyframes\s+([\w-]+)/g)].map(m => m[1]))];
-  assert.ok(names.length > 0, "没解析出 @keyframes，这条断言本身失效了");
-  const noneSelectors = [...body.matchAll(/([^{}]+)\{[^}]*animation\s*:\s*none/g)].map(m => m[1]);
-  const uncovered = names.filter(n => {
-    const usedBy = [...before.matchAll(new RegExp(`([^{}]+)\\{[^}]*animation[^}]*\\b${n}\\b`, "g"))].map(m => m[1].trim());
-    return usedBy.length && !usedBy.every(sel =>
-      noneSelectors.some(ns => ns.split(",").map(x => x.trim()).includes(sel)));
-  });
-  // 有总兜底时未显式关闭不算错（duration 已被压成 0）；但兜底一旦被人删掉，这条立刻指出是谁。
-  assert.ok(uncovered.length === 0 || /animation-duration\s*:\s*\.?0/.test(body),
-    `这些动画既没显式关闭、又没有总兜底：${uncovered.join(", ")}`);
+  /* ④ 原先是「每个动画名要么被显式 animation:none，要么落进总兜底」，
+     但末尾带了 `|| 总兜底存在` 这个析取支——而 ① 已经要求总兜底存在并且会先抛，
+     所以 ④ 在任何输入下都不可能失败。攻门代理实测：注入一个既没显式关闭、
+     又确实被总兜底罩住的动画，全绿；把那个析取支删掉，同一个注入立刻变红。
+     留着一条永不失败的断言比删掉更糟——它让人以为这一维被查过了。
+     换成一条真能倒下的：总兜底的选择器必须是**通用**的。
+     有人把它从 `*` 收窄成 `*,:where(...)` 之外的具体标签时，
+     duration 归零就只覆盖一部分元素，而 ① 那条正则照样过得去。 */
+  const blanket = (body.match(/([^{}*]*\*[^{}]*)\{[^}]*animation-duration\s*:\s*\.?0/) || [])[1] || "";
+  assert.ok(/\*/.test(blanket), "找不到带 * 的总兜底选择器");
+  assert.ok(!/(^|[\s,])(div|span|p|section|a|button|h1|h2|h3|img|li)\s*([,{\s])/.test(blanket.replace(/[^{}]*\*/g, "")),
+    `总兜底被收窄到具体标签了（"${blanket.trim()}"）——不在名单里的元素仍会动`);
 });
 
 test("设计令牌纪律：颜色字面量只能出现在令牌声明里", () => {
@@ -255,19 +254,22 @@ test("压在粒子场上的文字必须过 AA（--muted 与裸 --terra-ink 都�
   assert.ok(ratio(TOKENS["--muted"], speck) < 4.5,
     `--muted 对最坏画布底已有 ${ratio(TOKENS["--muted"], speck).toFixed(3)}:1，若达标可放宽 hero 的限制`);
 
-  // 按选择器把规则合并：.hero-cta 的颜色在 124 行、背景在 127 行，分开看会误判它裸露。
+  /* 哪些选择器算「画布上」：.hero 前缀、下滑提示，以及首页那块 motto——
+     它在 HTML 里就在 .hero 内，但 CSS 写的是裸 `.motto`，只按 `^\.hero` 筛会整个漏掉。
+     这是一份「谁压在画布上」的名册，新增首屏元素时要在这里登记一行。 */
+  const ON_CANVAS = /^(\.hero[\w-]*|\.hero\b|\.motto|\.scroll-cue)/;
   const bySel = new Map();
   for (const m of CSS_CODE.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-    for (const sel of m[1].split(",").map(s => s.trim().replace(/\s+/g, " ")).filter(Boolean)) {
-      if (!/^\.(hero[\w-]*|scroll-cue)\b/.test(sel)) continue;
+    for (const raw of m[1].split(",")) {
+      const sel = raw.trim().replace(/\s+/g, " ");
+      if (!ON_CANVAS.test(sel)) continue;
       bySel.set(sel, (bySel.get(sel) || "") + ";" + m[2]);
     }
   }
-  assert.ok(bySel.size >= 2, `只认出 ${bySel.size} 条 hero 规则，选择器解析大概脱节了`);
+  assert.ok(bySel.size >= 3, `只认出 ${bySel.size} 条首屏规则，选择器解析大概脱节了`);
 
-  /* .hero-cta:hover  inherits the opaque background declared on plain .hero-cta —
-     CSS 层叠里伪类规则并不重新声明背景，所以这里逐层剥掉伪类再合并一次。
-     不剥的话悬停态会被当成"裸在画布上"，报出一个并不存在的缺陷。 */
+  /* .hero-cta:hover 继承基类 .hero-cta 的不透明背景——CSS 层叠里伪类不重新声明背景。
+     不逐层剥伪类再合并，悬停态会被当成"裸在画布上"，报出一个并不存在的缺陷。 */
   const merged = (sel) => {
     let out = "", s = sel;
     const seen = new Set();
@@ -280,34 +282,69 @@ test("压在粒子场上的文字必须过 AA（--muted 与裸 --terra-ink 都�
     }
     return out;
   };
+  // 颜色既可能写 var(--token)，也可能直接写字面量（#6e6a5e 就是 --muted 的值，不能放过）
+  const resolve = (decl) => {
+    const v = (decl.match(/var\(\s*(--[\w-]+)/) || [])[1];
+    if (v) return { tok: v, hex: TOKENS[v] };
+    const hex = (decl.match(/#[0-9a-fA-F]{6}\b/) || [])[0];
+    return hex ? { tok: hex, hex } : null;
+  };
   const bad = [];
   for (const sel of bySel.keys()) {
     const decls = merged(sel);
-    // 取第一条命中 = 最贴近该选择器的那条规则；伪类自身的声明压得过基类。
-    const tok = (decls.match(/(?:^|;)\s*color:\s*var\(--([\w-]+)\)/) || [])[1];
-    if (!tok) continue;                       // 没显式写色 = 继承 --ink，本来就是最稳的一档
-    const solid = (decls.match(/(?:^|;)\s*background:\s*var\(--([\w-]+)\)(?![\w-])/) || [])[1];
-    const bg = solid ? TOKENS[`--${solid}`] : speck;
-    const r = ratio(TOKENS[`--${tok}`], bg);
-    if (r < 4.5) bad.push(`${sel}: --${tok} 对 ${bg} 只有 ${r.toFixed(3)}:1`);
+    // 取最后一条命中：同一块里后面的声明压过前面的，取第一条会让「后加一条 muted」溜过去。
+    const colors = [...decls.matchAll(/(?:^|;)\s*color\s*:\s*([^;]+)/g)].map(x => resolve(x[1])).filter(Boolean);
+    const fg = colors[colors.length - 1];
+    if (!fg || !fg.hex) continue;
+    const solid = [...decls.matchAll(/(?:^|;)\s*background(?:-color)?\s*:\s*(var\(--[\w-]+\)|#[0-9a-fA-F]{6})/g)]
+      .map(x => resolve(x[1])).filter(Boolean).pop();
+    const bg = solid && solid.hex ? solid.hex : speck;
+    const r = ratio(fg.hex, bg);
+    if (r < 4.5) bad.push(`${sel}: ${fg.tok} 对 ${bg} 只有 ${r.toFixed(3)}:1`);
   }
   assert.deepEqual(bad, [], "画布上的文字掉出 AA：\n" + bad.join("\n"));
 });
+
+/* 从一条声明块里抽出「赤陶橙染色背景」的 alpha。
+   三种写法都要认：background / background-color、逗号式 rgba(217,119,87,.12)、
+   空格式 rgba(217 119 87 / .12)。上一版只认 `background:` + 逗号式，
+   而且数值捕获写成 \.?(\d+)——碰上 0.28 只取到 "0"，alpha 变成 0，
+   那条规则被当成「没有染色底」直接跳过：真实的 4.393:1 被报成 5.682。 */
+const TINT_RE = /background(?:-color)?\s*:\s*rgba?\(\s*217[,\s]+119[,\s]+87[,\s/]*\s*(0?\.\d+|\d+(?:\.\d+)?|\.?\d+)\s*\)/;
+function tintAlpha(body) {
+  const m = body.match(TINT_RE);
+  if (!m) return null;
+  let a = parseFloat(m[1]);
+  if (!isFinite(a)) return null;
+  if (a > 1) a = a / 100;                       // 写成 12 表示 .12 的那种老式百分数
+  return a;
+}
 
 /* 染色底与文字档位的配对：从 CSS 里反推真实存在的组合，而不是凭空造一个最坏情况。
    上一版把 --terra-ink 放在 cream+12% 的合成底上量到 4.443 报了红——但那条组合
    其实是 .lang-menu 悬停（底色是 --paper 不是 --cream，真实值 4.840，是过的）。
    与其守一个不存在的合成底，不如把「染色底必须降档」写成可直接扫 CSS 的规则。 */
 test("染上赤陶橙底的规则不许再用 --terra-ink 承载文字（必须降到 --terra-ink-2）", () => {
+  /* 按选择器合并规则再判：染色底与文字色常常不在同一条规则里
+     （.hero-cta 的背景在一条、颜色在另一条），只看单条规则会漏掉这种跨规则的配对。 */
+  const bySel = new Map();
+  for (const m of CSS_CODE.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
+    for (const raw of m[1].split(",")) {
+      const sel = raw.trim().replace(/\s+/g, " ");
+      if (!sel) continue;
+      bySel.set(sel, (bySel.get(sel) || "") + ";" + m[2]);
+    }
+  }
   const TINTED_INK = [];
   const pairs = [];
-  for (const m of CSS_CODE.matchAll(/([^{}]+)\{([^}]*)\}/g)) {
-    const sel = m[1].trim().replace(/\s+/g, " ");
-    const ink = (m[2].match(/color:\s*var\(--(terra-ink(?:-2)?)\)/) || [])[1];
-    const alpha = parseFloat((m[2].match(/background:\s*rgba\(\s*217,\s*119,\s*87,\s*\.?(\d+)/) || [])[1]);
-    if (!ink || !alpha) continue;
-    pairs.push({ sel, ink, alpha: alpha / 100 });
-    if (ink === "terra-ink") TINTED_INK.push(`${sel}（alpha .${alpha}）`);
+  for (const [sel, body] of bySel) {
+    const alpha = tintAlpha(body);
+    if (alpha === null || alpha === 0) continue;
+    const inks = [...body.matchAll(/color:\s*var\(--(terra-ink(?:-2)?)\)/g)].map(x => x[1]);
+    const ink = inks[inks.length - 1];          // 后面那条压过前面那条
+    if (!ink) continue;
+    pairs.push({ sel, ink, alpha });
+    if (ink === "terra-ink") TINTED_INK.push(`${sel}（alpha ${alpha}）`);
   }
   assert.ok(pairs.length >= 1, "一条「染色底 + 赤陶文字」都没扫到，正则大概又脱节了");
   assert.deepEqual(TINTED_INK, [],
@@ -325,12 +362,16 @@ test("磁吸按钮不许被任何 animate translate 的关键帧占用", () => {
      谁被一个 animate translate 的 @keyframes 命中、还带 fill:both，
      就会在层叠里被永久钉死——.hero-cta 的磁吸就这么坏了很久。
      注意不能一刀切禁止"关键帧动 translate"：.lang-menu 的 langIn 就合法，它不是磁吸元素。 */
-  // 磁吸元素从 CSS 反推，不写死类名：写死的话换个选择器写法（a[data-magnetic]）就绕过了。
+  // 磁吸元素从 CSS 反推，不写死类名：写死的话换个选择器写法就绕过了。
+  // 但「反推自 translate:var(--mx」也不够——一条只写 [data-magnetic]{animation:…} 的规则
+  // 会把四枚磁吸按钮全钉住，却一个磁吸类名都不提。HTML 上真正的磁吸标记是 data-magnetic，
+  // 所以两种来源都要认。
   const MAGNETIC = [...new Set(
     [...CSS_CODE.matchAll(/([^{}]+)\{[^}]*translate\s*:[^}]*var\(\s*--mx/g)].map(m => m[1])
       .flatMap(sel => sel.split(",").map(s => s.trim()).filter(Boolean))
   )];
   assert.ok(MAGNETIC.length >= 3, `只从 CSS 认出 ${MAGNETIC.length} 个磁吸选择器，解析大概脱节了：${MAGNETIC.join(",")}`);
+  const isMagnetic = (sel) => MAGNETIC.some(c => sel.includes(c)) || /data-magnetic/.test(sel);
   const badKf = new Set(
     [...CSS_CODE.matchAll(/@keyframes\s+([\w-]+)\s*\{([\s\S]*?\})\s*\}/g)]
       .filter(m => /(^|[;{\s])translate\s*:/.test(m[2])).map(m => m[1])
@@ -342,7 +383,7 @@ test("磁吸按钮不许被任何 animate translate 的关键帧占用", () => {
     const decls = [...m[2].matchAll(/animation(?:-name)?\s*:\s*([^;]+)/g)].map(a => a[1]);
     // 反斜杠必须成双：模板字符串里 "\s" 会被吞成 "s"，正则退化成 [s,] 这种永远匹配不上的东西。
     const used = [...badKf].filter(k => decls.some(a => new RegExp(`(^|[\\s,])${k}(\\s|,|$)`).test(a)));
-    if (used.length && sels.some(s => MAGNETIC.some(c => s.includes(c)))) {
+    if (used.length && sels.some(isMagnetic)) {
       hits.push(`${sels.join(" / ")} 用了动画 ${used.join("/")}，它会覆盖磁吸的 translate`);
     }
   }
@@ -357,8 +398,14 @@ test("注释里引用的 CSS 规则必须真的存在（JS 与 CSS 两侧都查�
     .flatMap(m => m[1].split(",").map(s => ({ sel: s.trim().replace(/\s+/g, " "), body: m[2] })));
   assert.ok(rules.length > 20, `只解析出 ${rules.length} 条 CSS 规则，解析脱节了`);
 
-  const refs = (text) => [...text.matchAll(/\/\*([\s\S]*?)\*\//g)]
-    .flatMap(m => [...m[1].matchAll(/([#.][\w-]+(?:\[[^\]]*\])?(?::[\w-]+)?)\s*\{([-a-z]+\s*:[^}]*)\}/g)]
+  /* 块注释与行注释都要扫。上一版只认块注释，于是
+     「// 透视交给 #gallery{perspective:1200px} 提供」这种行注释里的假引用整个看不见。 */
+  const commentsOf = (text) => [
+    ...[...text.matchAll(/\/\*([\s\S]*?)\*\//g)].map(m => m[1]),
+    ...[...text.matchAll(/(^|[^:\w])\/\/([^\n]*)/g)].map(m => m[2]),
+  ];
+  const refs = (text) => commentsOf(text)
+    .flatMap(c => [...c.matchAll(/([#.][\w-]+(?:\[[^\]]*\])?(?::[\w-]+)?)\s*\{([-a-z]+\s*:[^}]*)\}/g)]
       .map(r => ({ sel: r[1], decl: r[2] })));
 
   const audit = (list) => list.flatMap(({ sel, decl }) => {
@@ -381,34 +428,58 @@ test("注释里引用的 CSS 规则必须真的存在（JS 与 CSS 两侧都查�
   assert.equal(live2.length, 1, `自检失效：规则在但声明不符的引用没被报（报了 ${live2.length} 条）`);
 });
 
-test("HTML 上挂的每个 class 都必须有出处（style.css 或本页内联 <style>）", () => {
+/* ── class 溯源的两份公共数据 ────────────────────────────────────────────
+   两条 class 断言原先各自实现一遍抽取，结果各自漏：
+   ① 使用侧不剥注释——`<!-- <p class="zombie"> -->` 能把一条真正的死规则「救活」；
+   ② 只认 class="…"，写成 class='…' 或 class=裸值 的元素整个看不见；
+   ③ 定义侧把三个页面的内联 <style> 合成一个全局集合——于是 index.html 用了
+      404 独有的 .nf-links 也算「有出处」。
+   现在统一在这里算好，两条断言共用。 */
+const stripComments = (s) => s.replace(/<!--[\s\S]*?-->/g, "").replace(/\/\*[\s\S]*?\*\//g, "");
+const ALL_PAGES = { ...PAGES, "404.html": read("404.html") };
+// class 属性三种写法都要认（HTML 规范允许未加引号的属性值）
+const CLASS_ATTR = /\bclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"'=]+))/g;
+const usedIn = (html) => [...stripComments(html).matchAll(CLASS_ATTR)]
+  .flatMap(m => (m[1] || m[2] || m[3] || "").trim().split(/\s+/)).filter(Boolean);
+
+const CSS_DEFINED = new Set([...CSS_CODE.matchAll(/\.-?[_a-zA-Z][\w-]*/g)].map(m => m[0].slice(1)));
+const INLINE_DEFINED = {};                       // 按页作用域，不合并成全局
+for (const [name, html] of Object.entries(ALL_PAGES)) {
+  const inline = stripComments((html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "");
+  INLINE_DEFINED[name] = new Set([...inline.matchAll(/\.-?[_a-zA-Z][\w-]*/g)].map(m => m[0].slice(1)));
+}
+// JS 加上去的类名：必须先剥注释，否则 /* classList.add("zombie2") */ 这种注释里的话能救活死规则
+const JS_CODE = stripComments(MAIN + "\n" + SCENE);
+const JS_ADDED = new Set();
+for (const m of JS_CODE.matchAll(/classList\.(?:add|remove|toggle|contains|replace)\(([^)]*)\)/g))
+  for (const lit of m[1].matchAll(/['"`]([^'"`]+)['"`]/g)) for (const c of lit[1].split(/\s+/)) JS_ADDED.add(c);
+for (const m of JS_CODE.matchAll(/\.className\s*=\s*['"`]([^'"`]+)['"`]/g))
+  for (const c of m[1].split(/\s+/)) JS_ADDED.add(c);
+
+test("HTML 上挂的每个 class 都必须有出处（style.css 或本页自己的内联 <style>）", () => {
   /* 404 页的 <h1 class="sec-title"> 就是个例子：.sec-title 与 .num 从来没被任何样式表定义过，
      于是那行标题一直是裸的——但页面「看起来没问题」，因为浏览器给了 h1 默认字号。
      这类缺陷人眼看不出来，只能反过来查：从 HTML 收集类名，逐个问 CSS 认不认。 */
-  const defined = new Set(
-    [...CSS_CODE.matchAll(/\.-?[_a-zA-Z][\w-]*/g)].map(m => m[0].slice(1))
-  );
-  // 三个页面都查（404 才是上次出问题的那页），内联 <style> 里定义的也算
-  const ALL = { ...PAGES, "404.html": read("404.html") };
-  for (const html of Object.values(ALL)) {
-    const inline = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
-    for (const m of inline.matchAll(/\.-?[_a-zA-Z][\w-]*/g)) defined.add(m[0].slice(1));
-  }
   const bad = [];
-  const scanned = new Set();
-  for (const [name, html] of Object.entries(ALL)) {
-    for (const m of html.matchAll(/\bclass="([^"]+)"/g)) {
-      for (const c of m[1].trim().split(/\s+/)) {
-        if (!c) continue;
-        scanned.add(`${name}::${c}`);
-        if (defined.has(c)) continue;
-        const k = `${name}:${c}`;
-        if (!bad.some(b => b.includes(k))) bad.push(`${name}: .${c}（没有任何样式表定义它）`);
-      }
+  let scanned = 0;
+  for (const [name, html] of Object.entries(ALL_PAGES)) {
+    const local = new Set([...CSS_DEFINED, ...INLINE_DEFINED[name]]);
+    for (const c of usedIn(html)) {
+      scanned++;
+      if (!local.has(c)) bad.push(`${name}: .${c}（没有任何样式表定义它）`);
     }
   }
-  assert.ok(scanned.size > 40, `只扫到 ${scanned.size} 个类名，解析大概脱节了`);
-  assert.deepEqual(bad, [], bad.join("\n"));
+  assert.ok(scanned >= 40, `只扫到 ${scanned} 个类名使用处，解析大概脱节了`);
+  assert.deepEqual([...new Set(bad)], [], [...new Set(bad)].join("\n"));
+});
+
+test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 会加上去）", () => {
+  /* .sr-only 定义了却没有任何元素挂过它；.eyebrow 只被 404 那个坏掉的标题用过。
+     死规则不会让页面出错，但它让下一个读 CSS 的人以为存在另一条路径。 */
+  const used = new Set([...Object.values(ALL_PAGES).flatMap(usedIn), ...JS_ADDED]);
+  assert.ok(used.size >= 20, `使用侧只认出 ${used.size} 个类名，解析脱节了`);
+  const dead = [...CSS_DEFINED].filter(c => !used.has(c)).sort();
+  assert.deepEqual(dead, [], `这些类在任何样式表里定义了，却没有任何元素使用：${dead.join(", ")}`);
 });
 
 test("英文页的缩写用印刷体撇号（’），不用直撇号（'）", () => {
@@ -450,37 +521,6 @@ test("scene.js 的每个 export 都必须真的被 main.js 用掉", () => {
   assert.ok(exports.includes("initField"), "scene.js 不再导出 initField？main.js 会静默退回静态底纹");
   const dead = exports.filter(e => !new RegExp(`\\b${e}\\b`).test(MAIN));
   assert.deepEqual(dead, [], `scene.js 导出了但 main.js 从没用过：${dead.join(", ")}`);
-});
-
-test("CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 会加上去）", () => {
-  /* .sr-only 定义了却没有任何元素用它；.lang-menu 的 [aria-selected] 那一半也是死的——
-     菜单只写 aria-current（main.js:233/344），从没写过 aria-selected。
-     死规则不会让页面出错，但它让下一个读 CSS 的人以为存在另一条路径，
-     于是「选中态有 aria-selected 和 aria-current 两种写法要照顾」这种负担会一直传下去。 */
-  const ALL = { ...PAGES, "404.html": read("404.html") };
-  const used = new Set();
-  for (const html of Object.values(ALL)) {
-    for (const m of html.matchAll(/\bclass="([^"]+)"/g)) for (const c of m[1].trim().split(/\s+/)) used.add(c);
-  }
-  // JS 会用 classList 或 className 加上去的类名同样算「有人用」
-  for (const m of (MAIN + SCENE).matchAll(/classList\.(?:add|remove|toggle|contains|replace)\(([^)]*)\)/g)) {
-    for (const lit of m[1].matchAll(/['"]([^'"]+)['"]/g)) for (const c of lit[1].split(/\s+/)) used.add(c);
-  }
-  for (const m of (MAIN + SCENE).matchAll(/\.className\s*=\s*['"]([^'"]+)['"]/g)) {
-    for (const c of m[1].split(/\s+/)) used.add(c);
-  }
-  const defined = new Set(
-    [...CSS_CODE.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map(m => m[1])
-  );
-  for (const html of Object.values(ALL)) {
-    const inline = (html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "";
-    // 内联块里的注释是散文（404 那段就写着「style.css 加载成功时…」），
-    // 不剥掉的话 "css" 会被当成一个定义过的类名。
-    for (const m of inline.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)) defined.add(m[1]);
-  }
-  const dead = [...defined].filter(c => !used.has(c)).sort();
-  assert.ok(defined.size > 30, `只解析出 ${defined.size} 个 class 定义，解析脱节了`);
-  assert.deepEqual(dead, [], `这些类在任何样式表里定义了，却没有任何元素使用：${dead.join(", ")}`);
 });
 
 test("文档说 verify-sync 有几段，就必须真的有几段", () => {
@@ -545,7 +585,8 @@ test("README 两张现状表里抄下来的数字必须与实测一致", () => {
   assert.deepEqual(bad, [], bad.join("\n"));
 });
 
-test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡）", () => {  const dead = ["墨点", "环境音", "音量斜坡", "sound-toggle", "ambient(", "fieldEnergy", "inkDot"];
+test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡）", () => {
+  const dead = ["墨点", "环境音", "音量斜坡", "sound-toggle", "ambient(", "fieldEnergy", "inkDot"];
   const hits = [];
   for (const [f, src] of [["assets/js/main.js", MAIN], ["assets/js/scene.js", SCENE], ["assets/css/style.css", CSS]]) {
     for (const d of dead) if (src.includes(d)) hits.push(`${f} 仍提到「${d}」`);
