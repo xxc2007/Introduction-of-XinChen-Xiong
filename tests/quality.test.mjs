@@ -209,6 +209,29 @@ test("令牌对比度：承载正文的色档必须过 AA，装饰色档必须�
   assert.ok(rt < 3, `--terra 对 cream 有 ${rt.toFixed(3)}:1，与「不可承载文字」的约定不再一致，注释要重写`);
 });
 
+test("磁吸按钮不许被任何 animate translate 的关键帧占用", () => {
+  /* translate 与 transform 是两个独立属性。设计约定 translate 归磁吸
+     （.hero-cta/.btn-live/.btn-repo/.copy-mail 都是 `translate:var(--mx) var(--my)`）。
+     谁被一个 animate translate 的 @keyframes 命中、还带 fill:both，
+     就会在层叠里被永久钉死——.hero-cta 的磁吸就这么坏了很久。
+     注意不能一刀切禁止"关键帧动 translate"：.lang-menu 的 langIn 就合法，它不是磁吸元素。 */
+  const MAGNETIC = [".hero-cta", ".btn-live", ".btn-repo", ".copy-mail"];
+  const badKf = new Set(
+    [...CSS_CODE.matchAll(/@keyframes\s+([\w-]+)\s*\{([\s\S]*?\})\s*\}/g)]
+      .filter(m => /(^|[;{\s])translate\s*:/.test(m[2])).map(m => m[1])
+  );
+  const hits = [];
+  for (const m of CSS_CODE.matchAll(/([^{}]+)\{([^}]*animation[^}]*)\}/g)) {
+    const sels = m[1].split(",").map(s => s.trim()).filter(Boolean);
+    const anim = (m[2].match(/animation\s*:\s*([^;]+)/) || [])[1] || "";
+    const used = [...badKf].filter(k => new RegExp(`\\b${k}\\b`).test(anim));
+    if (used.length && sels.some(s => MAGNETIC.some(c => s.includes(c)))) {
+      hits.push(`${sels.join(" / ")} 用了动画 ${used.join("/")}，它会覆盖磁吸的 translate`);
+    }
+  }
+  assert.deepEqual(hits, [], hits.join("\n"));
+});
+
 test("注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡）", () => {
   const dead = ["墨点", "环境音", "音量斜坡", "sound-toggle", "ambient(", "fieldEnergy", "inkDot"];
   const hits = [];
