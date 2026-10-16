@@ -264,7 +264,7 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
    漏了「本地图都要存在」就会在每个沙箱里先红，把该看的那条盖掉。 */
 /* 整仓复制，包括 .git：check-links 与 README 数字断言都要跑 git ls-files，
    少了 .git 它们不是「通过」而是当场崩掉。docs/ 也必须在——断言会读它。 */
-const SKIP = /(^|[\\/])(node_modules|\.tmp)([\\/]|$)/;
+const SKIP = /(^|[\\/])(node_modules|\.tmp|\.cache)([\\/]|$)/;
 const sandbox = () => {
   const dir = mkdtempSync(join(tmpdir(), "qamut-"));
   cpSync(ROOT, dir, { recursive: true, filter: (src) => !SKIP.test(src.slice(ROOT.length + 1)) });
