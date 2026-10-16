@@ -20,19 +20,19 @@
 
 44 秒，1920 × 1080。使用 Video Shotcraft 制作，画面来自当前新版网页，包含首屏地球的真实旋转、两个作品和做事方法。参考南昌十五中纪念站宣传片的留白与运镜节奏，采用轻柔原创配乐、自然叠化，无换场音效。
 
-[![点击观看新版个人站宣传片](assets/video/poster-hd.jpg)](https://xxc2007.me/assets/video/)
+[![点击观看新版个人站宣传片](assets/video/poster-hd.jpg?v=21e0bb06e392)](https://xxc2007.me/assets/video/)
 
 [▶ 打开 1080p 高清播放器](https://xxc2007.me/assets/video/) · [直接打开 MP4](https://xxc2007.me/assets/video/intro-promo.mp4) · [无配乐版](https://xxc2007.me/assets/video/intro-promo-nobgm.mp4)
 
 ## 当前网页
 
-![桌面首屏：大字姓名、个人介绍与真实地球](assets/images/readme-hero-desktop.png)
+![桌面首屏：大字姓名、个人介绍与真实地球](assets/images/readme-hero-desktop.png?v=4430820db066)
 
-![新版作品区：两个已上线网站与作品选择器](assets/images/readme-works-desktop.png)
+![新版作品区：两个已上线网站与作品选择器](assets/images/readme-works-desktop.png?v=ddaf350d481d)
 
-<p align="center"><img src="assets/images/readme-hero-mobile.png" width="390" alt="新版移动端首屏和导航"></p>
+<p align="center"><img src="assets/images/readme-hero-mobile.png?v=a80248cfcbe2" width="390" alt="新版移动端首屏和导航"></p>
 
-截图于 2026 年 10 月 16 日从本地待发布版本更新。桌面首屏取自真实浏览器录屏，其他截图由 Chrome 直接采集；没有重新绘制界面。
+截图于 2026 年 10 月 16 日从本地待发布版本更新。三张均由 Chrome 直接采集；两张作品缩略图已按同日线上页面刷新，没有重新绘制界面。介绍片保留制作时的画面快照，不随资讯实时更新。
 
 ## 网页里有什么
 
@@ -66,11 +66,11 @@ node --test "tests/*.test.mjs"
 
 | 项目 | 当前测量 | 复算方式 |
 |---|---|---|
-| 仓库文件 | **188** | `git ls-files \| wc -l` = 188 |
+| 仓库文件 | **189** | `git ls-files \| wc -l` = 189 |
 | 中英两页字节 | `24,111` / `24,542` B | index.html / en/index.html |
 | 全站 CSS | **50.7 KB** (`51,962` B), gzip **11.5 KB** | assets/css/style.css |
 | 首屏 JS（含 Three.js） | gzip **194.6 KB** | scripts/check-bytes.mjs |
-| 图片（头像 + 两张作品截图） | **85.8 KB** (`87,886` B) | scripts/check-bytes.mjs |
+| 图片（头像 + 两张作品截图） | **85.3 KB** (`87,382` B) | scripts/check-bytes.mjs |
 | 不进首屏的分享素材 | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
 ## 发布与同步

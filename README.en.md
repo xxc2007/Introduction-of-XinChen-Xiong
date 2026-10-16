@@ -20,7 +20,7 @@ A bilingual personal introduction, two live projects, a way of working, three be
 
 A 44-second, 1920 × 1080 film made from the current website with Video Shotcraft. Real page captures, the live rotating Earth, gentle camera movement and an original soft score. No transition sound effects.
 
-[![Watch the current website film](assets/video/poster-hd.jpg)](https://xxc2007.me/assets/video/)
+[![Watch the current website film](assets/video/poster-hd.jpg?v=21e0bb06e392)](https://xxc2007.me/assets/video/)
 
 [▶ Watch in the 1080p player](https://xxc2007.me/assets/video/) · [Download MP4](https://xxc2007.me/assets/video/intro-promo.mp4) · [No-music edition](https://xxc2007.me/assets/video/intro-promo-nobgm.mp4)
 
@@ -28,13 +28,13 @@ The film uses Chinese on-screen text. The English website remains fully translat
 
 ## Current website
 
-![Desktop hero: large name, introduction and a real Earth globe](assets/images/readme-hero-desktop.png)
+![Desktop hero: large name, introduction and a real Earth globe](assets/images/readme-hero-desktop.png?v=4430820db066)
 
-![Two live projects, shown using the current project selector](assets/images/readme-works-desktop.png)
+![Two live projects, shown using the current project selector](assets/images/readme-works-desktop.png?v=ddaf350d481d)
 
-<p align="center"><img src="assets/images/readme-hero-mobile.png" width="390" alt="Current mobile hero and navigation"></p>
+<p align="center"><img src="assets/images/readme-hero-mobile.png?v=a80248cfcbe2" width="390" alt="Current mobile hero and navigation"></p>
 
-These are captures of the current local release candidate, refreshed on 16 October 2026. The desktop hero is a frame from its real browser recording; other captures come directly from Chrome. No UI has been redrawn for these previews.
+These are captures of the current local release candidate, refreshed on 16 October 2026. All three captures come directly from Chrome, with project thumbnails refreshed from the live sites on the same day. No UI has been redrawn. The film preserves its production-time snapshot and does not track live news updates.
 
 ## What is here
 
@@ -68,11 +68,11 @@ The values below are checked against the files by the quality suite. JS totals i
 
 | Item | Current measurement | How to check |
 |---|---|---|
-| Repository files | **188** | `git ls-files \| wc -l` = 188 |
+| Repository files | **189** | `git ls-files \| wc -l` = 189 |
 | HTML size | `24,111` / `24,542` B | index.html / en/index.html |
 | Site CSS | **50.7 KB** (`51,962` B), gzip **11.5 KB** | assets/css/style.css |
 | Hero JS | gzip **194.6 KB** | scripts/check-bytes.mjs |
-| Images (avatar + two project shots) | **85.8 KB** (`87,886` B) | scripts/check-bytes.mjs |
+| Images (avatar + two project shots) | **85.3 KB** (`87,382` B) | scripts/check-bytes.mjs |
 | Social/share assets | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
 ## Publishing and verification
