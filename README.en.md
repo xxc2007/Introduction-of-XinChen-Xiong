@@ -90,7 +90,7 @@ The values below are checked against the files by the quality suite. JS totals i
 
 | Item | Current measurement | How to check |
 |---|---|---|
-| Repository files | **190** | `git ls-files \| wc -l` = 190 |
+| Repository files | **205** | `git ls-files \| wc -l` = 205 |
 | HTML size | `24,111` / `24,542` B | index.html / en/index.html |
 | Site CSS | **51.4 KB** (`52,612` B), gzip **11.7 KB** | assets/css/style.css |
 | Hero JS | gzip **195.1 KB** | scripts/check-bytes.mjs |
