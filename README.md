@@ -30,14 +30,14 @@ https://github.com/user-attachments/assets/674f7e9e-a87c-4235-b784-5ac5c5f1c822
 
 ![新版作品区：两个已上线网站与作品选择器](assets/images/readme-works-desktop.png?v=ddaf350d481d)
 
-<p align="center"><img src="assets/images/readme-hero-mobile.png?v=a80248cfcbe2" width="390" alt="新版移动端首屏和导航"></p>
+<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="新版移动端首屏和导航"></p>
 
 截图于 2026 年 10 月 16 日从本地待发布版本更新。三张均由 Chrome 直接采集；两张作品缩略图已按同日线上页面刷新，没有重新绘制界面。介绍片保留制作时的画面快照，不随资讯实时更新。
 
 ## 网页里有什么
 
 - **真实地球首屏**：使用本地 NASA Blue Marble 地球影像，支持任意方向 360° 自由拖动与翻转、上下左右方向键旋转、重置与减少动态效果。主地球仅属于首屏，不带外围轨道，也不进入“关于我”。
-- **章节导航**：桌面横向导航、当前章节指示、移动菜单与中英文切换。
+- **章节导航**：桌面横向导航、移动端默认展开的文字导航、当前章节指示与中英文切换。
 - **两个作品**：纪念南昌市第十五中学的网站与 GEOHOT 地理热点，支持切换查看，并对照两者的用途、内容和实现。
 - **做事方法**：保留原有四个步骤，配合可操作的视觉分镜。
 - **信念与联系**：原有三条信念、公开邮箱、社交入口与网址分享。
@@ -68,8 +68,8 @@ node --test "tests/*.test.mjs"
 |---|---|---|
 | 仓库文件 | **190** | `git ls-files \| wc -l` = 190 |
 | 中英两页字节 | `24,111` / `24,542` B | index.html / en/index.html |
-| 全站 CSS | **50.7 KB** (`51,961` B), gzip **11.5 KB** | assets/css/style.css |
-| 首屏 JS（含 Three.js） | gzip **195.0 KB** | scripts/check-bytes.mjs |
+| 全站 CSS | **51.4 KB** (`52,612` B), gzip **11.7 KB** | assets/css/style.css |
+| 首屏 JS（含 Three.js） | gzip **195.1 KB** | scripts/check-bytes.mjs |
 | 图片（头像 + 两张作品截图） | **85.3 KB** (`87,382` B) | scripts/check-bytes.mjs |
 | 不进首屏的分享素材 | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 

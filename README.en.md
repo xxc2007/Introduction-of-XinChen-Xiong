@@ -32,14 +32,14 @@ The film uses Chinese on-screen text. The English website remains fully translat
 
 ![Two live projects, shown using the current project selector](assets/images/readme-works-desktop.png?v=ddaf350d481d)
 
-<p align="center"><img src="assets/images/readme-hero-mobile.png?v=a80248cfcbe2" width="390" alt="Current mobile hero and navigation"></p>
+<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="Current mobile hero and navigation"></p>
 
 These are captures of the current local release candidate, refreshed on 16 October 2026. All three captures come directly from Chrome, with project thumbnails refreshed from the live sites on the same day. No UI has been redrawn. The film preserves its production-time snapshot and does not track live news updates.
 
 ## What is here
 
 - **Earth hero:** locally hosted NASA Blue Marble imagery on a Three.js sphere. Unrestricted 360° rotation and tumbling in any direction, four-arrow-key control, reset and reduced-motion support. The main globe belongs to the hero; no orbit rings or movement into the About section.
-- **Navigation:** desktop chapter links, current-section indicator, responsive menu and Chinese/English switch.
+- **Navigation:** desktop chapter links, always-visible mobile navigation, current-section indicator and Chinese/English switch.
 - **Two projects:** the Nanchang No. 15 memorial and GEOHOT, with project selection and a comparison of their purpose, content and implementation.
 - **Working process:** four original steps, paired with an interactive visual sequence.
 - **Beliefs and contact:** three original statements, email, social links and site sharing.
@@ -70,8 +70,8 @@ The values below are checked against the files by the quality suite. JS totals i
 |---|---|---|
 | Repository files | **190** | `git ls-files \| wc -l` = 190 |
 | HTML size | `24,111` / `24,542` B | index.html / en/index.html |
-| Site CSS | **50.7 KB** (`51,961` B), gzip **11.5 KB** | assets/css/style.css |
-| Hero JS | gzip **195.0 KB** | scripts/check-bytes.mjs |
+| Site CSS | **51.4 KB** (`52,612` B), gzip **11.7 KB** | assets/css/style.css |
+| Hero JS | gzip **195.1 KB** | scripts/check-bytes.mjs |
 | Images (avatar + two project shots) | **85.3 KB** (`87,382` B) | scripts/check-bytes.mjs |
 | Social/share assets | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 

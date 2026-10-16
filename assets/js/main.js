@@ -494,6 +494,17 @@ document.addEventListener('click', (ev) => {
 schedule();
 
 
+/* Match anchor offsets and sticky scenes to the naturally wrapped header. */
+(function navigationHeight(){
+  const bar=$('.topbar');if(!bar)return;
+  const observer=new ResizeObserver(()=>{
+    const height=Math.ceil(bar.getBoundingClientRect().height);
+    if(height&&innerWidth<=1000){root.style.setProperty('--bar',`${height}px`);document.body.style.setProperty('--bar',`${height}px`);}
+    else{root.style.removeProperty('--bar');document.body.style.removeProperty('--bar');}
+  });
+  observer.observe(bar);
+})();
+
 /* Mobile navigation uses real buttons and restores focus when dismissed. */
 (function navigationDrawer() {
   const toggle = $('.menu-toggle'), nav = $('#nav');

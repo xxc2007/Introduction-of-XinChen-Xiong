@@ -744,7 +744,6 @@ html[lang=en] .portfolio .hero h1{font-size:clamp(60px,15.2vw,230px);line-height
 .portfolio .progress{visibility:hidden}
 .portfolio .topbar[data-tone=ink]{color:var(--night)}
 .portfolio .topbar:has(#nav.is-open){color:var(--sand);background:var(--forest)}
-@media(min-width:1001px){
  .portfolio .menu-toggle{display:none}
  .portfolio #nav,.portfolio #nav.is-open{display:flex;position:static;inset:auto;flex-direction:row;align-items:center;justify-content:flex-end;order:1;margin-left:auto;padding:0;gap:clamp(22px,1.7vw,44px);background:transparent;overflow:visible}
  .portfolio #nav a{position:relative;color:inherit;border:0;padding:10px 0;font-size:clamp(14px,.82vw,21px);line-height:1.3;font-weight:700;letter-spacing:-.025em;text-transform:uppercase;white-space:nowrap}
@@ -752,7 +751,16 @@ html[lang=en] .portfolio .hero h1{font-size:clamp(60px,15.2vw,230px);line-height
  .portfolio #nav a:hover,.portfolio #nav a[aria-current]{background:transparent;color:inherit}
  .portfolio #nav a:hover::after,.portfolio #nav a[aria-current]::after{transform:scaleX(1)}
  .portfolio .controls{margin-left:8px}
+/* Keep the same visible navigation on phones, arranged below the brand. */
+@media(max-width:1000px){
+ .portfolio .topbar{flex-wrap:wrap;min-height:0;padding-block:8px;column-gap:12px;row-gap:0}
+ .hero-stage{padding-top:calc(var(--bar) + 34px)}
+ .portfolio .brand{min-height:44px;align-items:center}
+ .portfolio .controls{order:2;margin-left:0}
+ .portfolio #nav,.portfolio #nav.is-open{order:3;flex:1 0 100%;flex-wrap:wrap;justify-content:center;column-gap:clamp(5px,1.6vw,12px);row-gap:0;margin:0}
+ .portfolio #nav a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 0;font-size:clamp(13px,3.6vw,16px);line-height:1.3;letter-spacing:-.025em}
 }
+
 @media(scripting:none){.no-js .portfolio #nav{display:flex;position:static;flex-wrap:wrap;padding:10px 0;background:none}}
 @media(scripting:none){.no-js .portfolio #nav a{font-size:14px;padding:10px}}
 @media(scripting:none){.no-js .portfolio .topbar{position:relative;flex-wrap:wrap}}
