@@ -3,7 +3,7 @@
   "private": true,
   "description": "Development-only dependency inventory; production serves vendored static assets.",
   "dependencies": {
-    "three": "0.180.0"
+    "three": "0.186.1"
   },
   "scripts": {
     "test": "node --test \"tests/*.test.mjs\""
