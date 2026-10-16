@@ -810,7 +810,7 @@ html[lang=en] .portfolio .hero h1{font-size:clamp(65px,6.8vw,130px);padding-righ
 }
 @media(max-height:700px){.process-enabled .process-runway{height:auto}.process-enabled .process-stage{position:relative;top:0;height:auto;min-height:700px}.process-enabled .process-visual{height:350px}}
 .brand-flight{position:fixed;inset:0;z-index:79;pointer-events:none;visibility:hidden;overflow:hidden}
-.portfolio #field.orbit-interactive{pointer-events:auto;touch-action:pan-y;cursor:grab}
+.portfolio #field.orbit-interactive{pointer-events:auto;touch-action:none;cursor:grab}
 .portfolio #field.orbit-interactive:active{cursor:grabbing}
 .orbit-tools{position:absolute;bottom:0;left:0;right:0;z-index:2;text-align:center;font-size:14px;color:var(--sand)}
 .orbit-tools button{margin-left:16px;text-decoration:underline;text-underline-offset:5px;min-height:44px}
