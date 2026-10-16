@@ -16,7 +16,7 @@ const remote=execFileSync('gh',['api','repos/'+(site==='intro'?'xxc2007/Introduc
 if(sha!==remote)throw Error('GitHub main and the local release are not the same revision');
 const ssh=platform()==='win32'?'C:/Program Files/Git/usr/bin/ssh.exe':'ssh';
 const options=['-o','BatchMode=yes','-o','StrictHostKeyChecking=yes','-o','UserKnownHostsFile='+homedir()+'/.ssh/known_hosts','-i',env.DEPLOY_KEY.replace(/^~/,homedir()),env.DEPLOY_USER+'@'+env.DEPLOY_HOST];
-const run=(command,input)=>execFileSync(ssh,[...options,command],{input,encoding:input instanceof Buffer?undefined:'utf8',timeout:180000,maxBuffer:4*1024*1024});
+const run=(command,input)=>{try{return execFileSync(ssh,[...options,command],{input,encoding:input instanceof Buffer?undefined:'utf8',timeout:900000,maxBuffer:4*1024*1024});}catch(error){throw Error('SSH release operation failed ('+(error.code||error.status||'remote error')+'); live state must be checked before retrying.');}};
 const id=sha.slice(0,12)+'-'+Date.now();
 const release='/var/www/.site-releases/'+site+'/'+id;
 const q=value=>"'"+value.replaceAll("'","'\\''")+"'";
