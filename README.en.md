@@ -7,60 +7,88 @@
 *“I haven’t written code that changes the world yet.”*
 
 [![Website](https://img.shields.io/badge/Website-xxc2007.me-48583D)](https://xxc2007.me/)
-[![Vanilla JS](https://img.shields.io/badge/Stack-HTML_CSS_JavaScript-24251E)](#development)
+[![Stack](https://img.shields.io/badge/Stack-HTML_CSS_JavaScript-24251E)](#implementation)
 [![MIT](https://img.shields.io/badge/License-MIT-FF8B48)](LICENSE)
 
-**One person, building with AI.**
+**Ideas become websites. The work tells the story.**
 
-A bilingual personal introduction, two live projects, a way of working, three beliefs and public contact links. Olive green, warm cream, large typography and a real Earth globe introduce the site; the projects supply the evidence.
+This is my personal introduction and the shared entrance to two live projects: a place for campus memories and a daily geography publication.
+Through the projects, my working process and a few guiding beliefs, this bilingual site shows how I build with AI—from an initial idea to a website people can visit, explore and return to.
+
+[Visit the site](https://xxc2007.me/en/) · [Watch the film](#-product-film) · [Two projects](#two-projects) · [Experience](#experience) · [Implementation](#implementation) · [Run locally](#run-locally)
 
 </div>
 
-## Watch the new film
+![Desktop introduction with large typography and an interactive Earth](assets/images/readme-hero-desktop.png?v=4430820db066)
 
-A 44-second, 1920 × 1080 film made from the current website with Video Shotcraft. Real page captures, the live rotating Earth, gentle camera movement and an original soft score. No transition sound effects.
+## 🎬 Product film
+
+A 44-second introduction, from the name and rotating Earth to the campus memorial, GEOHOT and the process behind the projects. Real website footage, a soft score and gentle transitions bring the content and interactions into one short viewing sequence. The film uses Chinese on-screen text; the website has a full English edition.
+
+Play it directly below.
 
 https://github.com/user-attachments/assets/674f7e9e-a87c-4235-b784-5ac5c5f1c822
 
-[▶ Watch in the 1080p player](https://xxc2007.me/assets/video/) · [Download MP4](https://xxc2007.me/assets/video/intro-promo.mp4) · [No-music edition](https://xxc2007.me/assets/video/intro-promo-nobgm.mp4)
+[▶ Watch in the 1080p player](https://xxc2007.me/assets/video/) · [Open MP4](https://xxc2007.me/assets/video/intro-promo.mp4) · [No-music edition](https://xxc2007.me/assets/video/intro-promo-nobgm.mp4)
 
-The film uses Chinese on-screen text. The English website remains fully translated.
+## Two projects
 
-## Current website
+**One preserves memories; the other makes information easier to follow.** Their content and technical choices differ, while both bring together my practice in design, frontend development, mapping and ongoing maintenance.
 
-![Desktop hero: large name, introduction and a real Earth globe](assets/images/readme-hero-desktop.png?v=4430820db066)
-
-![Two live projects, shown using the current project selector](assets/images/readme-works-desktop.png?v=ddaf350d481d)
-
-<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="Current mobile hero and navigation"></p>
-
-These are captures of the current local release candidate, refreshed on 16 October 2026. All three captures come directly from Chrome, with project thumbnails refreshed from the live sites on the same day. No UI has been redrawn. The film preserves its production-time snapshot and does not track live news updates.
-
-## What is here
-
-- **Earth hero:** locally hosted NASA Blue Marble imagery on a Three.js sphere. Unrestricted 360° rotation and tumbling in any direction, four-arrow-key control, reset and reduced-motion support. The main globe belongs to the hero; no orbit rings or movement into the About section.
-- **Navigation:** desktop chapter links, always-visible mobile navigation, current-section indicator and Chinese/English switch.
-- **Two projects:** the Nanchang No. 15 memorial and GEOHOT, with project selection and a comparison of their purpose, content and implementation.
-- **Working process:** four original steps, paired with an interactive visual sequence.
-- **Beliefs and contact:** three original statements, email, social links and site sharing.
-- **Film:** downloaded only after activation; a dedicated player, poster and direct download links.
-
-| Project | Public site | Source |
+| Project | Content and implementation | Explore |
 |---|---|---|
-| Nanchang No. 15 memorial | [Open](https://xxc2007.me/nc15/) | [Repository](https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School) |
-| GEOHOT | [Open](https://xxc2007.me/geohot/) | [Repository](https://github.com/xxc2007/GeoHot) |
+| **The Nanchang No. 15 memorial** | A record of the school through 25 campus photographs I took, an eight-viewpoint photo tour, a Chinese-labelled map and a guestbook. Built with vanilla frontend code and a self-hosted comment service, with ten language editions. | [Visit](https://xxc2007.me/nc15/) · [Source](https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School) |
+| **GEOHOT** | Public geography sources become selected stories and daily editions through pre-filtering, two scoring passes and event grouping. Built on AIHOT, with server rendering and background job processing. | [Read](https://xxc2007.me/geohot/) · [Source](https://github.com/xxc2007/GeoHot) |
 
-## Development
+![The project selector and a comparison of the memorial and GEOHOT](assets/images/readme-works-desktop.png?v=ddaf350d481d)
+
+## Experience
+
+Olive green, warm cream, generous typography and scroll-linked motion guide the reading sequence: an introduction, the projects, the working process, then beliefs and contact details.
+
+- **An Earth you can turn:** NASA Blue Marble imagery on a globe with unrestricted dragging and tumbling, arrow-key control and a view reset.
+- **Visible chapter navigation:** text links stay expanded on desktop and mobile, with a dotted current-section marker, natural wrapping on narrow screens and a Chinese/English switch.
+- **A process to explore:** four steps and their visual scenes follow purpose, design and construction, mapping, and publication and maintenance.
+- **Different ways to browse:** desktop and touch layouts, keyboard controls, a static Earth fallback and reduced-motion support. Video loads when activated.
+
+<details>
+<summary>View the mobile edition</summary>
+
+<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="Mobile edition with expanded navigation, introduction, film entry and Earth"></p>
+
+</details>
+
+<sub>Screenshots were captured on 16 October 2026. The film preserves the website at production time; its news footage does not change with GEOHOT’s daily updates.</sub>
+
+## Implementation
+
+| Area | Approach |
+|---|---|
+| Structure | Static HTML with separate Chinese and English pages and SEO metadata; shared styles and behavior, with no application build step. |
+| Styles and interactions | CSS handles responsive layout and visual states; vanilla JavaScript handles chapter tracking, project selection, language controls and scroll-linked scenes. |
+| Earth | Self-hosted Three.js and textures, quaternion-based rotation for continuous tumbling, and WebGL context-loss and restoration handling. |
+| Loading | Earth and process modules load on demand; video loads after activation. Key visual assets are served locally, with static fallback content. |
+| Verification | Language parity, local links, asset budgets and static rules, alongside browser interaction regressions. Commands are listed below. |
+
+## Run locally
 
 ```sh
 node tools/serve.mjs 8901
+```
+
+Open http://127.0.0.1:8901/ or `/en/` for English. No application build is required. The main portfolio uses system sans-serif fonts; supporting pages retain local font assets.
+
+Check content, structure and resource sizes:
+
+```sh
 node scripts/check-parity.mjs
 node scripts/check-links.mjs
 node scripts/check-bytes.mjs
 node --test "tests/*.test.mjs"
 ```
 
-Open http://127.0.0.1:8901/. Static HTML, CSS and JavaScript; no application build step. The two language pages share styles and behavior. Three.js is self-hosted. Fonts retained for the supporting pages are also local. The main portfolio uses the system sans-serif stack.
+<details>
+<summary>Engineering measurements and publishing</summary>
 
 ## Measured source sizes
 
@@ -84,7 +112,9 @@ bash scripts/deploy.sh "feat: publish the redesigned portfolio and new film"
 bash scripts/verify-sync.sh
 ```
 
-The personal site owns `/` and `/en/`. `/nc15/`, `/geohot/` and the comment service have their own deployment boundaries. Updating this repository does not authorize replacing their content.
+The personal site owns `/` and `/en/`. `/nc15/`, `/geohot/` and the comment service have their own deployment boundaries. Each project is published separately.
+
+</details>
 
 ## Content and credits
 
