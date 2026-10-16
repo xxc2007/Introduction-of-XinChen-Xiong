@@ -1,0 +1,27 @@
+name: Site checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - run: |
+          node --test "tests/*.test.mjs"
+          node scripts/check-vendor.mjs
+          node scripts/check-parity.mjs
+          node scripts/check-links.mjs
+          node scripts/check-bytes.mjs
