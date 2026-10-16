@@ -15,7 +15,7 @@
 这里是熊鑫晨的个人介绍，也是两个已上线项目的共同入口：一个保存校园记忆的纪念册，一个追踪地理变化的资讯站。
 从作品、做事方法到个人信念，这个中英双语网站记录了我怎样与 AI 协作，把一个想法逐步做成可以访问、体验和继续维护的网页。
 
-[走进网站](https://xxc2007.me/) · [观看宣传片](#-宣传片展示) · [两个作品](#两个作品) · [交互与体验](#交互与体验) · [技术实现](#技术实现) · [本地运行](#本地运行)
+[走进网站](https://xxc2007.me/) · [观看宣传片](#-宣传片展示) · [两个作品](#两个作品) · [交互与体验](#交互与体验) · [技术实现](#技术实现) · [本地运行](#本地运行) · [License](#-license) · [Star History](#-star-history)
 
 </div>
 
@@ -51,12 +51,9 @@ https://github.com/user-attachments/assets/674f7e9e-a87c-4235-b784-5ac5c5f1c822
 - **可探索的制作过程**：通过四个步骤及对应的视觉分镜，呈现从用途构思、设计建造、地图组织到上线维护的过程。
 - **照顾不同的浏览方式**：适配桌面与触屏，保留键盘操作、静态地球后备画面与减少动态效果支持；宣传片在点击后加载。
 
-<details>
-<summary>查看移动端页面</summary>
+### 移动端页面
 
 <p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="移动端：展开的文字导航、个人介绍、影片入口与真实地球"></p>
-
-</details>
 
 <sub>展示截图采集于 2026 年 10 月 16 日。宣传片记录制作时的页面；其中的资讯画面不会随 GEOHOT 的日常更新而变化。</sub>
 
@@ -87,9 +84,6 @@ node scripts/check-bytes.mjs
 node --test "tests/*.test.mjs"
 ```
 
-<details>
-<summary>工程数据与发布流程</summary>
-
 ## 当前源码体积
 
 以下数值由质量检查与文件实测对照。首屏 JS 包含本地 Three.js，后续按需加载的制作分镜单列；图片、地球贴图和影片不计入 JS。这些源码数值不代表 Lighthouse 得分或访问者网络下的加载耗时。
@@ -114,10 +108,19 @@ bash scripts/verify-sync.sh
 
 个人站负责 `/` 与 `/en/`；`/nc15/`、`/geohot/` 与评论服务各有自己的发布边界。
 
-</details>
-
 ## 内容与署名
 
 个人介绍、作品描述及外链以 [内容出处](docs/content-sources.md) 为准。[ORYZO](https://oryzo.ai/) 为设计参考，页面内容与实现属于本站。地球影像来自 NASA Earth Observatory / Blue Marble Next Generation，为 2004 年 8 月无云合成影像，非实时天气；详见 [图像出处](docs/image-provenance.md)。
 
-新版宣传片使用真实网页素材与原创合成轻柔配乐，制作记录和核验见 [影片发布记录](docs/promo-release-20261016.md)。代码采用 [MIT](LICENSE)，第三方资产遵循各自原有条款。
+新版宣传片使用真实网页素材与原创合成轻柔配乐，制作记录和核验见 [影片发布记录](docs/promo-release-20261016.md)。
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 熊鑫晨（Xiong Xinchen）· 第三方素材遵循各自许可，详见[图像出处](docs/image-provenance.md)。
+
+## 📈 Star History
+
+<p align="center">
+  <img src="https://api.star-history.com/svg?repos=xxc2007/Introduction-of-XinChen-Xiong&type=Date" alt="个人展示网站仓库的 GitHub Star 历史" width="100%">
+</p>
+<p align="center"><sub>曲线由 <a href="https://star-history.com">star-history.com</a> 动态生成，GitHub 图片缓存可能使更新稍有延迟。</sub></p>
