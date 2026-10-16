@@ -1,11 +1,12 @@
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
+const base=process.env.BASE_URL||'http://127.0.0.1:8901';
 const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{
  for(const lang of ['/','/en/'])for(const width of [390,1440]){
   const page=await browser.newPage({viewport:{width,height:900}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:8901'+lang,{waitUntil:'networkidle'});
+  await page.goto(base+lang,{waitUntil:'domcontentloaded'});
   const field=page.locator('#field');await field.scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelector('.hero').dataset.field==='ready');
   await field.focus();await page.keyboard.press('ArrowRight');assert.equal(await field.getAttribute('aria-valuenow'),'10');
   await page.keyboard.press('Home');assert.equal(await field.getAttribute('aria-valuenow'),'-180');
@@ -17,6 +18,32 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});await field.focus();await page.keyboard.press('ArrowLeft');
   const reduced=await field.getAttribute('aria-valuenow');await page.waitForTimeout(250);assert.equal(await field.getAttribute('aria-valuenow'),reduced);
   const pixels=await field.screenshot();await page.keyboard.press('ArrowLeft');await page.waitForTimeout(100);assert.notDeepEqual(await field.screenshot(),pixels,'keyboard changes actual rendered globe');
+  await page.locator('.orbit-tools button').click();await field.focus();
+  await page.keyboard.press('End');await page.keyboard.press('ArrowRight');
+  assert.equal(await field.getAttribute('aria-valuenow'),'-170','right rotation crosses +180 without sticking');
+  await page.keyboard.press('Home');await page.keyboard.press('ArrowLeft');
+  assert.equal(await field.getAttribute('aria-valuenow'),'170','left rotation crosses -180 without sticking');
+  await page.locator('.orbit-tools button').click();await field.focus();
+  for(let i=0;i<108;i++)await page.keyboard.press('ArrowRight');
+  assert.equal(await field.getAttribute('aria-valuenow'),'0','keyboard can complete three uninterrupted turns');
+  const track=await field.boundingBox();
+  for(const direction of [1,-1]){
+   let travelled=0;
+   for(let turn=0;turn<4;turn++){
+    const start=direction>0?.1:.9,end=direction>0?.9:.1,y=track.y+track.height*.5;
+    await page.mouse.move(track.x+track.width*start,y);await page.mouse.down();
+    let previous=Number(await field.getAttribute('aria-valuenow'));
+    for(let step=1;step<=24;step++){
+     await page.mouse.move(track.x+track.width*(start+(end-start)*step/24),y);
+     const current=Number(await field.getAttribute('aria-valuenow')),delta=((current-previous+540)%360)-180;
+     assert.ok(delta*direction>0&&Math.abs(delta)<15,'every drag step keeps turning across both boundaries');
+     travelled+=delta;previous=current;
+    }
+    await page.mouse.up();
+   }
+   assert.ok(travelled*direction>720,'pointer completes more than two full turns in either direction');
+  }
+  await page.locator('.orbit-tools button').click();assert.equal(await field.getAttribute('aria-valuenow'),'0');
   if(process.env.SHOT_DIR)await page.screenshot({path:`${process.env.SHOT_DIR}/drag-${lang==='/'?'zh':'en'}-${width}.png`});
   if(width===1440){
    await page.evaluate(()=>{window.orbitLoss=document.querySelector('#field').getContext('webgl2').getExtension('WEBGL_lose_context');window.orbitLoss.loseContext();});
@@ -31,12 +58,30 @@ try{
   console.log(`${lang} ${width}: keyboard, drag, reset, inertia and reduced motion OK`);await page.close();
  }
  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
- await page.goto('http://127.0.0.1:8901/',{waitUntil:'networkidle'});await page.locator('#field').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelector('.hero').dataset.field==='ready');
+ await page.goto(base+'/',{waitUntil:'domcontentloaded'});await page.locator('#field').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelector('.hero').dataset.field==='ready');
  const cdp=await page.context().newCDPSession(page),b=await page.locator('#field').boundingBox(),x=b.x+b.width/2,y=b.y+b.height/2;
  const touch=(type,x,y)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y}]});
  const before=await page.evaluate(()=>scrollY);await touch('touchStart',x,y);await touch('touchMove',x,y-70);await touch('touchMove',x,y-130);await touch('touchEnd');await page.waitForTimeout(350);
  assert.ok(await page.evaluate(()=>scrollY)>before+30,'vertical touch pans the document');
  await page.locator('#field').scrollIntoViewIfNeeded();const box=await page.locator('#field').boundingBox();
  await touch('touchStart',box.x+box.width*.3,box.y+box.height*.5);await touch('touchMove',box.x+box.width*.5,box.y+box.height*.5);await touch('touchMove',box.x+box.width*.65,box.y+box.height*.5);await touch('touchEnd');
- assert.ok(Number(await page.locator('#field').getAttribute('aria-valuenow'))>20,'horizontal touch rotates');console.log('Touch vertical pan and horizontal rotation OK');await page.close();
+ assert.ok(Number(await page.locator('#field').getAttribute('aria-valuenow'))>20,'horizontal touch rotates');await page.emulateMedia({reducedMotion:'reduce'});
+ await page.locator('.orbit-tools button').click();
+ await page.locator('#field').scrollIntoViewIfNeeded();const touchTrack=await page.locator('#field').boundingBox();
+ for(const direction of [1,-1]){
+  let travelled=0;
+  for(let turn=0;turn<4;turn++){
+   const start=direction>0?.1:.9,end=direction>0?.9:.1,y=touchTrack.y+touchTrack.height*.5;
+   await touch('touchStart',touchTrack.x+touchTrack.width*start,y);let previous=Number(await page.locator('#field').getAttribute('aria-valuenow'));
+   for(let step=1;step<=12;step++){
+    await touch('touchMove',touchTrack.x+touchTrack.width*(start+(end-start)*step/12),y);
+    await page.waitForFunction(previous=>Number(document.querySelector('#field').getAttribute('aria-valuenow'))!==previous,previous,{timeout:2000});
+    const current=Number(await page.locator('#field').getAttribute('aria-valuenow')),delta=((current-previous+540)%360)-180;
+    assert.ok(delta*direction>0,'touch keeps rotating past the old limits: '+JSON.stringify({turn,step,direction,previous,current}));travelled+=delta;previous=current;
+   }
+   await touch('touchEnd');
+  }
+  assert.ok(travelled*direction>720,'touch completes more than two full turns in either direction');
+ }
+ console.log('Touch vertical pan and continuous 360-degree horizontal rotation OK');await page.close();
 }finally{await browser.close();}

@@ -51,7 +51,11 @@ export function initField(canvas, { reducedMotion = false } = {}) {
   canvas.classList.add('orbit-interactive');canvas.removeAttribute('aria-hidden');canvas.tabIndex=-1;
   canvas.setAttribute('role','slider');canvas.setAttribute('aria-label',english?'Earth model rotation':'地球模型旋转');
   canvas.setAttribute('aria-valuemin','-180');canvas.setAttribute('aria-valuemax','180');
-  function angle(value){yaw=THREE.MathUtils.clamp(value,-180,180);canvas.setAttribute('aria-valuenow',String(Math.round(yaw)));canvas.setAttribute('aria-valuetext',`${Math.round(yaw)}°`);requestDraw();}
+  function angle(value){
+    // Wrap the same spherical orientation instead of stopping at the meridian.
+    yaw=value%360;if(yaw>180)yaw-=360;if(yaw<-180)yaw+=360;
+    canvas.setAttribute('aria-valuenow',String(Math.round(yaw)));canvas.setAttribute('aria-valuetext',`${Math.round(yaw)}°`);requestDraw();
+  }
   angle(0);
   const takeControl=()=>{manual=true;velocity=0;reset.hidden=false;};
   reset.addEventListener('click',()=>{manual=false;velocity=0;phase=0;angle(0);reset.hidden=true;canvas.focus({preventScroll:true});});
@@ -82,7 +86,7 @@ export function initField(canvas, { reducedMotion = false } = {}) {
     if (lost || document.hidden || !visible || !earth.visible) return;
     const dt=Math.min((now-last)/1000||0,.04);
     if (!paused&&!manual) phase += dt;
-    if(!paused&&!pointer&&Math.abs(velocity)>.1){angle(yaw+velocity*dt);velocity*=Math.exp(-7*dt);if(Math.abs(yaw)===180)velocity=0;}
+    if(!paused&&!pointer&&Math.abs(velocity)>.1){angle(yaw+velocity*dt);velocity*=Math.exp(-7*dt);}
     last = now;
     const progress = paused ? 0 : Math.max(0, Math.min(1, -hero.getBoundingClientRect().top / Math.max(1, hero.offsetHeight * .65)));
     px += (tx - px) * .045; py += (ty - py) * .045;

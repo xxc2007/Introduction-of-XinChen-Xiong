@@ -38,7 +38,7 @@ These are captures of the current local release candidate, refreshed on 16 Octob
 
 ## What is here
 
-- **Earth hero:** locally hosted NASA Blue Marble imagery on a Three.js sphere. Drag, arrow-key rotation, reset and reduced-motion support. The main globe belongs to the hero; no orbit rings or movement into the About section.
+- **Earth hero:** locally hosted NASA Blue Marble imagery on a Three.js sphere. Continuous 360° dragging, arrow-key rotation, reset and reduced-motion support. The main globe belongs to the hero; no orbit rings or movement into the About section.
 - **Navigation:** desktop chapter links, current-section indicator, responsive menu and Chinese/English switch.
 - **Two projects:** the Nanchang No. 15 memorial and GEOHOT, with project selection and a comparison of their purpose, content and implementation.
 - **Working process:** four original steps, paired with an interactive visual sequence.
@@ -71,7 +71,7 @@ The values below are checked against the files by the quality suite. JS totals i
 | Repository files | **189** | `git ls-files \| wc -l` = 189 |
 | HTML size | `24,111` / `24,542` B | index.html / en/index.html |
 | Site CSS | **50.7 KB** (`51,962` B), gzip **11.5 KB** | assets/css/style.css |
-| Hero JS | gzip **194.6 KB** | scripts/check-bytes.mjs |
+| Hero JS | gzip **194.7 KB** | scripts/check-bytes.mjs |
 | Images (avatar + two project shots) | **85.3 KB** (`87,382` B) | scripts/check-bytes.mjs |
 | Social/share assets | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
