@@ -83,7 +83,7 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     from: `<html lang="zh-CN" dir="ltr" class="no-js">`, to: `<html lang="zh-CN" dir="ltr">`,
     expect: /缺 class="no-js"|停在 opacity:0/ },
   { name: "scene.js 多导出了一个 main.js 不用的东西", file: "assets/js/scene.js",
-    from: `function prefersReducedMotion() {`, to: `export function prefersReducedMotion() {`,
+    append: true, to: `\nexport function unusedSceneHelper() {}\n`,
     expect: /导出了但 main\.js 从没用过/ },
   { name: "往衬线斜体 motto 里塞回印刷体撇号", file: EN,
     re: /(class="motto">I haven)'t/, to: "$1’",
@@ -113,7 +113,7 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     expect: /溢出自己的盒子/ },
   { name: "CSS 里出现没人写过的属性选择器（aria-selected 那一族）", file: CSS, insert: true,
     from: `@media (prefers-reduced-motion:reduce)`,
-    to: `.lang-menu a[aria-pressed="true"]{color:var(--terra-ink-2)}\n`,
+    to: `.lang-menu a[data-unwritten-state="true"]{color:var(--terra-ink-2)}\n`,
     expect: /没有任何地方写上它们/ },
   { name: "给 verify-sync 再加一段而文档没跟上（段数说法过期）", file: "scripts/verify-sync.sh",
     append: true, to: `\necho "── H. 假想的新段"\n`, expect: /段字母表|但 migration\.md 的表只列了/ },
@@ -124,7 +124,7 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     re: /(\| 全站 CSS \| )\*\*[\d.]+ KB\*\*/, to: "$1**999.9 KB**",
     expect: /CSS 显示 KB：README 写/ },
   { name: "只改英文 README 的数字（旧版只查中文那份）", file: "README.en.md",
-    re: /(\| Site CSS \| [^|]*\()`\d[\d,]*` bytes/, to: "`1` bytes",
+    re: /(\| Site CSS \| [^|]*\()`\d[\d,]*` B/, to: "$1`1` B",
     expect: /README\.en\.md \/ CSS 字节/ },
   { name: "注释引用了一条不存在的 CSS 规则", file: "assets/js/main.js",
     from: `/* 触屏与 reduced-motion 一律不绑定倾斜`,
@@ -202,7 +202,7 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
   { name: "真私钥文件名藏在一句带回环的话里", file: ZH, gate: "links",
     from: `写信找我就可以`, to: `写信找我就可以（127.0.0.1 上还有 ${FAKE_KEY}）`,
     expect: /私钥文件名/ },
-  { name: "文档里的 <server-ip> 占位符不该误报", file: "README.md", gate: "links",
+  { name: "文档里的 <server-ip> 占位符不该误报", file: ".deploy.env.example", gate: "links",
     from: `DEPLOY_HOST=<server-ip>`, to: `DEPLOY_HOST=<server-ip>`, expect: null },
   { name: "SVG path 里的连写数字不该当成 IP", file: ZH, gate: "links",
     from: `class="hero" id="top"`, to: `class="hero" id="top" data-d="M5.243.002.03"`,
@@ -264,7 +264,7 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
    漏了「本地图都要存在」就会在每个沙箱里先红，把该看的那条盖掉。 */
 /* 整仓复制，包括 .git：check-links 与 README 数字断言都要跑 git ls-files，
    少了 .git 它们不是「通过」而是当场崩掉。docs/ 也必须在——断言会读它。 */
-const SKIP = /(^|[\\/])node_modules(\b|$)/;
+const SKIP = /(^|[\\/])(node_modules|\.tmp)([\\/]|$)/;
 const sandbox = () => {
   const dir = mkdtempSync(join(tmpdir(), "qamut-"));
   cpSync(ROOT, dir, { recursive: true, filter: (src) => !SKIP.test(src.slice(ROOT.length + 1)) });

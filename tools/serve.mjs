@@ -1,6 +1,7 @@
 // 本地预览服务器：把仓库根挂成站点，并把纪念册仓库挂到 /nc15/，用于迁移前的真机验证。
 // 用法：node tools/serve.mjs [端口]      默认 8899，只监听 127.0.0.1
 import { createServer } from "node:http";
+import { createGzip } from "node:zlib";
 import { createReadStream, statSync, existsSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 
@@ -22,6 +23,7 @@ const MIME = {
 
   ".txt": "text/plain; charset=utf-8", ".xml": "application/xml; charset=utf-8",
   ".map": "application/json",
+  ".mp4": "video/mp4", ".webm": "video/webm",
 };
 
 const send = (res, code, body, headers = {}) => {
@@ -46,12 +48,35 @@ const server = createServer((req, res) => {
   if (!existsSync(file)) return send(res, 404, `404 ${path}`);
 
   const ext = extname(file).toLowerCase();
-  res.writeHead(200, {
-    "Content-Type": MIME[ext] ?? "application/octet-stream",
-    "Content-Length": statSync(file).size,
-    "Cache-Control": "no-store",
-  });
-  createReadStream(file).pipe(res);
+  const stat = statSync(file);
+  const etag = `W/"${stat.size}-${stat.mtimeMs}"`;
+  const headers = {"Content-Type": MIME[ext] ?? "application/octet-stream", "Cache-Control": "no-cache", "ETag": etag, "Vary": "Accept-Encoding"};
+  if (req.headers["if-none-match"] === etag) {res.writeHead(304, headers);return res.end();}
+  const media=/\.(mp4|webm)$/.test(file);
+  if(media)headers['Accept-Ranges']='bytes';
+  // Our ETag is weak, so If-Range cannot establish byte-for-byte identity.
+  if(media && req.headers.range && !req.headers['if-range']){
+    const match=/^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+    let start=0,end=stat.size-1;
+    if(match){
+      if(match[1]){start=Number(match[1]);if(match[2])end=Math.min(end,Number(match[2]));}
+      else if(match[2])start=Math.max(0,stat.size-Number(match[2]));
+    }
+    if(!match || (!match[1]&&!match[2]) || start>end || start>=stat.size){
+      res.writeHead(416,{...headers,'Content-Range':`bytes */${stat.size}`});return res.end();
+    }
+    res.writeHead(206,{...headers,'Content-Range':`bytes ${start}-${end}/${stat.size}`,'Content-Length':end-start+1});
+    if(req.method==='HEAD')return res.end();
+    const segment=createReadStream(file,{start,end});segment.on('error',()=>res.destroy());segment.pipe(res);return;
+  }
+  const compress = /(?:^|,)\s*gzip\b/.test(req.headers['accept-encoding'] || '') && /\.(html|css|js|mjs|json|svg|xml|txt)$/.test(file);
+  if (compress) headers['Content-Encoding'] = 'gzip';
+  else headers['Content-Length'] = stat.size;
+  res.writeHead(200, headers);
+  if(req.method === 'HEAD') return res.end();
+  const stream = createReadStream(file);
+  stream.on('error', () => res.destroy());
+  if(compress) stream.pipe(createGzip()).pipe(res); else stream.pipe(res);
 });
 
 server.on("error", (e) => {

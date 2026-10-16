@@ -11,6 +11,7 @@ import { gzipSync } from "node:zlib";
 import { execFileSync } from "node:child_process";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import {initialJS} from '../scripts/asset-groups.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const read = (p) => readFileSync(join(ROOT, p), "utf8");
@@ -18,6 +19,7 @@ const read = (p) => readFileSync(join(ROOT, p), "utf8");
 const CSS = read("assets/css/style.css");
 const MAIN = read("assets/js/main.js");
 const SCENE = read("assets/js/scene.js");
+const ALL_JS = readdirSync(join(ROOT,"assets/js")).filter(name=>name.endsWith('.js')).map(name=>read('assets/js/'+name)).join('\n');
 const HTML_ZH = read("index.html");
 const HTML_EN = read("en/index.html");
 const README_MD = read("README.md");
@@ -32,7 +34,7 @@ const PAGES = { "index.html": HTML_ZH, "en/index.html": HTML_EN };
 const CSS_CODE = CSS.replace(/\/\*[\s\S]*?\*\//g, "");
 const cssDecls = [...CSS_CODE.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]);
 const cssUses = [...CSS_CODE.matchAll(/var\(\s*(--[a-z0-9-]+)/g)].map((m) => m[1]);
-const jsWrites = [...(MAIN + SCENE).matchAll(/setProperty\(\s*['"](--[a-z0-9-]+)['"]/g)].map((m) => m[1]);
+const jsWrites = [...ALL_JS.matchAll(/setProperty\(\s*['"](--[a-z0-9-]+)['"]/g)].map((m) => m[1]);
 const htmlSets = [...(HTML_ZH + HTML_EN).matchAll(/style="[^"]*?(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]);
 
 test("CSS 里每个 var(--x) 都要有出处：要么 CSS/HTML 声明过，要么 JS 会写进去", () => {
@@ -96,9 +98,9 @@ test("设计令牌纪律：颜色字面量只能出现在令牌声明里", () =>
   );
 });
 
-test("圆角只有 2px 这一档（外加 50% 的圆与 0）", () => {
+test("圆角只使用已记录的基础、作品展板和胶囊尺度", () => {
   const vals = [...CSS_CODE.matchAll(/border-radius\s*:\s*([^;}]+)/g)].flatMap((m) => m[1].split(/\s+/));
-  const allowed = new Set(["2px", "50%", "0", "0px", "0%"]);
+  const allowed = new Set(["2px", "8px", "16px", "40px", "50px", "50%", "0", "0px", "0%"]);
   const bad = [...new Set(vals)].filter((v) => v && !allowed.has(v));
   assert.deepEqual(bad, [], `出现了契约外的圆角：${bad.join(", ")}`);
 });
@@ -471,14 +473,14 @@ const CLASS_ATTR = /\bclass\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>"'=]+))/g;
 const usedIn = (html) => [...stripComments(html).matchAll(CLASS_ATTR)]
   .flatMap(m => (m[1] || m[2] || m[3] || "").trim().split(/\s+/)).filter(Boolean);
 
-const CSS_DEFINED = new Set([...CSS_CODE.matchAll(/\.-?[_a-zA-Z][\w-]*/g)].map(m => m[0].slice(1)));
+const CSS_DEFINED = new Set([...CSS_CODE.replace(/url\([^)]*\)/g, "").matchAll(/\.-?[_a-zA-Z][\w-]*/g)].map(m => m[0].slice(1)));
 const INLINE_DEFINED = {};                       // 按页作用域，不合并成全局
 for (const [name, html] of Object.entries(ALL_PAGES)) {
   const inline = stripComments((html.match(/<style>([\s\S]*?)<\/style>/) || [])[1] || "");
   INLINE_DEFINED[name] = new Set([...inline.matchAll(/\.-?[_a-zA-Z][\w-]*/g)].map(m => m[0].slice(1)));
 }
 // JS 加上去的类名：必须先剥注释，否则 /* classList.add("zombie2") */ 这种注释里的话能救活死规则
-const JS_CODE = stripComments(MAIN + "\n" + SCENE);
+const JS_CODE = stripComments(ALL_JS);
 const JS_ADDED = new Set();
 for (const m of JS_CODE.matchAll(/classList\.(?:add|remove|toggle|contains|replace)\(([^)]*)\)/g))
   for (const lit of m[1].matchAll(/['"`]([^'"`]+)['"`]/g)) for (const c of lit[1].split(/\s+/)) JS_ADDED.add(c);
@@ -738,7 +740,7 @@ test("README 两张现状表里抄下来的数字必须与实测一致", () => {
     /* 下面这几行原先没人盯：评审代理一次就数出两条过期值
        （分享素材写 78.7 KB / 80,541 B，实测 77.8 KB / 79,646 B；首屏 JS 写 189.3 KB，实测 192.5 KB）。
        它们和 CSS 那几行是同一张表、同一种"抄一份测量值"的形状，没有理由只钉一半。 */
-    ["首屏 JS gzip KB", KB(sumGz(/^assets\/(js|vendor)\/.*\.js$/)), "首屏 JS（含 Three.js）|Hero JS", true, /gzip \*\*([\d.]+) KB\*\*/],
+    ["首屏 JS gzip KB", KB(initialJS.reduce((sum,path)=>sum+gz(path),0)), "首屏 JS（含 Three.js）|Hero JS", true, /gzip \*\*([\d.]+) KB\*\*/],
     ["分享素材字节", sum(/^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/), "不进首屏的分享素材|Social/share assets", false, /`([\d,]+)` B|`([\d,]+)` bytes/],
     ["分享素材 KB", KB(sum(/^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/)), "不进首屏的分享素材|Social/share assets", true, /\*\*([\d.]+) KB\*\*\s*[（(]/],
     ["首屏图片字节", sum(/^assets\/images\/(avatar|shot)[^/]*\.(jpg|jpeg|png|webp)$/), "图片（头像|Images \\(avatar", false, /`([\d,]+)` B|`([\d,]+)` bytes/],
@@ -928,13 +930,14 @@ test("HTML 里每个 <img> 声明的 width/height 与文件真实尺寸一致", 
       const tag = m[0];
       // 必须容得下 ?v=：实际 src 是 "…webp?v=4019bf"，把结尾锚在文件名后的引号上会一张都匹配不上，
       // 测试就静默空跑（上一版正是这样，0/6 张被查过）。
-      const src = (tag.match(/src="[^"]*\/([^"?#]+\.(?:jpe?g|png|webp|svg|ico))(?:\?[^"]*)?"/i) || [])[1];
+      const src = (tag.match(/src="([^"?#]+\.(?:jpe?g|png|webp|svg|ico))(?:\?[^"]*)?"/i) || [])[1];
       const w = +(tag.match(/width="(\d+)"/) || [])[1];
       const h = +(tag.match(/height="(\d+)"/) || [])[1];
       if (!src) continue;
       seen.push(src);
       if (!w || !h) { bad.push(`${page}: ${src} 缺 width/height`); continue; }
-      const [aw, ah] = intrinsic(join("assets/images", src));
+      const local = src.replace(/^\.\.\//, '').replace(/^\.\//, '').replace(/^\//, '');
+      const [aw, ah] = intrinsic(local);
       if (aw !== w || ah !== h) bad.push(`${page}: ${src} 声明 ${w}×${h}，实际 ${aw}×${ah}`);
     }
   }
@@ -952,5 +955,12 @@ test("头像的 alt 不许声称它是本人照片（那是站长选的一张标
       `${page}: 头像 alt 把它说成本人照片了，图上是标语与无脸剪影："${alt}"`);
     assert.ok(/剪影|silhouette/.test(alt) && /标语|深红|crimson/.test(alt),
       `${page}: 头像 alt 应当描述「标语 + 剪影」这件实物，现在是："${alt}"`);
+  }
+});
+
+
+test("新版展览配色的正文组合均达到 AA", () => {
+  for (const [fg,bg] of [['--sand','--olive'],['--sand','--forest'],['--sand','--night'],['--night','--sand'],['--night','--orange'],['--soft','--night']]) {
+    assert.ok(ratio(TOKENS[fg],TOKENS[bg]) >= 4.5, `${fg} on ${bg} below AA`);
   }
 });

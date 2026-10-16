@@ -10,6 +10,8 @@ ROOT="$PWD"
 # shellcheck disable=SC1091
 set -a; . ./.deploy.env; set +a
 : "${DEPLOY_HOST:?}"; : "${DEPLOY_USER:?}"; : "${DEPLOY_ROOT:?}"; : "${SITE_URL:?}"
+case "$DEPLOY_ROOT" in /var/www/?*|/srv/www/?*) ;; *) echo "✗ 发布目录不在已配置的网站目录范围"; exit 1;; esac
+case "$DEPLOY_ROOT" in *..*|*\'*|*\ *|*\;*) echo "✗ 发布目录包含不安全字符"; exit 1;; esac
 DEPLOY_SITE="${DEPLOY_SITE:-xxc2007.me}"
 # 必须和 verify-sync.sh / switch-routes.sh 同一套展开：`.deploy.env.example` 教人写
 # DEPLOY_KEY=~/.ssh/<key>.pem，而 shell 在赋值时不会展开波浪号——少了这一步，
@@ -30,7 +32,7 @@ D="$(git log -1 --format=%cd --date=short -- index.html en/index.html)"
 node - "$V" "$D" <<'NODE'
 const fs = require("fs");
 const [v, d] = process.argv.slice(2);
-for (const p of ["index.html", "en/index.html", "404.html"]) {
+for (const p of ["index.html", "en/index.html", "404.html", "assets/video/index.html"]) {
   if (!fs.existsSync(p)) continue;
   const t = fs.readFileSync(p, "utf8");
   const n = t.replace(/\?v=[0-9a-z]{4,8}/g, "?v=" + v);
@@ -42,6 +44,7 @@ if (fs.existsSync("sitemap.xml")) {
   if (n !== t) { fs.writeFileSync("sitemap.xml", n); console.log(`  sitemap.xml → lastmod=${d}`); }
 }
 NODE
+node scripts/update-readme-metrics.mjs
 
 echo "== 1/5 质量闸门 =="
 node scripts/check-parity.mjs
@@ -94,20 +97,35 @@ if [ "$PUSHED" != 1 ]; then
 fi
 
 echo "== 3/5 部署到服务器（git archive HEAD = 仓库 blob 字节） =="
-ssh_run "rm -rf ~/deploy-intro && mkdir -p ~/deploy-intro"
+STAGE="deploy-intro-$(git rev-parse --short=12 HEAD)"
+ssh_run "test ! -e ~/$STAGE && mkdir ~/$STAGE"
 git archive --format=tar HEAD index.html en 404.html robots.txt sitemap.xml assets \
-  | ssh_run "tar -xf - -C ~/deploy-intro"
+  | ssh_run "tar -xf - -C ~/$STAGE"
 ssh_run "
   set -e
-  sudo mkdir -p $DEPLOY_ROOT
+  test -d '$DEPLOY_ROOT' && test ! -L '$DEPLOY_ROOT'
+  backup='${DEPLOY_ROOT%/}.backups/$(date +%Y%m%d-%H%M%S)-$(git rev-parse --short=8 HEAD)'
+  sudo mkdir -p \"\$backup\"
   for item in index.html en 404.html robots.txt sitemap.xml assets; do
-    sudo rm -rf '$DEPLOY_ROOT/'\"\$item\"
-    sudo cp -r ~/deploy-intro/\"\$item\" '$DEPLOY_ROOT/'\"\$item\"
+    test -e '$DEPLOY_ROOT/'\"\$item\" && sudo cp -a '$DEPLOY_ROOT/'\"\$item\" \"\$backup/\" || true
   done
-  sudo chown -R www-data:www-data $DEPLOY_ROOT
-  rm -rf ~/deploy-intro
+  # Preserve the existing shared promotional-player URLs used by the other projects.
+  if test -d '$DEPLOY_ROOT/assets/promo' && ! test -e ~/$STAGE/assets/promo; then
+    sudo cp -a '$DEPLOY_ROOT/assets/promo' ~/$STAGE/assets/promo
+  fi
+  sudo chown -R www-data:www-data ~/$STAGE
+  # Publish complete asset directories first; the entry document changes last.
+  for item in assets en; do
+    sudo mv '$DEPLOY_ROOT/'\"\$item\" '$DEPLOY_ROOT/.'\"\$item\"'-previous' 
+    sudo mv ~/$STAGE/\"\$item\" '$DEPLOY_ROOT/'\"\$item\"
+    sudo mv '$DEPLOY_ROOT/.'\"\$item\"'-previous' \"\$backup/\$item-before-swap\"
+  done
+  for item in 404.html robots.txt sitemap.xml index.html; do
+    sudo mv ~/$STAGE/\"\$item\" '$DEPLOY_ROOT/'\"\$item\"
+  done
+  rmdir ~/$STAGE
 "
-echo "  ✓ 服务器文件已替换"
+echo "  ✓ 服务器文件已替换，已保留回滚副本及既有宣传片入口"
 
 echo "== 4/5 四方逐字节核验 =="
 bash scripts/verify-sync.sh

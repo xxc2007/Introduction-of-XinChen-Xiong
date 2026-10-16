@@ -6,7 +6,7 @@
 <title>熊鑫晨 · Introduction of XinChen Xiong</title>
 <meta name="description" content="熊鑫晨：一个人加上 AI，做出两个已经上线的网站——纪念南昌市第十五中学的青山湖畔纪念册，和地理热点 GEOHOT。设计、前端、GIS 制图、部署运维。">
 <meta name="author" content="熊鑫晨">
-<meta name="theme-color" content="#F0EEE6">
+<meta name="theme-color" content="#48583D">
 <link rel="canonical" href="https://xxc2007.me/">
 <link rel="alternate" hreflang="zh-Hans" href="https://xxc2007.me/">
 <link rel="alternate" hreflang="en" href="https://xxc2007.me/en/">
@@ -21,11 +21,10 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:locale:alternate" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="icon" href="./assets/images/favicon.ico?v=b69c27" type="image/x-icon">
-<link rel="icon" href="./assets/images/favicon-32.png?v=b69c27" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="./assets/images/apple-touch-icon.png?v=b69c27">
-<link rel="stylesheet" href="./assets/fonts/noto-serif-sc/wght.css?v=b69c27">
-<link rel="stylesheet" href="./assets/css/style.css?v=b69c27">
+<link rel="icon" href="./assets/images/favicon.ico?v=earth033" type="image/x-icon">
+<link rel="icon" href="./assets/images/favicon-32.png?v=earth033" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="./assets/images/apple-touch-icon.png?v=earth033">
+<link rel="stylesheet" href="./assets/css/style.css?v=earth033">
 <noscript>
 <style>
 /* 关掉脚本时：脚本本来要揭示的内容全部直接显示，两个语言链接摊平仍可点击。
@@ -33,7 +32,7 @@
 .reveal{opacity:1!important;translate:none!important}
 .lang-menu[hidden]{display:flex!important;position:static;padding:0;border:none;background:none}
 .lang-menu{flex-direction:row;gap:6px}
-.scroll-cue,.progress{display:none!important}
+.scroll-next,.progress{display:none!important}
 </style>
 </noscript>
 <script type="application/ld+json">
@@ -58,13 +57,14 @@
 }
 </script>
 </head>
-<body>
+<body class="portfolio">
 
 <a class="skip" href="#main">跳到主要内容</a>
 
 <header class="topbar">
-  <div class="brand"><b>熊鑫晨</b><span>个人介绍</span></div>
+  <a class="brand" href="#top"><b>熊鑫晨</b><span>个人介绍</span></a>
 
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav">菜单 <span aria-hidden="true">＋</span></button>
   <nav id="nav" aria-label="页面目录">
     <a href="#about">关于我</a>
     <a href="#works">两个网站</a>
@@ -97,17 +97,26 @@
 
   <!-- ============ 首屏 ============ -->
   <section class="hero" id="top">
-    <canvas id="field" aria-hidden="true"></canvas>
-    <div class="avatar"><img src="./assets/images/avatar.jpg?v=b69c27" alt="站长选定的头像图：深红底上两行白字「你能始终站在人民这边，你就是他最坚定的战士」，其下一行俄文「Служи народу」，底部是一个戴帽人物的黑色剪影" width="300" height="300"></div>
-    <h1>熊鑫晨</h1>
-    <p class="motto">我还没写出改变世界的代码。</p>
+<div class="hero-stage">
+<h1>熊鑫晨</h1>
+    <div class="hero-visual"><div class="orbit-fallback" aria-hidden="true"><img src="./assets/images/orbit-poster.webp?v=earth033" width="800" height="800" alt="" fetchpriority="high" decoding="async"></div>
+    <canvas id="field" aria-hidden="true"></canvas></div>
+
+
+    <div class="hero-copy"><p class="motto">我还没写出改变世界的代码。</p>
     <p class="hero-sub">但用 AI 做出了自己的第一个网站——把母校装进一个可以随时回去的网页。</p>
-    <a class="hero-cta" data-magnetic href="#about">关于我</a>
-    <p class="scroll-cue" aria-hidden="true">往下滑</p>
+    <a class="hero-cta" data-magnetic href="#works">探索我的作品 <span aria-hidden="true">↗</span></a>
+    <a class="film-entry" href="./assets/video/intro-promo.mp4?v=earth033"><img src="./assets/video/poster.webp?v=earth033" width="480" height="270" alt="" decoding="async"><span>▶ 观看介绍片<small>44 秒 · 新版介绍</small></span></a></div>
+<div class="hero-caption"><span>一个人，与 AI 一起。</span><span>设计 / 建造 / 探索</span></div>
+
+<a class="scroll-next" href="#about">向下，认识我 <span aria-hidden="true">↓</span></a>
+<button class="motion-toggle" type="button" aria-pressed="false">暂停动效</button>
+</div>
   </section>
 
   <!-- ============ 壹 · ABOUT ============ -->
   <section id="about">
+    <div class="avatar"><img src="./assets/images/avatar.jpg?v=earth033" alt="站长选定的头像图：深红底上两行白字「你能始终站在人民这边，你就是他最坚定的战士」，其下一行俄文「Служи народу」，底部是一个戴帽人物的黑色剪影" width="300" height="300"></div>
     <div class="sec-head reveal"><span class="sec-index">壹 · ABOUT</span><h2>关于我</h2></div>
     <hr class="sec-rule reveal">
     <p class="reveal">我叫熊鑫晨。你现在看到的这个页面，是我为自己做的介绍页。我放上线的还有两个站点——纪念母校的那本私人纪念册，和地理热点 GEOHOT。</p>
@@ -132,10 +141,12 @@
       <path d="M-20 250c100-80 260 20 380-50s260-150 400-100 280 160 420 120"/>
     </svg>
 
-    <article class="work-card reveal">
+<div class="project-switch" aria-label="选择作品"><button type="button" data-project="0" aria-pressed="true">青山湖畔的纪念册</button><button type="button" data-project="1" aria-pressed="false">GEOHOT 地理热点</button></div>
+    <div class="project-stage">
+    <article class="work-card reveal" id="project-memorial">
       <h3>青山湖畔的纪念册 · 纪念南昌市第十五中学</h3>
       <p class="lede">把母校做成一个可以随时访问的地址。</p>
-      <img class="shot" src="./assets/images/shot-nc15.webp?v=b69c27" alt="纪念册网站的首屏：米白纸面、校徽、眉标 NANCHANG NO. 15 MIDDLE SCHOOL · EST. 1958，以及衬线大标题「青山湖畔，红砖楼与香樟记得。」" width="1200" height="750" loading="lazy">
+      <img class="shot" src="./assets/images/shot-nc15.webp?v=earth033" alt="纪念册网站的首屏：米白纸面、校徽、眉标 NANCHANG NO. 15 MIDDLE SCHOOL · EST. 1958，以及衬线大标题「青山湖畔，红砖楼与香樟记得。」" width="1200" height="750" loading="lazy">
       <ul class="facts" role="list">
         <li>纯 HTML / CSS / 原生 JS，结构、样式、行为三分离，没有构建步骤。</li>
         <li>25 张我自己拍的校园实景，八个机位的时光漫游。</li>
@@ -145,10 +156,10 @@
       <a class="btn-repo" data-magnetic href="https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School" target="_blank" rel="noopener noreferrer">开源仓库</a>
     </article>
 
-    <article class="work-card reveal">
+    <article class="work-card reveal" id="project-geohot">
       <h3>GEOHOT · 地理热点</h3>
       <p class="lede">每天上午八点排期出刊；那一天没有值得写的，它就照实空着，不凑数。</p>
-      <img class="shot" src="./assets/images/shot-geohot.webp?v=b69c27" alt="GEOHOT 首页：带入选分的地理条目列表与每日日报" width="1000" height="626" loading="lazy">
+      <img class="shot" src="./assets/images/shot-geohot.webp?v=earth033" alt="GEOHOT 首页：带入选分的地理条目列表与每日日报" width="1000" height="626" loading="lazy">
       <ul class="facts" role="list">
         <li>建在开源框架 AIHOT 之上，地理这一层全部收在 <code>industry/</code> 一个目录里。</li>
         <li>信源先采集、再预筛，然后两次独立打分；入选标准是空间显著性优先，门槛按信源分级。</li>
@@ -157,18 +168,29 @@
       <a class="btn-live" data-magnetic href="https://xxc2007.me/geohot/" target="_blank" rel="noopener noreferrer">线上访问</a>
       <a class="btn-repo" data-magnetic href="https://github.com/xxc2007/GeoHot" target="_blank" rel="noopener noreferrer">开源仓库</a>
     </article>
+    </div>
+    <table class="project-compare">
+      <caption>两个网站，各有去处。</caption>
+      <thead><tr><th scope="col">青山湖畔的纪念册</th><th scope="col">GEOHOT 地理热点</th></tr></thead>
+      <tbody>
+        <tr><td><span>记录什么</span>母校与校园记忆</td><td><span>记录什么</span>地理热点与每日日报</td></tr>
+        <tr><td><span>打开后看到</span>25 张校园实景、八个机位的时光漫游</td><td><span>打开后看到</span>带入选分的地理条目与日报</td></tr>
+        <tr><td><span>怎样做成</span>HTML、CSS、原生 JavaScript</td><td><span>怎样做成</span>基于 AIHOT 的地理热点站</td></tr>
+        <tr><td><a href="https://xxc2007.me/nc15/" target="_blank" rel="noopener noreferrer">走进纪念册 ↗</a></td><td><a href="https://xxc2007.me/geohot/" target="_blank" rel="noopener noreferrer">阅读地理热点 ↗</a></td></tr>
+      </tbody>
+    </table>
   </section>
 
   <!-- ============ 叁 · HOW ============ -->
   <section id="how">
     <div class="sec-head reveal"><span class="sec-index">叁 · HOW</span><h2>我怎么做事</h2></div>
     <hr class="sec-rule reveal">
-    <ol class="steps reveal" role="list">
+<div class="process-runway"><div class="process-stage">    <ol class="steps" role="list">
       <li><b>先想清楚它是干什么的。</b><p>动笔之前，我先写下这一页要让人做成哪件事。</p></li>
       <li><b>设计与建造。</b><p>版式、字体、前端——结构、样式、行为各归一个文件。</p></li>
       <li><b>地图这一层自己做。</b><p>底图用高德的瓦片，中文标注来自瓦片；八个机位和这张定位图是我排的。</p></li>
       <li><b>上线并且养着它。</b><p>我把它部署出去，也负责它一直能用；哪里不对就改哪里。</p></li>
-    </ol>
+    </ol><div class="process-visual" aria-hidden="true"><div class="process-fallback"></div><canvas id="process-field"></canvas></div><div class="process-controls" aria-label="制作步骤"><button type="button" data-step="0" aria-pressed="true">01 构思</button><button type="button" data-step="1" aria-pressed="false">02 建造</button><button type="button" data-step="2" aria-pressed="false">03 地图</button><button type="button" data-step="3" aria-pressed="false">04 上线</button></div></div></div>
     <p class="closing reveal">设计、前端、GIS 制图、部署运维，全部 AI 协作完成。我负责想清楚要纪念什么。</p>
   </section>
 
@@ -207,15 +229,27 @@
       <li><a href="https://x.com/xxc2007" target="_blank" rel="noopener noreferrer" aria-label="X 主页"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X</span></a></li>
       <li><a href="https://www.youtube.com/@xxc2007" target="_blank" rel="noopener noreferrer" aria-label="YouTube 频道"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg><span>YouTube</span></a></li>
     </ul>
+  <div class="share-row">
+    <strong>把这个页面分享给朋友</strong>
+    <a href="https://xxc2007.me/">xxc2007.me</a>
+    <button class="copy-url" type="button" hidden>复制网址</button>
+  </div>
   </section>
 
 </main>
 
 <footer class="foot">
+  <div class="foot-wordmark" aria-hidden="true">XXC2007</div>
   <p class="foot-sign">编辑标准与代码 · 熊鑫晨</p>
   <p class="foot-meta">2026 · MIT 协议 · <a href="#top">返回顶部 ↑</a></p>
 </footer>
 
-<script type="module" src="./assets/js/main.js?v=b69c27"></script>
+<dialog class="film-dialog" aria-labelledby="film-title">
+  <div class="film-bar"><strong id="film-title">个人站介绍片 · 此前版本</strong><button type="button" class="film-close" autofocus>关闭</button></div>
+  <video controls playsinline preload="none" width="1920" height="1080" aria-label="个人站介绍片，中文"></video>
+  <p class="film-note">影片展示当前新版网页，含中文画面文字。</p>
+  <a href="./assets/video/intro-promo.mp4?v=earth033" download>下载影片</a>
+</dialog>
+<script type="module" src="./assets/js/main.js?v=earth033"></script>
 </body>
 </html>

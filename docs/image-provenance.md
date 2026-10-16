@@ -237,3 +237,30 @@ node scripts/check-bytes.mjs                   # 预算口径，今天 BUDGET OK
 - WebP：`RIFF` 头 12 字节 + `WEBP` 4 字节 + `VP8 ` FourCC 4 字节 + 块长 4 字节 ⇒ 载荷从偏移 20 起；
   帧标签 3 字节、同步码 `9D 01 2A` 3 字节，宽和高各是偏移 26 与 28 上的 16 位小端再 `& 0x3FFF`。
 - 解码像素做比对时，PNG 用 `zlib.inflateSync` 解开 IDAT 再按 filter 0–4 还原；JPEG 与 WebP 交给 ffmpeg 出 PPM。
+
+## 2026-10-14 真实地球球面
+
+用户要求将抽象球体换为反映真实地理情况的地球。球面使用 NASA Blue Marble Next Generation 2004 年 8 月全球无云合成底图（5400×2700，等距圆柱投影），按原始经纬度 UV 映射，不镜像、不绘制虚构大陆。保留球形近似，未夸大地形，也未模拟实时云层、日照、季节变化或真实轨道。原有三角网格与随机地表点删除，球体使用独立中性白光，外围轨道仍为艺术装饰。
+
+本地文件：`assets/images/earth-blue-marble-200408.jpg`，原始 JPEG 未重编码，1,616,254 字节。独立贴图预算 2,000,000 字节，按路径直接检查，包含尚未加入 Git 索引的新资源。
+
+来源：[NASA Blue Marble Base Map](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-map/)，[2004 年 8 月原始 JPEG](https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/august/world.200408.3x5400x2700.jpg)。影像署名 NASA Earth Observatory / Blue Marble Next Generation。使用说明：[NASA Earth Science FAQ](https://science.nasa.gov/earth/faq/)。SHA-256：`2048023ccc62250c677c0f4b03d4362f997b130eb0154a6cad00aa1b27c390b9`。贴图本地托管；失败时保留本地地球静态预览，不影响正文。
+
+
+## 2026-10-14 布局与加载修订（stage015）
+
+地球使用独立网格区域，说明在左，模型在右，姓名排在下一行；窄屏按说明、模型、姓名排列。删除按文字剩余高度反复缩放画布的脚本。原始 NASA JPEG 留存；运行时按屏宽选择同源 2048×1024 WebP（131,790 B）或 1024×512 WebP（39,394 B）。本地渲染的 800×800 轨道预览为 orbit-poster.webp（41,454 B），正文与预览先显示，地球贴图解码且首帧渲染成功才显示 canvas。贴图错误、无 WebGL 和无脚本保留静态画面。非实时地球影像和艺术轨道的性质不变。
+
+取消首页未使用的 Noto 字体样式请求；无脚本布局限定在 scripting:none，避免脚本启动时整页跳动。72 个刻度改为单个 InstancedMesh；模型离开视口停止循环。预览服务器启用文本 gzip 和 ETag 条件请求。生产服务器配置未修改。
+
+对标 ORYZO 的大字导航、分段配色、立体主视觉、大幅作品展示与选择器：新增全屏菜单及双项目切换，沿用真实个人内容。没有加入虚构产品、虚构评价或未经核验的个人经历。作品切换无脚本时退化为两项顺序展示。
+
+## 2026-10-15 既有个人站介绍片
+
+`assets/video/intro-promo.mp4` 复用既有 `D:/ChatGPT Worktrees/9191/promo-shotcraft-20261008/intro-promo.mp4`，未重编码，6,999,802 B，35.4 秒，1920×1080。SHA-256：`09b3866e70f4b2a61e4df004c5cd6bf4e4d5900f8ef7e3c29bb2b5056933259b`。界面标注此前版本；画面包含旧站内容与中文屏幕文字，不宣称是当前新版演示。
+
+`assets/video/poster.webp` 从该既有工作树个人站 `assets/promo/poster.jpg` 转码，480×270、5,376 B。视频和缩略图均来自既有个人站素材，没有使用参考站影片。
+
+## 2026-10-16 纯地球备用图
+
+按用户要求删除首屏外围轨道、刻度与卫星。orbit-poster.webp 保留兼容文件名，但已从当前纯地球 Three.js 场景重新渲染为 800×800 透明 WebP；使用同一 NASA 贴图，未生成虚构陆地。静态备用图和实际模型均仅用于首屏。此前关于轨道预览的记录为历史状态。

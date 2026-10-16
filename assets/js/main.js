@@ -41,25 +41,110 @@ if (progress) updaters.push(() => {
   if (!els.length) return;
   if (RM || !('IntersectionObserver' in window)) { els.forEach((el) => el.classList.add('is-in')); return; }
   const io = new IntersectionObserver((list) => {
-    list.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+    list.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); e.target.classList.remove('is-pending'); io.unobserve(e.target); } });
   }, { threshold: .12, rootMargin: '0px 0px -4% 0px' });
   els.forEach((el) => {
     const kids = el.parentElement
       ? Array.prototype.filter.call(el.parentElement.children, (c) => c.classList.contains('reveal'))
       : [el];
     el.style.setProperty('--d', (Math.min(kids.indexOf(el), 8) * 60) + 'ms');
+    if (el.getBoundingClientRect().top >= innerHeight) el.classList.add('is-pending');
     io.observe(el);
   });
+})();
+
+/* A reversible footer reveal follows the visitor's scroll, not a timer. */
+(function footerLetters(){
+  const word=$('.foot-wordmark'),reduced=mq('(prefers-reduced-motion: reduce)');
+  if(!word || reduced.matches)return;
+  const text=word.textContent;word.textContent='';
+  const letters=Array.from(text).map(char=>{const span=document.createElement('span');span.className='foot-glyph';span.textContent=char;word.appendChild(span);return span;});
+  let previous=-1;
+  updaters.push(()=>{
+    const box=word.getBoundingClientRect();
+    const progress=motionPaused||reduced.matches?1:clamp((innerHeight-box.top)/Math.max(1,Math.min(innerHeight*.65,box.height)),0,1);
+    if(progress===previous)return;previous=progress;
+    letters.forEach((letter,i)=>{const p=clamp(progress*1.4-i*.06,0,1);letter.style.transform=`translateY(${(1-p)*125}%)`;});
+  });
+  reduced.addEventListener('change',schedule);schedule();
 })();
 
 /* 场强基准：必须先声明再用——bootField 里那句 initField({energy: FIELD_BASE})
    靠 await import() 的延迟侥幸躲过了暂时性死区，但读代码的人不该靠运气。 */
 const FIELD_BASE = .34;
 
+/* The reference opens with construction circles before revealing the object.
+   This overlay never owns layout or blocks access to the underlying page. */
+(function openingDrawing(){
+  const hero=$('.hero'),target=$('.hero-visual'),reduced=mq('(prefers-reduced-motion: reduce)');
+  if(!hero || !target || reduced.matches || location.hash || scrollY>0) return;
+  const panel=document.createElement('div');panel.className='opening-drawing';
+  const canvas=document.createElement('canvas');canvas.setAttribute('aria-hidden','true');
+  const skip=document.createElement('button');skip.type='button';skip.textContent=LANG==='en'?'Skip intro':'跳过开场';
+  panel.append(canvas,skip);document.body.appendChild(panel);
+  const ctx=canvas.getContext('2d');if(!ctx){panel.remove();return;}
+  const style=getComputedStyle(document.body),sand=style.getPropertyValue('--sand').trim(),orange=style.getPropertyValue('--orange').trim();
+  let raf=0,done=false,exitAt=null,w=innerWidth,h=innerHeight;
+  const start=performance.now();
+  const abort=new AbortController(),options={signal:abort.signal,passive:true};
+  function resize(){w=innerWidth;h=innerHeight;const d=Math.min(devicePixelRatio||1,2);canvas.width=w*d;canvas.height=h*d;ctx.setTransform(d,0,0,d,0,0);}
+  function finish(){if(done)return;done=true;cancelAnimationFrame(raf);clearTimeout(deadline);abort.abort();panel.remove();}
+  const deadline=setTimeout(finish,3200);
+  function frame(now){
+    if(done)return;
+    const age=now-start,ready=['ready','off','lost'].includes(hero.dataset.field)||hero.dataset.earth==='error';
+    if(exitAt===null && age>=850 && (ready||age>=2300))exitAt=now;
+    const p=exitAt===null?0:clamp((now-exitAt)/650,0,1),ease=p*p*(3-2*p);
+    if(p===1){
+      finish();
+      const arrivals=$$('.hero .motto,.hero .hero-sub,.hero .hero-cta').map((el,i)=>el.animate?.([{opacity:0,translate:'0 18px'},{opacity:1,translate:'0 0'}],{duration:500,delay:i*65,fill:'backwards',easing:'cubic-bezier(.22,1,.36,1)'})).filter(Boolean);
+      const stop=()=>arrivals.forEach(a=>a.cancel());
+      reduced.addEventListener('change',stop,{once:true});
+      Promise.allSettled(arrivals.map(a=>a.finished)).then(()=>reduced.removeEventListener('change',stop));
+      return;
+    }
+    const rect=target.getBoundingClientRect(),radius=Math.min(w*.28,h*.225,215);
+    const x=w/2+(rect.left+rect.width/2-w/2)*ease,y=h/2+(rect.top+rect.height/2-h/2)*ease;
+    const r=radius+(Math.min(rect.width,rect.height)*.3-radius)*ease;
+    panel.style.backgroundColor=`color-mix(in srgb, var(--olive) ${(1-ease)*100}%, transparent)`;
+    ctx.clearRect(0,0,w,h);ctx.globalAlpha=1-ease;
+    ctx.strokeStyle=sand;ctx.lineWidth=1;ctx.setLineDash([3,5]);
+    ctx.globalAlpha=(1-ease)*.12;
+    for(const offset of [-1,-.45,0,.45,1]){
+      ctx.beginPath();ctx.moveTo(x+r*offset,0);ctx.lineTo(x+r*offset,h);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,y+r*offset);ctx.lineTo(w,y+r*offset);ctx.stroke();
+    }
+    ctx.globalAlpha=1-ease;ctx.lineWidth=1.5;
+    const sweep=clamp(age/700,0,1)*Math.PI*2;
+    for(const ratio of [1,.45]){
+      const a=r*ratio;ctx.strokeStyle=sand;ctx.setLineDash([3,4]);
+      ctx.beginPath();ctx.ellipse(x,y,a,a*(1-ease*.2),ease*-.22,-Math.PI/2,sweep-Math.PI/2);ctx.stroke();
+      ctx.strokeStyle=orange;ctx.fillStyle=orange;ctx.setLineDash([]);
+      for(let i=0;i<4;i++){
+        const angle=i*Math.PI/2,cx=x+Math.cos(angle)*a,cy=y+Math.sin(angle)*a;
+        const dx=-Math.sin(angle)*a*.55,dy=Math.cos(angle)*a*.55;
+        ctx.beginPath();ctx.moveTo(cx-dx,cy-dy);ctx.lineTo(cx+dx,cy+dy);ctx.stroke();
+        ctx.fillRect(cx-3,cy-3,6,6);
+        for(const sign of [-1,1]){ctx.beginPath();ctx.arc(cx+sign*dx,cy+sign*dy,3,0,Math.PI*2);ctx.fill();}
+      }
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  skip.addEventListener('click',finish,{signal:abort.signal});
+  window.addEventListener('wheel',finish,options);window.addEventListener('touchstart',finish,options);
+  window.addEventListener('scroll',finish,options);
+  window.addEventListener('keydown',finish,{signal:abort.signal});
+  window.addEventListener('resize',resize,options);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)finish();},options);
+  reduced.addEventListener('change',finish,{signal:abort.signal});
+  resize();raf=requestAnimationFrame(frame);
+})();
+
 /* ---------- 首屏粒子场：失败只降级，不影响本文件其余部分 ---------- */
 /* 资源指纹跟着 HTML 里 main.js 的 ?v= 走：import.meta.url 就是本文件被取回时的地址。 */
 const VER = (import.meta.url.match(/[?&]v=([0-9a-z]{4,8})/) || [])[1] || 'dev';
 let scene = null;
+let motionPaused = RM;
 (async function bootField() {
   const canvas = $('#field');
   if (!canvas) return;
@@ -71,40 +156,15 @@ let scene = null;
     return;
   }
   try {
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const mod = await import('./scene.js?v=' + VER);
     if (typeof mod.initField !== 'function') throw new TypeError('scene.js 未导出 initField');
-    scene = mod.initField(canvas, { reducedMotion: RM, energy: FIELD_BASE });   /* 句柄上有 setEnergy */
+    scene = mod.initField(canvas, { reducedMotion: RM, energy: FIELD_BASE });
+    scene.setPaused(motionPaused);   /* 句柄上有 setEnergy */
   } catch (e) {
     const hero = $('.hero');
     if (hero) hero.dataset.field = 'off';   /* CSS 据 data-field=off 退回静态发丝底纹 */
   }
-})();
-
-
-/* ---------- 场强跟随滚动：滑得越快纸屑越活跃，停下后回落到基准 ---------- */
-(function fieldDrive() {
-  if (RM) return;                    /* 减弱动效：既不绑滚动，也不该被驱动——见 scene.js 的 setEnergy */
-  let cur = FIELD_BASE, target = FIELD_BASE, idle = 0;
-  let lastY = window.scrollY, lastT = performance.now();
-
-  window.addEventListener('scroll', () => {
-    const now = performance.now(), dt = Math.max(8, now - lastT);
-    const speed = Math.abs(window.scrollY - lastY) / dt;   /* px/ms */
-    lastY = window.scrollY; lastT = now;
-    target = Math.min(1, FIELD_BASE + speed * .62);
-    clearTimeout(idle);
-    idle = setTimeout(() => { target = FIELD_BASE; }, 90);
-    schedule();
-  }, { passive: true });
-
-  /* 缓动搭全站那条 rAF 链，不再自己开第二个 requestAnimationFrame 循环。 */
-  updaters.push(() => {
-    const d = target - cur;
-    if (Math.abs(d) < .004) { cur = target; }
-    else cur += d * .12;
-    if (scene && typeof scene.setEnergy === 'function') { try { scene.setEnergy(cur); } catch (e) { } }
-    if (cur !== target) keep();
-  });
 })();
 
 
@@ -331,6 +391,9 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
     if (sec) map.set(sec, a);
   });
   if (!map.size) return;
+  const intro = $('.hero');
+  if (intro) map.set(intro, links[0]);
+  links[0].setAttribute('aria-current', 'true');
   function mark(link) {
     links.forEach((a) => { a === link ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current'); });
   }
@@ -340,17 +403,16 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   map.forEach((a, sec) => io.observe(sec));
 })();
 
-/* ---------- 复制邮箱 ---------- */
-(function copyMail() {
-  const btn = $('.copy-mail');
-  if (!btn) return;
-  const MAIL = 'xxc200707@gmail.com';
+/* ---------- Copy contact details and the canonical public URL ---------- */
+function enableCopy(btn,value) {
+  if(!btn || !value)return;
+  btn.hidden=false;
   const say = document.createElement('span');
   say.className = 'copy-status';
   say.setAttribute('aria-live', 'polite');
   say.textContent = '';
   if (btn.nextSibling) btn.parentNode.insertBefore(say, btn.nextSibling); else btn.parentNode.appendChild(say);
-  let timer = 0;
+  let timer = 0,manual=null;
 
   function legacy(text) {
     const ta = document.createElement('textarea');
@@ -362,20 +424,53 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   }
   function flash(ok) {
     say.textContent = ok ? (LANG === 'en' ? 'Copied / 已复制' : '已复制 / Copied')
-      : (LANG === 'en' ? 'Press Ctrl+C after selecting' : '已选中，按 Ctrl+C 复制');
+      : (LANG === 'en' ? 'Text selected. Copy it with your keyboard or touch menu.' : '已选中下方内容，可用键盘或长按菜单复制。');
     btn.dataset.state = ok ? 'copied' : 'manual';
-    clearTimeout(timer); timer = setTimeout(() => { say.textContent = ''; delete btn.dataset.state; }, 1800);
+    clearTimeout(timer);
+    if(ok)timer=setTimeout(()=>{say.textContent='';delete btn.dataset.state;},2200);
+    else {
+      manual=document.createElement('input');manual.className='copy-fallback';manual.readOnly=true;manual.value=value;
+      manual.setAttribute('aria-label',LANG==='en'?'Text to copy':'要复制的内容');
+      say.after(manual);manual.focus({preventScroll:true});manual.select();
+    }
   }
-  btn.addEventListener('click', () => {
-    let done = false;
+  btn.addEventListener('click', async () => {
+    btn.disabled=true;manual?.remove();manual=null;clearTimeout(timer);
+    let ok=false;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(MAIL).then(() => { done = true; flash(true); }, () => { if (!done) flash(legacy(MAIL)); });
-        return;
+        await navigator.clipboard.writeText(value);ok=true;
       }
-    } catch (e) { }
-    flash(legacy(MAIL));
+    } catch { }
+    if(!ok)ok=legacy(value);
+    btn.disabled=false;flash(ok);
   });
+}
+enableCopy($('.copy-mail'),'xxc200707@gmail.com');
+enableCopy($('.copy-url'),$('link[rel="canonical"]')?.href);
+
+/* Load the existing film only after an explicit play action. */
+(function filmPlayer(){
+  const entry=$('.film-entry'),dialog=$('.film-dialog'),video=$('.film-dialog video');
+  if(!entry || !dialog || !video || !dialog.showModal)return;
+  const note=$('.film-note'),originalNote=note.textContent;let overflow='',released=true;
+  entry.addEventListener('click',e=>{
+    if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+    e.preventDefault();released=false;overflow=document.body.style.overflow;document.body.style.overflow='hidden';
+    note.textContent=originalNote;dialog.showModal();video.src=entry.href;
+    video.play().catch(()=>{});
+  });
+  function release(){
+    if(released)return;released=true;
+    video.pause();video.removeAttribute('src');video.load();document.body.style.overflow=overflow;entry.focus({preventScroll:true});
+  }
+  function close(){video.pause();dialog.close();release();}
+  $('.film-close',dialog).addEventListener('click',close);
+  dialog.addEventListener('click',e=>{if(e.target===dialog)close();});
+  dialog.addEventListener('cancel',e=>{e.preventDefault();close();});
+  dialog.addEventListener('close',release);
+  video.addEventListener('error',()=>{note.textContent=LANG==='en'?'The film could not load. Try the download link below.':'影片加载失败，可尝试下方下载链接。';});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)video.pause();});
 })();
 
 /* ---------- 锚点平滑滚动（含 #top 回顶） ---------- */
@@ -397,3 +492,267 @@ document.addEventListener('click', (ev) => {
 });
 
 schedule();
+
+
+/* Mobile navigation uses real buttons and restores focus when dismissed. */
+(function navigationDrawer() {
+  const toggle = $('.menu-toggle'), nav = $('#nav');
+  if (!toggle || !nav) return;
+  function close(restore = false) {
+    if(!nav.classList.contains('is-open'))return;
+    nav.classList.remove('is-open'); toggle.setAttribute('aria-expanded', 'false');
+    toggle.textContent = LANG === 'en' ? 'Menu' : '菜单';
+    document.body.style.overflow = '';
+    $$('main, .foot').forEach(el => el.inert = false);
+    if (restore) toggle.focus();
+    schedule();
+  }
+  toggle.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true';
+    if (!open) {close(true);return;}
+    toggle.setAttribute('aria-expanded', 'true');nav.classList.add('is-open');
+    toggle.textContent = LANG === 'en' ? 'Close' : '关闭';
+    document.body.style.overflow = 'hidden';
+    $$('main, .foot').forEach(el => el.inert = true);
+    schedule();
+  });
+  nav.addEventListener('click', e => { if (e.target.closest('a')) close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && nav.classList.contains('is-open')) close(true); });
+  document.addEventListener('click', e => { if (!e.target.closest('.topbar')) close(); });
+  window.addEventListener('resize', () => {if(innerWidth > 1000 && nav.classList.contains('is-open')) close();}, {passive:true});
+
+})();
+(function motionControl() {
+  const button = $('.motion-toggle'); if (!button) return;
+  function label() {
+    button.setAttribute('aria-pressed', String(motionPaused));
+    button.textContent = LANG === 'en' ? (motionPaused ? 'Resume motion' : 'Pause motion') : (motionPaused ? '继续动效' : '暂停动效');
+  }
+  label();
+  if (RM) {button.textContent = LANG === 'en' ? 'Reduced motion' : '已减弱动效';button.disabled = true;}
+  button.addEventListener('click', () => {motionPaused=!motionPaused;scene?.setPaused(motionPaused);label();schedule();});
+})();
+
+/* Both projects remain readable without JavaScript. */
+(function projectShowcase() {
+  const buttons = $$('.project-switch button'), cards = $$('#works .work-card');
+  if (!buttons.length || cards.length !== buttons.length) return;
+  const stage=$('.project-stage'), reduced=mq('(prefers-reduced-motion: reduce)');
+  let active=-1, animations=[], measuredWidth=0;
+  const stop=()=>{animations.forEach(animation=>animation.cancel());animations=[];};
+  function reserveHeight() {
+    if(!stage) return;
+    const width=stage.clientWidth;
+    if(!width) return;
+    measuredWidth=width;
+    // Measure both existing articles synchronously without changing their reading order.
+    const heights=cards.map(card=>{
+      const hidden=card.hidden,style=card.style.cssText;
+      card.style.cssText+=`;position:absolute;visibility:hidden;width:${width}px;`;
+      card.hidden=false;
+      const height=card.getBoundingClientRect().height;
+      card.hidden=hidden;card.style.cssText=style;
+      return height;
+    });
+    stage.style.minHeight=`${Math.ceil(Math.max(...heights))}px`;
+  }
+  function select(index,animate=true) {
+    if(index===active) return;
+    const direction=index>active?1:-1;stop();active=index;
+    cards.forEach((card, i) => {card.hidden = i !== index; if(i === index) card.classList.add('is-in');});
+    buttons.forEach((button, i) => button.setAttribute('aria-pressed', String(i === index)));
+    if(animate && !motionPaused && !reduced.matches){
+      const card=cards[index],shot=$('.shot',card);
+      if(shot?.animate) animations.push(shot.animate([
+        {opacity:.2,transform:`perspective(1200px) translateX(${direction*28}px) rotateY(${direction*-7}deg) scale(.96)`},
+        {opacity:1,transform:'perspective(1200px) translateX(0) rotateY(0) scale(1)'}
+      ],{duration:650,easing:'cubic-bezier(.22,1,.36,1)'}));
+      $$('h3,.lede,.facts',card).forEach((el,i)=>{
+        if(el.animate) animations.push(el.animate([{opacity:0,translate:`${direction*20}px 0`},{opacity:1,translate:'0 0'}],{duration:450,delay:i*45,fill:'backwards',easing:'cubic-bezier(.22,1,.36,1)'}));
+      });
+    }
+  }
+  buttons.forEach((button, i) => {
+    button.setAttribute('aria-controls',cards[i].id);
+    button.addEventListener('click', () => select(i));
+    button.addEventListener('keydown',e=>{
+      const next=e.key==='ArrowRight'?(i+1)%buttons.length:e.key==='ArrowLeft'?(i+buttons.length-1)%buttons.length:e.key==='Home'?0:e.key==='End'?buttons.length-1:null;
+      if(next===null)return;e.preventDefault();buttons[next].focus();select(next);
+    });
+  });
+  select(0,false);reserveHeight();
+  if(stage){new ResizeObserver(()=>{if(stage.clientWidth!==measuredWidth)reserveHeight();}).observe(stage);}
+  document.fonts?.ready.then(reserveHeight);
+  cards.forEach(card=>$('.shot',card)?.addEventListener('load',reserveHeight));
+  // Warm the alternate preview only near this section, before a user switches.
+  if(stage){const warm=new IntersectionObserver(([entry])=>{
+    if(!entry.isIntersecting)return;
+    cards.forEach(card=>{const shot=$('.shot',card);if(shot)shot.loading='eager';});warm.disconnect();
+  },{rootMargin:'400px'});warm.observe(stage);}
+  reduced.addEventListener('change',()=>{if(reduced.matches)stop();});
+  const pause=$('.motion-toggle');
+  if(pause)new MutationObserver(()=>{if(motionPaused)stop();}).observe(pause,{attributes:true,attributeFilter:['aria-pressed']});
+})();
+
+/* Restore scroll-linked typography inside the existing, separate hero cells. */
+if (!RM) {
+  const hero = $('.hero'), copy = $('.hero-copy'), title = $('.hero h1');
+  if (hero && copy && title) updaters.push(() => {
+    if (motionPaused) return;
+    const p = clamp(-hero.getBoundingClientRect().top / Math.max(1, hero.offsetHeight * .65), 0, 1);
+    copy.style.transform = `translateY(${-p * 36}px)`;
+    copy.style.opacity = String(1 - p * .35);
+
+  });
+}
+
+/* Keep the transparent navigation readable over the existing section backgrounds. */
+(function navigationTone() {
+  const bar = $('.topbar'), sections = $$('main > section');
+  if (!bar) return;
+  updaters.push(() => {
+    const y = bar.getBoundingClientRect().height / 2;
+    const section = sections.find(el => {const box=el.getBoundingClientRect();return box.top<=y && box.bottom>y;});
+    bar.dataset.tone = section && ['about','how','contact'].includes(section.id) ? 'ink' : 'sand';
+  });
+  schedule();
+})();
+
+/* Letter-roll feedback observed on the reference navigation. */
+(function navigationLetters() {
+  $$('#nav a').forEach(link => {
+    const label = link.textContent.trim();
+    link.setAttribute('aria-label', label);
+    const fragment = document.createDocumentFragment();
+    Array.from(label).forEach((character, index) => {
+      const window = document.createElement('span'), roll = document.createElement('span');
+      window.className = 'nav-glyph'; window.setAttribute('aria-hidden', 'true');
+      roll.className = 'nav-roll'; roll.textContent = character === ' ' ? '\u00a0' : character;
+      roll.dataset.glyph = roll.textContent;
+      roll.style.setProperty('--nav-delay', `${index * 14}ms`);
+      window.appendChild(roll); fragment.appendChild(window);
+    });
+    link.replaceChildren(fragment);
+  });
+})();
+
+/* A local four-chapter stage; no document-wide scroll interception. */
+(function processChapters() {
+  const section=$('#how'), runway=$('.process-runway'), cards=$$('.steps li'), buttons=$$('.process-controls button');
+  if(!section || !runway || cards.length!==4 || RM) return;
+  section.classList.add('process-enabled');
+  let active=-1, visual=null, loading=false, short=innerHeight<=700;
+  const tuning=document.createElement('div');tuning.className='process-tuning';
+  const label=document.createElement('label'), slider=document.createElement('input');
+  slider.type='range';slider.id='process-spread';slider.min='0';slider.max='100';slider.value='100';slider.disabled=true;
+  label.htmlFor=slider.id;
+  label.textContent=LANG==='en'?'Explore the layers':'拆开看看';
+  const value=document.createElement('output');value.htmlFor=slider.id;
+  const updateSpread=()=>{
+    const amount=Number(slider.value),text=LANG==='en'?`Expanded ${amount}%`:`展开 ${amount}%`;
+    value.textContent=text;slider.setAttribute('aria-valuetext',text);visual?.setSpread(amount/100);
+  };
+  updateSpread();slider.addEventListener('input',updateSpread);
+  tuning.append(label,value,slider);
+  const visualHost=$('.process-visual');visualHost.removeAttribute('aria-hidden');
+  $$('.process-fallback, #process-field',visualHost).forEach(el=>el.setAttribute('aria-hidden','true'));
+  visualHost.appendChild(tuning);
+  new MutationObserver(()=>{slider.disabled=section.dataset.processRender!=='ready';}).observe(section,{attributes:true,attributeFilter:['data-process-render']});
+  function select(index) {
+    if(active===index) return;
+    active=index;section.dataset.processStep=String(index);
+    tuning.hidden=index!==1;
+    cards.forEach((card,i)=>{card.classList.toggle('is-current',i===index);card.setAttribute('aria-hidden',String(i!==index));});
+    buttons.forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)));
+  }
+  select(0);
+  function progress() {
+    if(short) return active;
+    const top=runway.getBoundingClientRect().top, stage=$('.process-stage');
+    const bar=parseFloat(getComputedStyle(document.body).getPropertyValue('--bar'))||84;
+    return clamp((bar-top)/Math.max(1,runway.offsetHeight-stage.offsetHeight)*3,0,3);
+  }
+  updaters.push(()=>{
+    short=innerHeight<=700;
+    const p=progress();if(!short) select(Math.min(3,Math.floor(p+.5)));
+    visual?.setProgress(p,motionPaused);
+  });
+  buttons.forEach((button,index)=>button.addEventListener('click',()=>{
+    if(short){select(index);visual?.setProgress(index,motionPaused);return;}
+    const stage=$('.process-stage'), bar=parseFloat(getComputedStyle(document.body).getPropertyValue('--bar'))||84;
+    window.scrollTo({top:scrollY+runway.getBoundingClientRect().top-bar+index/3*(runway.offsetHeight-stage.offsetHeight),behavior:motionPaused?'auto':'smooth'});
+  }));
+  const observer=new IntersectionObserver(async ([entry])=>{
+    if(!entry.isIntersecting || loading) return;loading=true;observer.disconnect();
+    try {
+      const mod=await import('./process-scene.js?v='+VER);
+      visual=mod.initProcess($('#process-field'),$('.work-card .shot').src);
+      visual.setProgress(progress(),motionPaused);
+    } catch {section.dataset.processRender='fallback';}
+  },{rootMargin:'500px'});
+  observer.observe(runway);
+  schedule();
+})();
+
+/* Transfer the existing heading into the header without moving layout boxes.
+   Per-character geometry preserves both Chinese and wrapped English source text. */
+(function brandTransfer() {
+  const title=$('.hero h1'), brand=$('.brand b'), header=$('.topbar');
+  if(!title || !brand || RM || title.textContent.trim()!==brand.textContent.trim()) return;
+  const source=title.firstChild,destination=brand.firstChild;
+  if(source?.nodeType!==Node.TEXT_NODE || destination?.nodeType!==Node.TEXT_NODE) return;
+  const layer=document.createElement('div');layer.className='brand-flight';layer.setAttribute('aria-hidden','true');
+  const letters=Array.from(title.textContent),spans=letters.map(letter=>{
+    const span=document.createElement('span');span.textContent=letter;layer.appendChild(span);return span;
+  });
+  document.body.appendChild(layer);
+  let geometry=null,dirty=true;
+  const measureText=node=>{
+    let offset=0;
+    return letters.map(letter=>{
+      const range=document.createRange();range.setStart(node,offset);offset+=letter.length;range.setEnd(node,offset);
+      const box=range.getBoundingClientRect();return {x:box.left,y:box.top+scrollY};
+    });
+  };
+  function metric(style) {
+    const probe=spans[0];probe.style.cssText='left:0;top:0;';
+    Object.assign(probe.style,{fontFamily:style.fontFamily,fontSize:style.fontSize,fontWeight:style.fontWeight,lineHeight:style.lineHeight,letterSpacing:style.letterSpacing});
+    const range=document.createRange();range.selectNodeContents(probe);
+    const box=range.getBoundingClientRect(),outer=probe.getBoundingClientRect();
+    return {x:box.left-outer.left,y:box.top-outer.top};
+  }
+  function measure() {
+    const fromStyle=getComputedStyle(title),toStyle=getComputedStyle(brand),sourceBox=title.getBoundingClientRect();
+    const startTop=header.getBoundingClientRect().height+100;
+    const start=Math.max(0,sourceBox.top+scrollY-startTop);
+    geometry={from:measureText(source),to:measureText(destination),start,distance:Math.min(360,sourceBox.height*.75+60),fromStyle:{size:parseFloat(fromStyle.fontSize),height:parseFloat(fromStyle.lineHeight)||parseFloat(fromStyle.fontSize)*1.2,weight:parseFloat(fromStyle.fontWeight),spacing:parseFloat(fromStyle.letterSpacing)||0,color:fromStyle.color,family:fromStyle.fontFamily},toStyle:{size:parseFloat(toStyle.fontSize),height:parseFloat(toStyle.lineHeight)||parseFloat(toStyle.fontSize)*1.2,weight:parseFloat(toStyle.fontWeight),spacing:parseFloat(toStyle.letterSpacing)||0},fromOffset:metric(fromStyle),toOffset:metric(toStyle)};
+    geometry.to.forEach(point=>point.y-=scrollY);
+    dirty=false;
+  }
+  const mix=(a,b,t)=>a+(b-a)*t;
+  function reset(){layer.style.visibility='hidden';title.style.opacity='';brand.style.opacity='';layer.dataset.progress='0';}
+  updaters.push(()=>{
+    if(motionPaused || mq('(prefers-reduced-motion: reduce)').matches || $('#nav')?.classList.contains('is-open')){reset();return;}
+    if(dirty)measure();
+    const g=geometry,p=clamp((scrollY-g.start)/g.distance,0,1);
+    layer.dataset.progress=p.toFixed(4);
+    if(p===0){reset();return;}
+    title.style.opacity='0';
+    brand.style.opacity=p===1?'1':'0';
+    if(p===1){layer.style.visibility='hidden';return;}
+    layer.style.visibility='visible';layer.style.opacity='1';layer.style.color=g.fromStyle.color;
+    // Shrink and move together; the source stays below the globe throughout the transfer.
+    const t=p*p*(3-2*p);
+    spans.forEach((span,i)=>Object.assign(span.style,{
+      left:`${mix(g.from[i].x-g.fromOffset.x,g.to[i].x-g.toOffset.x,t)}px`,
+      top:`${mix(g.from[i].y-g.start-g.fromOffset.y,g.to[i].y-g.toOffset.y,t)}px`,
+      fontFamily:g.fromStyle.family,fontSize:`${mix(g.fromStyle.size,g.toStyle.size,t)}px`,
+      lineHeight:`${mix(g.fromStyle.height,g.toStyle.height,t)}px`,
+      fontWeight:String(mix(g.fromStyle.weight,g.toStyle.weight,t)),letterSpacing:`${mix(g.fromStyle.spacing,g.toStyle.spacing,t)}px`
+    }));
+  });
+  const observer=new ResizeObserver(()=>{dirty=true;schedule();});observer.observe(title);observer.observe(brand);observer.observe(header);
+  document.fonts?.ready.then(()=>{dirty=true;schedule();});
+  mq('(prefers-reduced-motion: reduce)').addEventListener('change',schedule);
+  schedule();
+})();

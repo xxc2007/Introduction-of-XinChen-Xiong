@@ -108,12 +108,15 @@ echo "── E. 公网逐个取回「浏览器真正会去取的那些资源 URL
 # 拿裸路径去比会命中指纹方案之前的孤儿副本，比出假红。
 ASSETS="$(node -e '
 const fs = require("fs");
+const path = require("path");
 const out = new Set();
-for (const p of ["index.html", "en/index.html", "404.html"]) {
+for (const p of ["index.html", "en/index.html", "404.html", "assets/video/index.html"]) {
   const t = fs.readFileSync(p, "utf8");
   // 三种前缀都要认：./ ../ 以及 404.html 专用的根绝对 /assets/
-  for (const m of t.matchAll(/(?:href|src)="(?:\.\.?\/|\/)(assets\/[^"?]+)(\?v=[0-9a-z]+)?"/g)) {
-    out.add("/" + m[1] + (m[2] || ""));
+  for (const m of t.matchAll(/(?:href|src)="([^"#]+)"/g)) {
+    if (/^[a-z]+:/i.test(m[1]) || m[1].startsWith("//")) continue;
+    const u = new URL(m[1], "https://site.invalid/" + p);
+    if (u.pathname.startsWith("/assets/")) out.add(u.pathname + u.search);
   }
 }
 for (const v of ["three.module.min.js", "three.core.min.js"]) out.add("/assets/vendor/" + v);

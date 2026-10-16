@@ -1,4 +1,30 @@
+# 2026-10-16 局部修订（优先于下文历史记录）
+
+按用户最新要求：主地球仅在首屏显示，只保留真实地球球面，删除外围轨道、刻度和卫星；取消进入关于我章节的地球转场。删除额外加入的缓动曲线与写字翻面演示。ORYZO 仅为设计参考，不能据此增加个人站没有的内容。其余现有设计与个人内容保留。下文涉及这三项旧效果的描述仅为历史记录，不再是实现要求。
+
 # 构建契约（所有构建智能体照此实现，不得自创第二套）
+
+## 2026-10-14 视觉改版（当前有效）
+
+用户明确要求以 oryzo.ai 为标准全面升级。该要求替代下文旧版纸面视觉的固定配色、2px 圆角、无渐变及原首屏粒子构图限制；旧版规则保留作为历史说明及 404 页基础样式。内容出处边界仍然有效。
+
+新版采用 `.portfolio` 作用域：全屏橄榄绿三维轨道首屏、暖白介绍、深绿作品展板、橙色方法区、深色理念区、暖白联系区。三维对象由本地 Three.js 程序生成，未取用参考站的模型、贴图、字体或品牌文件。头像原图不裁切，正文、项目和外链保留，中英文同步。
+
+| 新令牌 | 值 | 用途 |
+| --- | --- | --- |
+| `--olive` | `#48583D` | 首屏和导航 |
+| `--sand` | `#FFEBD2` | 浅色背景与反白文字 |
+| `--night` | `#24251E` | 正文与理念背景 |
+| `--orange` | `#FF8B48` | 方法区及交互强调 |
+| `--forest` | `#303D2B` | 作品区 |
+| `--soft` | `#C9D0BD` | 深色区辅助文字 |
+
+`--stage-line` 为半透明浅色分隔线。圆角尺度：基础 0/2px，移动作品展板 8px，桌面展板 16px，按钮 40/50px，圆形 50%。标题与正文使用系统无衬线字体；原字体资产仍供旧基础样式和 404 页使用。
+
+首屏使用 sticky 长滚动区，三维旋转和相机距离随滚动改变；指针产生轻微视差。后台标签和离屏画布停止绘制，像素比上限 1.5。暂停按钮停止自主运动，系统 reduced-motion 使用静态首屏；省流、WebGL 失败和无脚本时显示 CSS 轨道，正文仍可阅读。移动端为可展开导航，支持 Escape 和锚点选择后关闭。
+
+本轮交付是本地可预览改版，线上发布状态以实际部署核验为准。
+
 
 ## 0. 已备好的资产（不要重复生成）
 
@@ -101,7 +127,7 @@ body
 
 **数量断言（`check-parity.mjs` 会钉死，中英两页相等且都非零）**：章节标题的真实结构是 `.sec-head` 里放 `.sec-index`（眉标串）+ `<h2>`（标题本体），**`.sec-title` / `.num` 这个类现在整个仓库一处都不用**（`404.html` 也只在一句注释里提到它，实际同样走 `.sec-head`/`.sec-index`）——旧契约写的 `h2.sec-title` 早已不存在。
 `.sec-head` = 5、`.sec-index` = 5、`.sec-rule` = 5、`<h2>` = 5；`section` = 6；`nav a` = 5；
-`.work-card` = 2；`.social li` = 7；`<img>` = 3（avatar + shot-nc15 + shot-geohot）；
+`.work-card` = 2；`.social li` = 7；`<img>` = 5（首屏地球 + avatar + shot-nc15 + shot-geohot + film poster）；
 `blockquote` = 3；`dl.facts div` = 4；`ol.steps li` = 4。
 
 ## 3. 允许出现在页面上的文案事实（逐字来自他的公开内容）
@@ -146,3 +172,11 @@ body
   **对比度的唯一出处是 `tests/quality.test.mjs` 的断言**——本文件与 `style.css` 的注释都不再各自抄数，
   抄过一次就错了一次（旧版这里写 5.0:1，那是在 `--paper` 上量的）。
 - 移动端：≤420px 无横向滚动；`.social` 换行成 4+3；语言菜单不溢出。
+
+## 2026-10-14 真实地球球面
+
+用户要求将抽象球体换为反映真实地理情况的地球。球面使用 NASA Blue Marble Next Generation 2004 年 8 月全球无云合成底图（5400×2700，等距圆柱投影），按原始经纬度 UV 映射，不镜像、不绘制虚构大陆。保留球形近似，未夸大地形，也未模拟实时云层、日照、季节变化或真实轨道。原有三角网格与随机地表点删除，球体使用独立中性白光，外围轨道仍为艺术装饰。
+
+本地文件：`assets/images/earth-blue-marble-200408.jpg`，原始 JPEG 未重编码，1,616,254 字节。独立贴图预算 2,000,000 字节，按路径直接检查，包含尚未加入 Git 索引的新资源。
+
+来源：[NASA Blue Marble Base Map](https://science.nasa.gov/earth/earth-observatory/blue-marble-next-generation/base-map/)，[2004 年 8 月原始 JPEG](https://assets.science.nasa.gov/content/dam/science/esd/eo/images/bmng/bmng-base/august/world.200408.3x5400x2700.jpg)。影像署名 NASA Earth Observatory / Blue Marble Next Generation。使用说明：[NASA Earth Science FAQ](https://science.nasa.gov/earth/faq/)。SHA-256：`2048023ccc62250c677c0f4b03d4362f997b130eb0154a6cad00aa1b27c390b9`。贴图本地托管；失败回退原 CSS 装饰轨道，不影响正文。
