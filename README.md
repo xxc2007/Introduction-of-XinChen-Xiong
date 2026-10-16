@@ -20,7 +20,7 @@
 
 44 秒，1920 × 1080。使用 Video Shotcraft 制作，画面来自当前新版网页，包含首屏地球的真实旋转、两个作品和做事方法。参考南昌十五中纪念站宣传片的留白与运镜节奏，采用轻柔原创配乐、自然叠化，无换场音效。
 
-[![点击观看新版个人站宣传片](assets/video/poster-hd.jpg?v=21e0bb06e392)](https://xxc2007.me/assets/video/)
+https://github.com/user-attachments/assets/0e13ff8a-20a2-49e3-9d22-3014d81b9108
 
 [▶ 打开 1080p 高清播放器](https://xxc2007.me/assets/video/) · [直接打开 MP4](https://xxc2007.me/assets/video/intro-promo.mp4) · [无配乐版](https://xxc2007.me/assets/video/intro-promo-nobgm.mp4)
 

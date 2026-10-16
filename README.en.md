@@ -20,7 +20,7 @@ A bilingual personal introduction, two live projects, a way of working, three be
 
 A 44-second, 1920 × 1080 film made from the current website with Video Shotcraft. Real page captures, the live rotating Earth, gentle camera movement and an original soft score. No transition sound effects.
 
-[![Watch the current website film](assets/video/poster-hd.jpg?v=21e0bb06e392)](https://xxc2007.me/assets/video/)
+https://github.com/user-attachments/assets/0e13ff8a-20a2-49e3-9d22-3014d81b9108
 
 [▶ Watch in the 1080p player](https://xxc2007.me/assets/video/) · [Download MP4](https://xxc2007.me/assets/video/intro-promo.mp4) · [No-music edition](https://xxc2007.me/assets/video/intro-promo-nobgm.mp4)
 
