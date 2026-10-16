@@ -23,13 +23,15 @@ try {
    await page.waitForFunction(tone=>document.querySelector('.topbar').dataset.tone===tone,tone);
    assert.equal(await page.locator('.topbar').evaluate(e=>getComputedStyle(e).backgroundColor),'rgba(0, 0, 0, 0)');
   }
-  await page.setViewportSize({width:390,height:844});await page.locator('.menu-toggle').click();
-  assert.equal(await page.locator('main').evaluate(e=>e.inert),true);
+  await page.setViewportSize({width:390,height:844});
+  assert.equal(await page.locator('.menu-toggle').isVisible(),false);
+  for(const item of await page.locator('#nav a').all())assert.equal(await item.isVisible(),true,'mobile navigation stays expanded');
+  assert.equal(await page.locator('main').evaluate(e=>e.inert),false);
   await page.setViewportSize({width:1440,height:900});
   await page.waitForFunction(()=>!document.querySelector('main').inert);
   await page.emulateMedia({reducedMotion:'reduce'});await link.hover();
   assert.equal(await link.locator('.nav-roll').first().evaluate(e=>getComputedStyle(e).transform),'none');
-  console.log(`${lang}: horizontal menu, accessible labels, letter roll, focus, section tones, resize recovery and reduced motion OK`);
+  console.log(`${lang}: horizontal menu, expanded mobile links, accessible labels, letter roll, focus, section tones, resize recovery and reduced motion OK`);
   await page.close();
  }
 }finally{await browser.close();}
