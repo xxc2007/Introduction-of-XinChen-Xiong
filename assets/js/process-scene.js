@@ -1,4 +1,4 @@
-import * as THREE from '../vendor/three.module.min.js';
+import * as THREE from '../vendor/three-0.180.0/three.module.min.js';
 
 /** Four connected views of the existing workflow, driven only by local scroll progress. */
 export function initProcess(canvas, screenshotURL) {
@@ -26,7 +26,7 @@ export function initProcess(canvas, screenshotURL) {
   const smooth=(a,b,x)=>{const t=THREE.MathUtils.clamp((x-a)/(b-a),0,1);return t*t*(3-2*t);};
   const loader=new THREE.TextureLoader();
   loader.load(screenshotURL,texture=>{texture.colorSpace=THREE.SRGBColorSpace;screenMaterial.map=texture;screenMaterial.needsUpdate=true;pending--;request();},undefined,()=>{textureFailed=true;host.dataset.processRender='fallback';});
-  loader.load(new URL('../images/earth-200408-1024.webp',import.meta.url).href,texture=>{texture.colorSpace=THREE.SRGBColorSpace;earthMaterial.map=texture;earthMaterial.needsUpdate=true;pending--;request();},undefined,()=>{textureFailed=true;host.dataset.processRender='fallback';});
+  loader.load(new URL('../images/earth-200408-1024.webp'+new URL(import.meta.url).search,import.meta.url).href,texture=>{texture.colorSpace=THREE.SRGBColorSpace;earthMaterial.map=texture;earthMaterial.needsUpdate=true;pending--;request();},undefined,()=>{textureFailed=true;host.dataset.processRender='fallback';});
   function draw() {
     frame=0;if(!visible||document.hidden||lost)return;
     current+=(target-current)*.14;if(Math.abs(target-current)<.001)current=target;

@@ -1,5 +1,5 @@
 /** Hero-only Earth globe; local Three.js and locally hosted NASA Blue Marble imagery; see docs/image-provenance.md. */
-import * as THREE from '../vendor/three.module.min.js';
+import * as THREE from '../vendor/three-0.180.0/three.module.min.js';
 export function initField(canvas, { reducedMotion = false } = {}) {
   const hero = canvas.closest('.hero');
   const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
@@ -30,7 +30,7 @@ export function initField(canvas, { reducedMotion = false } = {}) {
   const earth = new THREE.Mesh(new THREE.SphereGeometry(1.6, 96, 64), earthMaterial);
   earth.rotation.y = 3.7; earth.visible = false; sculpture.add(earth);
   hero.dataset.earth = 'loading';
-  new THREE.TextureLoader().load(new URL('../images/earth-200408-' + (matchMedia('(max-width: 600px)').matches ? '1024' : '2048') + '.webp', import.meta.url).href, texture => {
+  new THREE.TextureLoader().load(new URL('../images/earth-200408-' + (matchMedia('(max-width: 600px)').matches ? '1024' : '2048') + '.webp'+new URL(import.meta.url).search, import.meta.url).href, texture => {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     earthMaterial.map = texture; earthMaterial.needsUpdate = true; earth.visible = true;
