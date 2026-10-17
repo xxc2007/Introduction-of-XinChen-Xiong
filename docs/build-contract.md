@@ -31,7 +31,7 @@
 | 资产 | 路径 | 事实 |
 | --- | --- | --- |
 | 头像 | `assets/images/avatar.jpg`（26,762 B，唯一一份；`avatar.webp` 已删，站长要求原图直出） | 300×300，站长本人提供的原图，不转码、不裁切、不加圆框 |
-| Three.js | `assets/vendor/three.module.min.js` | r0.180.0，338,908 B（gzip 数值不在此抄写：**字节与预算的唯一出处是 `node scripts/check-bytes.mjs` 与 `wc -c assets/vendor/*.js`**），MIT，文件头 license 注释保留 |
+| Three.js | `assets/vendor/three-0.180.0/three.module.min.js` | r0.180.0，338,908 B（gzip 数值不在此抄写：**字节与预算的唯一出处是 `node scripts/check-bytes.mjs` 与 `wc -c assets/vendor/*.js`**），MIT，文件头 license 注释保留 |
 | 衬线字体 | `assets/fonts/noto-serif-sc/wght.css` + `files/`（101 个 woff2 切片） | 与纪念册同一份，按 `unicode-range` 惰性加载 |
 
 引用写法一律**相对路径**（这样站点放在域名根或任何子路径都能跑）——**唯一的页面例外是 `404.html`**：它会被 nginx 从任意深度重写到 `/404.html`，相对路径在那种位置解析不出来，所以它整页只用根绝对路径（`tests/quality.test.mjs` 有一条断言钉这件事）：
@@ -50,11 +50,11 @@
 const VER = (import.meta.url.match(/[?&]v=([0-9a-z]{4,8})/) || [])[1] || 'dev';
 await import('./scene.js?v=' + VER);
 // assets/js/scene.js 内
-import * as THREE from "../vendor/three.module.min.js";
+import * as THREE from "../vendor/three-0.180.0/three.module.min.js";
 ```
-**唯一的例外是 `assets/vendor/three.core.min.js`**：它由 `three.module.min.js` 用裸相对名 import，
+**唯一的例外是 `assets/vendor/three-0.180.0/three.core.min.js`**：它由 `three.module.min.js` 用裸相对名 import，
 查询串不会从外层模块传导过去，所以带不上 `?v=`。它的指纹就是**文件名本身**——
-升级 Three.js 必须换成新文件名（并同步改 `three.module.min.js` 里那一处 import），
+升级 Three.js 必须更换包含版本号的目录，并同步更新导入路径和依赖清单；官方模块及 core 的相对导入均落在新目录中，
 不要原地覆盖，否则边缘会按扩展名把旧字节钉一年。
 `scripts/verify-sync.sh` 的 E 段逐个取回「HTML 里写着的那条 URL」比哈希，把这条例外也列进去了，
 所以无论是漏加指纹还是原地覆盖了 vendor，都会红。
