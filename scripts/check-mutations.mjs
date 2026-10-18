@@ -5,12 +5,24 @@
    那种闸门比没有闸门更糟——它让人以为查过了。断言必须能失败才算数。
 
    跑法：node scripts/check-mutations.mjs       （只读写临时目录，不碰真仓库） */
-import { cpSync, rmSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { cpSync, rmSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync, lstatSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
+export function copyTrackedSandbox(source, destination) {
+  const git=(...args)=>execFileSync("git",args,{cwd:source,encoding:"utf8",stdio:["ignore","pipe","pipe"]});
+  git("clone","--shared","--no-checkout","--",source,destination);
+  const entries=git("ls-files","-z").split("\0").filter(Boolean);
+  for(const path of entries) {
+    if(path.split("/").some(part=>part===".git" || (part.startsWith(".") && ![".github",".gitignore",".gitattributes",".deploy.env.example"].includes(part))) || /(?:^|\/)\.?[^/]*\.env(?:\.|$)/i.test(path) && !path.endsWith(".example")) continue;
+    const from=join(source,path);if(!existsSync(from) || !lstatSync(from).isFile())continue;
+    mkdirSync(dirname(join(destination,path)),{recursive:true});cpSync(from,join(destination,path),{dereference:false});
+  }
+  execFileSync("git",["add","-A"],{cwd:destination,stdio:["ignore","pipe","pipe"]});
+}
+function runMutationChecks() {
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CSS = "assets/css/style.css", ZH = "index.html", EN = "en/index.html";
 
@@ -260,14 +272,12 @@ a[data-magnetic].copy-mail{animation:magbug3 .5s both}
     expect: /首屏 JS gzip KB：README 写/ },
 ];
 
-/* 整仓复制（剔掉 .git 与站点无关的目录）。只挑几个文件带会漏，
-   漏了「本地图都要存在」就会在每个沙箱里先红，把该看的那条盖掉。 */
-/* 整仓复制，包括 .git：check-links 与 README 数字断言都要跑 git ls-files，
-   少了 .git 它们不是「通过」而是当场崩掉。docs/ 也必须在——断言会读它。 */
-const SKIP = /(^|[\\/])(node_modules|\.tmp|\.cache)([\\/]|$)/;
+/* Only tracked working files are copied. A local shared clone supplies clean Git
+   metadata and commit dates without copying the source config, hooks or ignored
+   private files. The clone shares read-only object storage and is disposable. */
 const sandbox = () => {
   const dir = mkdtempSync(join(tmpdir(), "qamut-"));
-  cpSync(ROOT, dir, { recursive: true, filter: (src) => !SKIP.test(src.slice(ROOT.length + 1)) });
+  copyTrackedSandbox(ROOT, dir);
   return dir;
 };
 
@@ -412,3 +422,6 @@ for (const m of MUTS) {
 const total = MUTS.length;
 console.log(`\n${total} 条负向对照：${total - red - wrong - missed} 通过 / ${red} 死断言 / ${wrong} 抓错或误报 / ${missed} 锚点失效`);
 process.exit(red + wrong + missed ? 1 : 0);
+
+}
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) runMutationChecks();

@@ -2,7 +2,7 @@
 // 用法：node tools/serve.mjs [端口]      默认 8899，只监听 127.0.0.1
 import { createServer } from "node:http";
 import { createGzip } from "node:zlib";
-import { createReadStream, statSync, existsSync } from "node:fs";
+import { createReadStream, statSync, existsSync, realpathSync } from "node:fs";
 import { extname, join, resolve, sep } from "node:path";
 
 const PORT = Number(process.argv[2] || 8899);
@@ -32,20 +32,32 @@ const send = (res, code, body, headers = {}) => {
 };
 
 const server = createServer((req, res) => {
+  if (!/^(?:localhost|127\.0\.0\.1)(?::\d+)?$/i.test(req.headers.host || '')) return send(res, 403, 'forbidden host');
+  if (!['GET','HEAD'].includes(req.method)) return send(res, 405, 'method not allowed', {Allow:'GET, HEAD'});
   let path;
   try { path = decodeURIComponent(new URL(req.url, "http://x").pathname); }
   catch { return send(res, 400, "bad request"); }
+  if (path.includes('\\') || path.includes('\0') || path.split('/').some(part => part.startsWith('.'))) return send(res,403,'forbidden');
 
   const fromNc15 = path === "/nc15" || path.startsWith("/nc15/");
-  const rel = fromNc15 ? path.slice("/nc15".length) : path;
+  const rel = fromNc15 ? (path.slice("/nc15".length) || '/') : path;
   const base = fromNc15 ? NC15 : ROOT;
   if (fromNc15 && !existsSync(NC15)) return send(res, 404, "nc15 source not mounted");
+  const publicPath = fromNc15
+    ? /^(?:\/(?:index\.html|404\.html|robots\.txt|sitemap\.xml|favicon\.ico)?$|\/(?:en|zh-Hant|ja|ko|ru|es|fr|pt|ar|assets|images|maplibre|data|promo)(?:\/|$))/
+    : /^(?:\/(?:index\.html|404\.html|robots\.txt|sitemap\.xml|favicon\.ico)?$|\/(?:en|assets)(?:\/|$))/;
+  if (!publicPath.test(rel)) return send(res,404,'not found');
 
-  let file = resolve(join(base, rel));
+  const promo = fromNc15 && /^\/promo(?:\/|$)/.test(rel);
+  let file = resolve(promo ? join(base, "docs", rel) : join(base, rel));
   // 目录穿越一律拒绝
   if (file !== base && !file.startsWith(base + sep)) return send(res, 403, "forbidden");
   if (statSync(file, { throwIfNoEntry: false })?.isDirectory()) file = join(file, "index.html");
   if (!existsSync(file)) return send(res, 404, `404 ${path}`);
+  const realBase=realpathSync(base),realFile=realpathSync(file);
+  if (realFile !== realBase && !realFile.startsWith(realBase + sep)) return send(res,403,'forbidden');
+  if (!statSync(realFile).isFile() || !Object.hasOwn(MIME,extname(file).toLowerCase())) return send(res,404,'not found');
+  file=realFile;
 
   const ext = extname(file).toLowerCase();
   const stat = statSync(file);

@@ -143,6 +143,19 @@ const FIELD_BASE = .34;
 /* ---------- 首屏粒子场：失败只降级，不影响本文件其余部分 ---------- */
 /* 资源指纹跟着 HTML 里 main.js 的 ?v= 走：import.meta.url 就是本文件被取回时的地址。 */
 const VER = (import.meta.url.match(/[?&]v=([0-9a-z]{4,8})/) || [])[1] || 'dev';
+function permitsHints() {
+  const conn=navigator.connection;
+  return !conn || (!conn.saveData && !/^(slow-2g|2g)$/.test(conn.effectiveType||''));
+}
+const hinted=new Set();
+function resourceHint(path,rel,as) {
+  const href=new URL(path,import.meta.url).href,key=rel+href;
+  if(hinted.has(key))return;hinted.add(key);
+  const link=document.createElement('link');link.rel=rel;link.href=href;
+  if(as)link.as=as;
+  if(as==='image')link.crossOrigin='anonymous'; // Match Three.js ImageLoader's request mode.
+  document.head.appendChild(link);
+}
 let scene = null;
 let motionPaused = RM;
 (async function bootField() {
@@ -156,6 +169,9 @@ let motionPaused = RM;
     return;
   }
   try {
+    // Discover independent dependencies together, without bypassing the data-saving fallback.
+    for(const name of ['three.module.min.js','three.core.min.js'])resourceHint('../vendor/three-0.180.0/'+name,'modulepreload');
+    resourceHint('../images/earth-200408-'+(mq('(max-width: 600px)').matches?'1024':'2048')+'.webp?v='+VER,'preload','image');
     await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     const mod = await import('./scene.js?v=' + VER);
     if (typeof mod.initField !== 'function') throw new TypeError('scene.js 未导出 initField');
@@ -261,6 +277,13 @@ if (FINE && !COARSE && !RM) $$('.work-card').forEach((card) => spring(card, (ev,
   function open(idx) {
     menu.hidden = false;
     btn.setAttribute('aria-expanded', 'true');
+    if(permitsHints()){
+      const other=items.find(item=>codeOf(item)!==LANG),anchor=other&&anchorOf(other);
+      if(anchor){
+        const url=new URL(anchor.href,location.href);
+        if(url.origin===location.origin && url.pathname===(LANG==='en'?'/':'/en/') && !url.search && !url.hash)resourceHint(url.href,'prefetch','document');
+      }
+    }
     if (typeof idx === 'number') focusItem(items[idx]);
   }
   function close(refocus) {
