@@ -90,11 +90,11 @@ node --test "tests/*.test.mjs"
 
 | 项目 | 当前测量 | 复算方式 |
 |---|---|---|
-| 仓库文件 | **212** | `git ls-files \| wc -l` = 212 |
-| 中英两页字节 | `24,135` / `24,566` B | index.html / en/index.html |
+| 仓库文件 | **219** | `git ls-files \| wc -l` = 219 |
+| 中英两页字节 | `24,135` / `24,621` B | index.html / en/index.html |
 | 全站 CSS | **51.4 KB** (`52,612` B), gzip **11.7 KB** | assets/css/style.css |
 | 首屏 JS（含 Three.js） | gzip **195.7 KB** | scripts/check-bytes.mjs |
-| 图片（头像 + 两张作品截图） | **85.3 KB** (`87,382` B) | scripts/check-bytes.mjs |
+| 图片（头像 + 两张作品截图） | **112.5 KB** (`115,154` B) | scripts/check-bytes.mjs |
 | 不进首屏的分享素材 | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
 ## 发布与同步

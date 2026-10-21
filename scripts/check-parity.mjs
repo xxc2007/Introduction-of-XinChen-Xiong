@@ -183,9 +183,15 @@ const paths = h => grab(h, /<path[^>]*\bd="([^"]+)"/g);
 seqEq("SVG path 几何逐条一致", paths(pages.ZH), paths(pages.EN));
 
 const ext = h => grab(h, /href="(https?:\/\/[^"]+)"/);
-setEq("外链集合", ext(pages.ZH), ext(pages.EN));
+setEq("外链集合", ext(pages.ZH), ext(pages.EN).map(u=>u==='https://xxc2007.me/nc15/en/'?'https://xxc2007.me/nc15/':u));
 const imgs = h => grab(h, /<img[^>]+src="([^"]+)"/g);
-seqEq("图片引用（basename，含顺序）", imgs(pages.ZH).map(base), imgs(pages.EN).map(base));
+// The film cover is localized; other image references must still match exactly.
+seqEq("图片引用（basename，含顺序）", imgs(pages.ZH).map(base), imgs(pages.EN).map(base).map(p=>({'poster-en.webp':'poster.webp','shot-nc15-en.webp':'shot-nc15.webp'}[p]||p)));
+pages.EN.includes('src="../assets/images/shot-nc15-en.webp?')?ok('英文学校截图独立资源'):bad('英文学校截图独立资源','缺少英文截图');
+for (const [name,html,film] of [['ZH',pages.ZH,'intro-promo.mp4'],['EN',pages.EN,'intro-promo-en.mp4']]) {
+  const entry=(html.match(/<a class="film-entry" href="([^"]+)"/)||[])[1]||'';
+  base(entry)===film?ok(`${name} 影片语言资源`):bad(`${name} 影片语言资源`,entry);
+}
 const ids = h => grab(h, /\bid="([^"]+)"/);
 setEq("id 集合", ids(pages.ZH), ids(pages.EN));
 
