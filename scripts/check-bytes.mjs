@@ -26,7 +26,7 @@ const BUDGET = [
   ["assets/css/*.css", () => pick(/^assets\/css\/.*\.css$/).reduce((a, p) => a + size(p), 0), 57_000, "CSS 合计（含分镜与联系区）"],
   ["assets/js(自有)", () => ownJS.reduce((a, p) => a + gz(p), 0), 30_000, "自有 JS gzip"],
   ["首屏 JS 合计", () => initialJS.reduce((a, p) => a + gz(p), 0), 204_000, "含 Three.js gzip"],
-  ["首屏图片", () => pick(/^assets\/images\/(avatar|shot)[^/]*\.(jpg|jpeg|png|webp)$/).reduce((a, p) => a + size(p), 0), 90_000, "头像 + 两张作品截图"],
+  ["首屏图片", () => size('assets/images/avatar.jpg') + size('assets/images/shot-geohot.webp') + Math.max(size('assets/images/shot-nc15.webp'),size('assets/images/shot-nc15-en.webp')), 90_000, "单页头像 + 两张作品截图（中英分别核算）"],
   ["爬虫素材", () => pick(/^assets\/images\/(og-card|banner|favicon)[^/]*\.(jpg|jpeg|png|webp|svg)$/).reduce((a, p) => a + size(p), 0), 200_000, "不进首屏，只算仓库体积"],
 ];
 

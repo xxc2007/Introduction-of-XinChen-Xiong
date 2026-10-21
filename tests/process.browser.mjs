@@ -13,10 +13,12 @@ try {
   const page=await browser.newPage({viewport:{width,height:900}}),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base+lang,{waitUntil:'networkidle'});
+  assert.ok((await page.locator('#project-memorial .shot').getAttribute('src')).includes(lang==='/en/'?'shot-nc15-en.webp':'shot-nc15.webp'),'school preview must match page language');
   assert.equal(await page.evaluate(()=>performance.getEntriesByType('resource').some(e=>e.name.includes('process-scene.js'))),false,'process module loaded before approaching section');
   const hashes=new Set();
   for(const index of [0,1,2,3]){
    await chapter(page,index);await page.waitForFunction(()=>document.querySelector('#how').dataset.processRender==='ready');await page.waitForTimeout(850);
+   if(index===0)assert.ok(await page.evaluate(part=>performance.getEntriesByType('resource').some(e=>e.name.includes(part)),lang==='/en/'?'shot-nc15-en.webp':'shot-nc15.webp'),'process texture must load the localized preview');
    assert.equal(await page.locator('.steps li.is-current').count(),1);
    assert.equal(await page.locator('.process-controls button[aria-pressed=true]').getAttribute('data-step'),String(index));
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
@@ -53,7 +55,7 @@ try {
  for(const mode of ['short','reduced','no-js','no-webgl','texture-failure']){
   const context=await browser.newContext({viewport:{width:390,height:mode==='short'?600:844},hasTouch:mode==='short',javaScriptEnabled:mode!=='no-js',reducedMotion:mode==='reduced'?'reduce':'no-preference'});
   if(mode==='no-webgl')await context.addInitScript(()=>{const native=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){return type.startsWith('webgl')?null:native.call(this,type,...args);};});
-  const page=await context.newPage();if(mode==='texture-failure')await page.route('**/earth-200408-*.webp',route=>route.abort());
+  const page=await context.newPage();if(mode==='texture-failure')await page.route(/\/earth-200408-[^/?]+\.webp(?:\?.*)?$/,route=>route.abort());
   await page.goto(base,{waitUntil:'networkidle'});await page.locator('#how').scrollIntoViewIfNeeded();
   if(['reduced','no-js'].includes(mode)){
    assert.equal(await page.locator('#how').evaluate(e=>e.classList.contains('process-enabled')),false);

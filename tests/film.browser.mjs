@@ -23,6 +23,7 @@ try{
   assert.equal(requests.some(url=>url.includes('.mp4')),false,'film must not download before activation');
   await page.locator('.film-entry').click();
   await page.waitForFunction(()=>document.querySelector('.film-dialog video').currentTime>.2);
+  assert.equal(new URL(await page.locator('.film-dialog video').evaluate(e=>e.currentSrc)).pathname,lang==='/'?'/assets/video/intro-promo.mp4':'/assets/video/intro-promo-en.mp4');
   assert.equal(await page.locator('.film-dialog').evaluate(e=>e.open),true);
   assert.equal(await page.evaluate(()=>document.body.style.overflow),'hidden','menu click handler must not unlock the video backdrop');
   assert.equal(await page.locator('video').evaluate(e=>e.videoWidth),1920);

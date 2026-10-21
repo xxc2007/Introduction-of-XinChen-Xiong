@@ -23,13 +23,11 @@ Through the projects, my working process and a few guiding beliefs, this bilingu
 
 ## 🎬 Product film
 
-A 44-second introduction, from the name and rotating Earth to the campus memorial, GEOHOT and the process behind the projects. Real website footage, a soft score and gentle transitions bring the content and interactions into one short viewing sequence. The film uses Chinese on-screen text; the website has a full English edition.
+A 44-second introduction, from the name and rotating Earth to the campus memorial, GEOHOT and the process behind the projects. The English edition follows the Chinese film's visual style and pacing, with English titles, real English website footage, the same soft score and gentle transition sounds. GEOHOT's original interface retains Chinese article text.
 
-Play it directly below.
+[![Watch the English film](assets/video/poster-en-hd.jpg)](https://xxc2007.me/assets/video/en.html)
 
-https://github.com/user-attachments/assets/674f7e9e-a87c-4235-b784-5ac5c5f1c822
-
-[▶ Watch in the 1080p player](https://xxc2007.me/assets/video/) · [Open MP4](https://xxc2007.me/assets/video/intro-promo.mp4) · [No-music edition](https://xxc2007.me/assets/video/intro-promo-nobgm.mp4)
+[▶ Watch in the 1080p player](https://xxc2007.me/assets/video/en.html) · [Open MP4](https://xxc2007.me/assets/video/intro-promo-en.mp4) · [No-music edition, with transition sounds](https://xxc2007.me/assets/video/intro-promo-en-nobgm.mp4)
 
 ## Two projects
 
@@ -90,11 +88,11 @@ The values below are checked against the files by the quality suite. JS totals i
 
 | Item | Current measurement | How to check |
 |---|---|---|
-| Repository files | **212** | `git ls-files \| wc -l` = 212 |
-| HTML size | `24,135` / `24,566` B | index.html / en/index.html |
+| Repository files | **219** | `git ls-files \| wc -l` = 219 |
+| HTML size | `24,135` / `24,621` B | index.html / en/index.html |
 | Site CSS | **51.4 KB** (`52,612` B), gzip **11.7 KB** | assets/css/style.css |
 | Hero JS | gzip **195.7 KB** | scripts/check-bytes.mjs |
-| Images (avatar + two project shots) | **85.3 KB** (`87,382` B) | scripts/check-bytes.mjs |
+| Images (avatar + two project shots) | **112.5 KB** (`115,154` B) | scripts/check-bytes.mjs |
 | Social/share assets | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
 ## Publishing and verification
