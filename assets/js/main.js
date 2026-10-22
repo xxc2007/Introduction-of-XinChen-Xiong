@@ -647,6 +647,7 @@ if (!RM) {
   updaters.push(() => {
     const y = bar.getBoundingClientRect().height / 2;
     const section = sections.find(el => {const box=el.getBoundingClientRect();return box.top<=y && box.bottom>y;});
+    bar.dataset.section = section?.id || 'hero';
     bar.dataset.tone = section && ['about','how','contact'].includes(section.id) ? 'ink' : 'sand';
   });
   schedule();

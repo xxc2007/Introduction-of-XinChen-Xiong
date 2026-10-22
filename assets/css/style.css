@@ -856,6 +856,14 @@ html[lang=en] .portfolio .hero h1{font-size:clamp(65px,6.8vw,130px);padding-righ
 .project-compare a{display:inline-block;color:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:7px;padding:10px 0}
 .project-compare a:hover{color:var(--orange)}
 @media(max-width:600px){.project-compare{font-size:16px;margin-top:60px}.project-compare caption{font-size:30px;padding-bottom:28px}.project-compare th,.project-compare td{padding-top:20px;padding-bottom:20px}.project-compare td span{font-size:12px}}
+/* A fixed mobile header must paint over scrolling text, including wrapped links. */
+@media(max-width:1000px){
+  .portfolio .topbar{background:var(--olive)}
+  .portfolio .topbar[data-section=about],.portfolio .topbar[data-section=contact]{background:var(--sand)}
+  .portfolio .topbar[data-section=works]{background:var(--forest)}
+  .portfolio .topbar[data-section=how]{background:var(--orange)}
+  .portfolio .topbar[data-section=beliefs]{background:var(--night)}
+}
 @media (prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{
