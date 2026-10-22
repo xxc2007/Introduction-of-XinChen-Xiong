@@ -8,7 +8,7 @@ const spec = {
     "静态页面为基础，按需增强；每条分支对应一次真实的浏览行为。",
     "Static pages, enhanced on demand. Follow each branch through a browsing action."
   ],
-  "height": 1550,
+  "height": 1220,
   "nodes": [
     [
       "entry",
@@ -97,22 +97,6 @@ const spec = {
       "加载失败显示下载入口\n不支持对话框时走原影片链接",
       "Offer a download link on media failure\nUse the film link without dialog support",
       "guard"
-    ],
-    [
-      "motion",
-      600,
-      1190,
-      "系统要求减少动态效果\n交互按偏好降级，保留内容入口",
-      "Respect reduced-motion preferences\nReduce animation; retain content access",
-      "guard"
-    ],
-    [
-      "links",
-      600,
-      1350,
-      "从作品链接进入独立站点\n/nc15/ 纪念册 · /geohot/ 地理热点",
-      "Project links open separate websites\n/nc15/ memorial · /geohot/ geography",
-      "result"
     ]
   ],
   "edges": [
@@ -179,18 +163,7 @@ const spec = {
       "Failure / fallback"
     ]
   ],
-  "notes": [
-    [
-      "motion",
-      "三条交互分支共同遵循的浏览偏好",
-      "A preference respected across the interaction branches"
-    ],
-    [
-      "links",
-      "作品入口是普通链接；本站不代理两个项目的业务逻辑",
-      "Ordinary links lead to the projects; each has its own application and release boundary"
-    ]
-  ],
+  "notes": [],
   "sources": [
     "assets/js/main.js",
     "assets/js/scene.js",
