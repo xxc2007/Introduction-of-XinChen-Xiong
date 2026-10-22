@@ -185,6 +185,7 @@ const spec = {
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const escape = s => String(s).replace(/[&<>\"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const height = n => n[5] === 'decision' ? (n[3].includes('\n') || n[4].includes('\n') ? 156 : 104) : 86;
@@ -258,6 +259,19 @@ for (let lang=0; lang<2; lang++) {
   text(600,outputHeight-35,'Documentation illustration · 22 October 2026 · SVG, editable text and paths',15,400,'middle','#78838b');
  }
  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="'+outputHeight+'" viewBox="0 0 1200 '+outputHeight+'" role="img" aria-labelledby="title description" xml:lang="'+language+'"><title id="title">'+escape(spec.title[lang])+'</title><desc id="description">'+escape(spec.intro[lang])+'</desc><defs><marker id="arrow" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><path d="M 0 0 L 9 3.5 L 0 7 L 2 3.5 Z" fill="#4e585f"/></marker></defs><rect width="1200" height="'+outputHeight+'" fill="#ffffff"/><g font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, Arial, sans-serif">'+elements.join('')+'</g></svg>\n';
- fs.writeFileSync(path.join(directory,'flow.'+language+'.svg'),svg);
- console.log('Rendered flow.'+language+'.svg');
+ const fingerprint=createHash('sha256').update(svg).digest('hex').slice(0,12);
+ const filename='flow.'+language+'.'+fingerprint+'.svg';
+ const readmePath=path.resolve(directory,'../..',lang?'README.en.md':'README.md');
+ const readme=fs.readFileSync(readmePath,'utf8');
+ const references=new RegExp('docs/architecture/flow\\.'+language+'(?:\\.[a-f0-9]{12})?\\.svg','g');
+ const previous=new Set(readme.match(references)||[]);
+ if(!previous.size)throw new Error('Missing diagram reference in '+readmePath);
+ fs.writeFileSync(path.join(directory,filename),svg);
+ fs.writeFileSync(readmePath,readme.replace(references,'docs/architecture/'+filename));
+ // Only remove superseded diagram files explicitly referenced by this README.
+ for(const reference of previous){
+  const oldFilename=path.basename(reference);
+  if(oldFilename!==filename && fs.existsSync(path.join(directory,oldFilename)))fs.unlinkSync(path.join(directory,oldFilename));
+ }
+ console.log('Rendered '+filename+' and updated its README references');
 }
