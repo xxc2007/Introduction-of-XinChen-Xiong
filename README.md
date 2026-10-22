@@ -71,7 +71,7 @@ https://github.com/user-attachments/assets/674f7e9e-a87c-4235-b784-5ac5c5f1c822
 
 从一次访问开始，图中分别展开地球、制作分镜和影片的加载路径，以及图形或媒体不可用时的处理。灰色表示处理步骤，菱形表示判断，绿色表示可见结果，橙色表示后备路径或约束。
 
-[![个人展示网站 · 从访问到交互](docs/architecture/flow.zh.svg)](docs/architecture/flow.zh.svg)
+[![个人展示网站 · 从访问到交互](docs/architecture/flow.zh.fe4a447f42e4.svg)](docs/architecture/flow.zh.fe4a447f42e4.svg)
 
 点击图片可打开矢量原图放大阅读。实现依据：[assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html)。
 

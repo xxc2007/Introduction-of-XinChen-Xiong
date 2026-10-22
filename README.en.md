@@ -69,7 +69,7 @@ Olive green, warm cream, generous typography and scroll-linked motion guide the 
 
 Starting with a visit, the diagram follows Earth rendering, process scenes and film loading, including graphics and media fallbacks. Grey boxes are processing steps, diamonds are decisions, green boxes are visible results, and amber boxes mark fallbacks or constraints.
 
-[![Personal website · From request to interaction](docs/architecture/flow.en.svg)](docs/architecture/flow.en.svg)
+[![Personal website · From request to interaction](docs/architecture/flow.en.715898465b84.svg)](docs/architecture/flow.en.715898465b84.svg)
 
 Open the image to zoom in. Source references: [assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html).
 
