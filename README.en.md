@@ -65,6 +65,16 @@ Olive green, warm cream, generous typography and scroll-linked motion guide the 
 | Loading | Earth and process modules load on demand; video loads after activation. Key visual assets are served locally, with static fallback content. |
 | Verification | Language parity, local links, asset budgets and static rules, alongside browser interaction regressions. Commands are listed below. |
 
+### How it works
+
+Starting with a visit, the diagram follows Earth rendering, process scenes and film loading, including graphics and media fallbacks. Grey boxes are processing steps, diamonds are decisions, green boxes are visible results, and amber boxes mark fallbacks or constraints.
+
+[![Personal website · From request to interaction](docs/architecture/flow.en.svg)](docs/architecture/flow.en.svg)
+
+Open the image to zoom in. Source references: [assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html).
+
+To update both diagrams, edit the bilingual labels in [`render.mjs`](docs/architecture/render.mjs) and run `node docs/architecture/render.mjs`.
+
 ## Run locally
 
 ```sh
@@ -88,7 +98,7 @@ The values below are checked against the files by the quality suite. JS totals i
 
 | Item | Current measurement | How to check |
 |---|---|---|
-| Repository files | **219** | `git ls-files \| wc -l` = 219 |
+| Repository files | **222** | `git ls-files \| wc -l` = 222 |
 | HTML size | `24,135` / `24,621` B | index.html / en/index.html |
 | Site CSS | **51.8 KB** (`53,077` B), gzip **11.8 KB** | assets/css/style.css |
 | Hero JS | gzip **195.7 KB** | scripts/check-bytes.mjs |

@@ -67,6 +67,16 @@ https://github.com/user-attachments/assets/674f7e9e-a87c-4235-b784-5ac5c5f1c822
 | 资源加载 | 地球模块与制作分镜按需加载，影片点击后请求；主要视觉资源本地托管，提供静态后备内容。 |
 | 质量检查 | 中英文结构对照、本地链接、资源体积和静态规则检查，配合浏览器交互回归。具体命令见下文。 |
 
+### 底层原理与运行流程
+
+从一次访问开始，图中分别展开地球、制作分镜和影片的加载路径，以及图形或媒体不可用时的处理。灰色表示处理步骤，菱形表示判断，绿色表示可见结果，橙色表示后备路径或约束。
+
+[![个人展示网站 · 从访问到交互](docs/architecture/flow.zh.svg)](docs/architecture/flow.zh.svg)
+
+点击图片可打开矢量原图放大阅读。实现依据：[assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html)。
+
+后续修改可编辑 [`render.mjs`](docs/architecture/render.mjs) 中的双语文字与节点，运行 `node docs/architecture/render.mjs` 同步生成两种语言的图。
+
 ## 本地运行
 
 ```sh
@@ -90,7 +100,7 @@ node --test "tests/*.test.mjs"
 
 | 项目 | 当前测量 | 复算方式 |
 |---|---|---|
-| 仓库文件 | **219** | `git ls-files \| wc -l` = 219 |
+| 仓库文件 | **222** | `git ls-files \| wc -l` = 222 |
 | 中英两页字节 | `24,135` / `24,621` B | index.html / en/index.html |
 | 全站 CSS | **51.8 KB** (`53,077` B), gzip **11.8 KB** | assets/css/style.css |
 | 首屏 JS（含 Three.js） | gzip **195.7 KB** | scripts/check-bytes.mjs |
