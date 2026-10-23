@@ -172,8 +172,11 @@ let motionPaused = RM;
     // Discover independent dependencies together, without bypassing the data-saving fallback.
     for(const name of ['three.module.min.js','three.core.min.js'])resourceHint('../vendor/three-0.180.0/'+name,'modulepreload');
     resourceHint('../images/earth-200408-'+(mq('(max-width: 600px)').matches?'1024':'2048')+'.webp?v='+VER,'preload','image');
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const mod = await import('./scene.js?v=' + VER);
+    // Fetch the scene while the first two frames paint; initialization still waits for them.
+    const [mod] = await Promise.all([
+      import('./scene.js?v=' + VER),
+      new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    ]);
     if (typeof mod.initField !== 'function') throw new TypeError('scene.js 未导出 initField');
     scene = mod.initField(canvas, { reducedMotion: RM, energy: FIELD_BASE });
     scene.setPaused(motionPaused);   /* 句柄上有 setEnergy */
