@@ -170,7 +170,7 @@ let motionPaused = RM;
   }
   try {
     // Discover independent dependencies together, without bypassing the data-saving fallback.
-    for(const name of ['three.module.min.js','three.core.min.js'])resourceHint('../vendor/three-0.180.0/'+name,'modulepreload');
+    resourceHint('../vendor/three-0.180.0/three.site.87639d42f226.min.js','modulepreload');
     resourceHint('../images/earth-200408-'+(mq('(max-width: 600px)').matches?'1024':'2048')+'.webp?v='+VER,'preload','image');
     // Fetch the scene while the first two frames paint; initialization still waits for them.
     const [mod] = await Promise.all([
