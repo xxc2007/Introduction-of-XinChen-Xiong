@@ -1,21 +1,23 @@
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 const require=createRequire(import.meta.url),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
-const browser=await chromium.launch({channel:'chrome',headless:true});
+const browser=await chromium.launch({channel:'chrome',headless:true,args:['--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const {readFileSync}=await import('node:fs');
+const runtime=JSON.parse(readFileSync(new URL('../dependencies.json',import.meta.url))).runtime.path.split('/').at(-1);
 const base=process.argv[2]||'http://127.0.0.1:8914';
 try{
  for(const lang of ['/', '/en/'])for(const width of [390,1440]){
   const page=await browser.newPage({viewport:{width,height:900}}),requests=[];
   page.on('request',r=>requests.push(r.url()));
   await page.route('**/assets/js/scene.js*',async route=>{
-   for(const name of ['three.module.min.js','three.core.min.js'])assert.ok(requests.some(u=>u.endsWith('/'+name)),`${name} must start before scene imports are parsed`);
+   for(const name of [runtime])assert.ok(requests.some(u=>u.endsWith('/'+name)),`${name} must start before scene imports are parsed`);
    assert.ok(requests.some(u=>u.includes('earth-200408-')),'texture must start before scene initialization');
    await route.continue();
   });
   await page.goto(base+lang,{waitUntil:'networkidle'});
   await page.waitForFunction(()=>document.querySelector('.hero').dataset.field==='ready');
   const hints=await page.locator('link[rel="modulepreload"]').evaluateAll(els=>els.map(e=>e.href));
-  for(const name of ['three.module.min.js','three.core.min.js']){
+  for(const name of [runtime]){
    assert.equal(hints.filter(u=>u.endsWith('/'+name)).length,1,`${name} needs one early hint`);
    assert.equal(requests.filter(u=>u.endsWith('/'+name)).length,1,`${name} must not download twice`);
   }

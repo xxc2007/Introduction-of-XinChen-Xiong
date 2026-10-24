@@ -31,7 +31,7 @@
 | 资产 | 路径 | 事实 |
 | --- | --- | --- |
 | 头像 | `assets/images/avatar.jpg`（26,762 B，唯一一份；`avatar.webp` 已删，站长要求原图直出） | 300×300，站长本人提供的原图，不转码、不裁切、不加圆框 |
-| Three.js | `assets/vendor/three-0.180.0/three.module.min.js` | r0.180.0，338,908 B（gzip 数值不在此抄写：**字节与预算的唯一出处是 `node scripts/check-bytes.mjs` 与 `wc -c assets/vendor/*.js`**），MIT，文件头 license 注释保留 |
+| Three.js | `assets/vendor/three-0.180.0/three.site.<sha256>.min.js` | r0.180.0，按两场景实际导出生成子集（gzip 数值不在此抄写：**字节与预算的唯一出处是 `node scripts/check-bytes.mjs` 与 `wc -c assets/vendor/*.js`**），MIT，文件头 license 注释保留 |
 | 衬线字体 | `assets/fonts/noto-serif-sc/wght.css` + `files/`（101 个 woff2 切片） | 与纪念册同一份，按 `unicode-range` 惰性加载 |
 
 引用写法一律**相对路径**（这样站点放在域名根或任何子路径都能跑）——**唯一的页面例外是 `404.html`**：它会被 nginx 从任意深度重写到 `/404.html`，相对路径在那种位置解析不出来，所以它整页只用根绝对路径（`tests/quality.test.mjs` 有一条断言钉这件事）：
@@ -50,14 +50,9 @@
 const VER = (import.meta.url.match(/[?&]v=([0-9a-z]{4,8})/) || [])[1] || 'dev';
 await import('./scene.js?v=' + VER);
 // assets/js/scene.js 内
-import * as THREE from "../vendor/three-0.180.0/three.module.min.js";
+import * as THREE from "../vendor/three-0.180.0/three.site.87639d42f226.min.js";
 ```
-**唯一的例外是 `assets/vendor/three-0.180.0/three.core.min.js`**：它由 `three.module.min.js` 用裸相对名 import，
-查询串不会从外层模块传导过去，所以带不上 `?v=`。它的指纹就是**文件名本身**——
-升级 Three.js 必须更换包含版本号的目录，并同步更新导入路径和依赖清单；官方模块及 core 的相对导入均落在新目录中，
-不要原地覆盖，否则边缘会按扩展名把旧字节钉一年。
-`scripts/verify-sync.sh` 的 E 段逐个取回「HTML 里写着的那条 URL」比哈希，把这条例外也列进去了，
-所以无论是漏加指纹还是原地覆盖了 vendor，都会红。
+Three.js 运行时使用版本目录与内容指纹文件名，路径和 SHA-256 记录在 `dependencies.json.runtime`。官方两模块原件保留并校验，但不进入首屏请求与字节预算。维护时执行 `npm ci && npm run build:three`（固定 esbuild 0.25.11），随后运行指纹/README 更新脚本；生成物提交进仓库，部署仍为零构建。两个场景共享同一个运行时，不重复下载；新增 THREE 导出后必须重新生成。`scripts/verify-sync.sh` 从清单读取运行时逐个比对线上哈希。
 只有 `canonical` / `hreflang` / `og:url` / `og:image` / JSON-LD 里的站址用绝对地址 `https://xxc2007.me/…`，
 并且**不带** `?v=`——分享卡与结构化数据要的是规范地址。
 `INTRO_VER` 是构建版本串（跟着 HEAD 走，`deploy.sh` 每次部署重算），

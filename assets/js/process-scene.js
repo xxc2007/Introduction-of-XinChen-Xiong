@@ -1,4 +1,4 @@
-import * as THREE from '../vendor/three-0.180.0/three.module.min.js';
+import * as THREE from '../vendor/three-0.180.0/three.site.87639d42f226.min.js';
 
 /** Four connected views of the existing workflow, driven only by local scroll progress. */
 export function initProcess(canvas, screenshotURL) {

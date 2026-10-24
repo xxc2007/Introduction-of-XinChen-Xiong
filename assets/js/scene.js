@@ -1,5 +1,5 @@
 /** Hero-only Earth globe; local Three.js and locally hosted NASA Blue Marble imagery; see docs/image-provenance.md. */
-import * as THREE from '../vendor/three-0.180.0/three.module.min.js';
+import * as THREE from '../vendor/three-0.180.0/three.site.87639d42f226.min.js';
 export function initField(canvas, { reducedMotion = false } = {}) {
   const hero = canvas.closest('.hero');
   const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');

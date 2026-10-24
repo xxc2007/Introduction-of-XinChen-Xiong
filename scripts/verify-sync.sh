@@ -119,7 +119,7 @@ for (const p of ["index.html", "en/index.html", "404.html", "assets/video/index.
     if (u.pathname.startsWith("/assets/")) out.add(u.pathname + u.search);
   }
 }
-for (const v of ["three.module.min.js", "three.core.min.js"]) out.add("/assets/vendor/three-0.180.0/" + v);
+out.add("/" + JSON.parse(fs.readFileSync("dependencies.json", "utf8")).runtime.path);
 process.stdout.write([...out].sort().join("\n"));
 ')"
 NA=$(printf '%s\n' "$ASSETS" | grep -c .)

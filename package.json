@@ -6,6 +6,10 @@
     "three": "0.180.0"
   },
   "scripts": {
+    "build:three": "node scripts/build-three-subset.mjs",
     "test": "node --test \"tests/*.test.mjs\""
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11"
   }
 }

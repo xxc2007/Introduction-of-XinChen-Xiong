@@ -1,0 +1,246 @@
+{
+  "runtimeRaw": 497449,
+  "runtimeGzip": 125990,
+  "initialJSGzip": 145823
+}
+
+$ node scripts/build-three-subset.mjs --check
+assets/vendor/three-0.180.0/three.site.87639d42f226.min.js 497449 bytes; 24 exports
+
+
+$ node --test tests/*.test.mjs
+✔ media patch adds only two scoped blocks, retains security headers and is idempotent (140.5562ms)
+✔ media patch rejects missing/extra/static body drift and modified generated blocks without output (386.7483ms)
+✔ media patch copies HTTPS-only headers without leaking them to HTTP and handles CRLF (90.6592ms)
+✔ media map grants immutable only to an eight-hex version and retains original default (2.772ms)
+✔ preview denies private files, development files and escaped symlinks (157.4533ms)
+✔ preview refuses foreign Host and mutating HTTP methods (113.408ms)
+✔ public pages, NC15 mounts, Range, HEAD, ETag and gzip remain usable (213.187ms)
+✔ mutation sandbox copies only tracked working files and clean Git metadata (878.6359ms)
+✔ retired migration entrypoint fails closed before SSH or private config reads (0.4341ms)
+✔ publisher preserves the exact local commit and removes deleted remote files (1515.0653ms)
+✔ publisher rejects divergence instead of overwriting remote changes (1677.5156ms)
+✔ CSS 里每个 var(--x) 都要有出处：要么 CSS/HTML 声明过，要么 JS 会写进去 (1.4452ms)
+✔ JS 写进 DOM 的每个自定义属性都要被 CSS 用到 (0.1619ms)
+✔ reduced-motion 块必须真的把动画与迟到都压掉 (0.5365ms)
+✔ 设计令牌纪律：颜色字面量只能出现在令牌声明里 (0.645ms)
+✔ 圆角只使用已记录的基础、作品展板和胶囊尺度 (0.254ms)
+✔ 中英两页结构对称 (0.5578ms)
+✔ HTML 引用的每个本地图都要在仓库里存在 (1.295ms)
+✔ aria-controls 指向的 id 必须存在 (0.3801ms)
+✔ 每张 img 都有 alt；每个图标按钮都有可访问名字 (0.4768ms)
+✔ 标题层级不许跳级 (0.478ms)
+✔ 无障碍名必须包含可见文字（WCAG 2.5.3） (0.4521ms)
+✔ 不许留下 JS 从不写入的空 live region (0.2933ms)
+✔ 令牌对比度：承载正文的色档必须过 AA，装饰色档必须被识别为不可承载文字 (0.384ms)
+✔ 自定义属性不许闲置：声明了却没有一处 var() 读取，就是死代码 (0.1473ms)
+✔ 颜色令牌不许两个名字同值：改一个必漏另一个 (0.2781ms)
+✔ 文档里的令牌表必须与 CSS 一致：不许点名一个已删除的令牌，也不许抄错值 (0.3903ms)
+✔ 压在粒子场上的文字必须过 AA（--muted 与裸 --terra-ink 都不许） (1.3982ms)
+✔ 染上赤陶橙底的规则不许再用 --terra-ink 承载文字（必须降到 --terra-ink-2） (1.5022ms)
+✔ 磁吸按钮不许被任何 animate translate 的关键帧占用 (13.9204ms)
+✔ 注释里引用的 CSS 规则必须真的存在（JS 与 CSS 两侧都查） (1.2339ms)
+✔ HTML 上挂的每个 class 都必须有出处（style.css 或本页自己的内联 <style>） (0.3724ms)
+✔ CSS 里定义的每个 class 都必须有人用（HTML 挂着它，或 JS 会加上去） (0.5449ms)
+✔ 衬线斜体的 motto 里不许用印刷体撇号（实测会豁出 16.7px 的空洞） (0.2061ms)
+✔ 不挂脚本的页面必须带 html.no-js，否则 .reveal 会永久隐形 (0.3324ms)
+✔ CSS 里想把 [hidden] 的元素显出来，display 就必须带 !important (0.4368ms)
+✔ 等高线画入动画的挂载点必须真的能匹配上 (0.9036ms)
+✔ design.md 的令牌对比度表必须等于按 WCAG 公式现算的值 (6.7742ms)
+✔ scene.js 的每个 export 都必须真的被 main.js 用掉 (0.2067ms)
+✔ 带 nowrap 的 flex 项不许被 flex:1 1 0 + min-width:0 压到内容宽度以下 (0.5991ms)
+✔ CSS 里按属性选中的每个属性都必须真的被写上（aria-selected 那组就是死的） (0.9293ms)
+✔ 文档说 verify-sync 有几段，就必须真的有几段 (7.7571ms)
+✔ README 两张现状表里抄下来的数字必须与实测一致 (60.4249ms)
+✔ 注释里不许留下已经被删掉的功能名（墨点 / 环境音 / 音量斜坡） (0.4622ms)
+✔ 每个被 HTML 直接取用的资源都带 ?v=，且全站只有同一个指纹 (1.6462ms)
+✔ 文档不许用行号指向本仓库的文件 (103.8206ms)
+✔ 文档里逐字抄的 CSS 片段必须仍在 CSS 里 (0.7664ms)
+✔ build-contract 的「数量断言」表必须逐项等于 HTML 实测 (0.9687ms)
+✖ sitemap.xml 的 lastmod 必须等于最后一次改动两页 HTML 的提交日期 (87.2452ms)
+✔ 404.html 必须只用根绝对路径（它会被重写到任意深度） (0.3092ms)
+✔ HTML 里每个 <img> 声明的 width/height 与文件真实尺寸一致 (1.651ms)
+✔ 头像的 alt 不许声称它是本人照片（那是站长选的一张标语海报） (0.4253ms)
+✔ 新版展览配色的正文组合均达到 AA (0.1344ms)
+ℹ tests 53
+ℹ suites 0
+ℹ pass 52
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3303.0631
+
+✖ failing tests:
+
+test at tests\quality.test.mjs:888:1
+✖ sitemap.xml 的 lastmod 必须等于最后一次改动两页 HTML 的提交日期 (87.2452ms)
+  AssertionError [ERR_ASSERTION]: sitemap 写的是 2026-10-24，最后一次动 HTML 的提交是 2026-10-23（跑一次 deploy.sh 会自动对齐）
+  + actual - expected
+  
+    [
+  +   '2026-10-24'
+  -   '2026-10-23'
+    ]
+  
+      at TestContext.<anonymous> (file:///D:/%E4%B8%AA%E4%BA%BA%E5%B1%95%E7%A4%BA%E7%BD%91%E7%AB%99/tests/quality.test.mjs:893:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ '2026-10-24' ],
+    expected: [ '2026-10-23' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+EXIT 1
+
+$ node scripts/check-vendor.mjs
+three 0.180.0 2 checksums OK
+
+
+$ node scripts/check-parity.mjs
+── A. 绝对断言（不是「两页一样」，是「各自正确」）
+  ✓ ZH canonical → https://xxc2007.me/
+  ✓ ZH og:url → https://xxc2007.me/
+  ✓ ZH og:locale = zh_CN
+  ✓ ZH hreflang zh-Hans=https://xxc2007.me/
+  ✓ ZH hreflang en=https://xxc2007.me/en/
+  ✓ ZH hreflang x-default=https://xxc2007.me/
+  ✓ EN canonical → https://xxc2007.me/en/
+  ✓ EN og:url → https://xxc2007.me/en/
+  ✓ EN og:locale = en_US
+  ✓ EN hreflang zh-Hans=https://xxc2007.me/
+  ✓ EN hreflang en=https://xxc2007.me/en/
+  ✓ EN hreflang x-default=https://xxc2007.me/
+── A2. 资源指纹覆盖面
+  ✓ index.html 12 条本地资源全部带指纹
+  ✓ index.html 指纹单值 d4823e0c
+  ✓ en/index.html 12 条本地资源全部带指纹
+  ✓ en/index.html 指纹单值 d4823e0c
+  ✓ 404.html 2 条本地资源全部带指纹
+  ✓ 404.html 指纹单值 d4823e0c
+  ✓ 三页共用同一指纹 d4823e0c
+── B. 结构与属性（顺序敏感）
+  ✓ sec-head = 5
+  ✓ h2 = 5
+  ✓ sec-index = 5
+  ✓ sec-rule = 5
+  ✓ p = 19
+  ✓ section = 6
+  ✓ nav 锚链 = 5
+  ✓ work-card = 2
+  ✓ img = 5
+  ✓ blockquote = 3
+  ✓ reveal = 22
+  ✓ live region（HTML 0 处 + JS 建一处）
+  ✓ menuitem = 2
+  ✓ aria-label = 14
+  ✓ aria-haspopup = 1
+  ✓ aria-controls = 2
+  ✓ aria-expanded = 2
+  ✓ lang-btn = 1
+  ✓ data-magnetic = 6
+  ✓ svg = 11
+  ✓ json-ld = 1
+── B2. 承重类名跨文件存在
+  ✓ .sec-head 在 CSS 与两页都在
+  ✓ .sec-index 在 CSS 与两页都在
+  ✓ .sec-rule 在 CSS 与两页都在
+  ✓ .work-card 在 CSS 与两页都在
+  ✓ .lang-btn 在 CSS 与两页都在
+  ✓ .lang-menu 在 CSS 与两页都在
+  ✓ .social 在 CSS 与两页都在
+  ✓ .reveal 在 CSS 与两页都在
+  ✓ .progress 在 CSS 与两页都在
+  ✓ .hero 在 CSS 与两页都在
+  ✓ .copy-mail 在 CSS 与两页都在
+  ✓ .foot 在 CSS 与两页都在
+  ✓ ZH aria-label 不重复（14 条）
+  ✓ EN aria-label 不重复（14 条）
+  ✓ data-* 属性名集合（3 项）
+  ✓ 每个 <img> 都有 alt（5 项，含顺序）
+  ✓ 社交链接顺序（7 项，含顺序）
+  ✓ 导航锚点顺序（5 项，含顺序）
+  ✓ SVG path 几何逐条一致（18 项，含顺序）
+  ✓ 外链集合（12 项）
+  ✓ 图片引用（basename，含顺序）（5 项，含顺序）
+  ✓ 英文学校截图独立资源
+  ✓ ZH 影片语言资源
+  ✓ EN 影片语言资源
+  ✓ id 集合（14 项）
+── C. 跨文件不变量
+  ✓ ZH 锚点都有落点
+  ✓ ZH aria-controls 落点
+  ✓ EN 锚点都有落点
+  ✓ EN aria-controls 落点
+  ✓ index.html 引用的文件都在
+  ✓ en/index.html 引用的文件都在
+  ✓ 404.html 引用的文件都在
+PARITY OK
+
+
+$ node scripts/check-bytes.mjs
+  ✓ 仅点击播放后加载的影片        7131.5 KB / 7812.5 KB
+  ✓ 首屏影片缩略图               9.2 KB / 9.8 KB
+  ✓ 按需加载分镜 JS gzip        1.9 KB / 7.8 KB
+  ✓ 桌面地球贴图              128.7 KB / 146.5 KB
+  ✓ 手机地球贴图               38.5 KB / 48.8 KB
+  ✓ 静态地球保底画面             30.2 KB / 58.6 KB
+  ✓ NASA 地球贴图          1578.4 KB / 1953.1 KB
+  ✓ HTML 中文页             23.6 KB / 58.6 KB
+  ✓ HTML 英文页               24 KB / 58.6 KB
+  ✓ CSS 合计（含分镜与联系区）      51.8 KB / 55.7 KB
+  ✓ 自有 JS gzip           21.2 KB / 29.3 KB
+  ✓ 含 Three.js gzip     142.4 KB / 199.2 KB
+  ✓ 单页头像 + 两张作品截图（中英分别核算）     86.3 KB / 87.9 KB
+  ✓ 不进首屏，只算仓库体积          77.8 KB / 195.3 KB
+  · 字体切片 101 个（按 unicode-range 惰性加载，不计入首屏预算）
+BUDGET OK
+
+
+$ node tests/resource-hints.browser.mjs http://127.0.0.1:8924
+Resource hints: desktop/mobile reuse, language intent, constrained network and URL boundaries OK
+
+
+$ node tests/earth-free-rotation.browser.mjs
+
+Baseline main initial JS gzip: 200465 bytes
+/ 1440 vertical, diagonal, multiple pole crossings and reset OK
+
+
+$ node tests/process.browser.mjs http://127.0.0.1:8924
+$ node --test --test-name-pattern=sitemap.xml tests/quality.test.mjs
+✔ sitemap.xml 的 lastmod 必须等于最后一次改动两页 HTML 的提交日期 (63.5399ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 163.6833
+
+$ node scripts/prepare-release.mjs --check
+Resource fingerprint d4823e0c current
+
+$ node scripts/check-vendor.mjs
+three 0.180.0 3 checksums OK (official originals + generated runtime)
+
+/ 320: lazy load, pinned chapters, four rendered states, text, keyboard, controls and overflow OK
+/ 390: lazy load, pinned chapters, four rendered states, text, keyboard, controls and overflow OK
+/ 1440: lazy load, pinned chapters, four rendered states, text, keyboard, controls and overflow OK
+/en/ 320: lazy load, pinned chapters, four rendered states, text, keyboard, controls and overflow OK
+/en/ 390: lazy load, pinned chapters, four rendered states, text, keyboard, controls and overflow OK
+/en/ 1440: lazy load, pinned chapters, four rendered states, text, keyboard, controls and overflow OK
+short: process fallback OK
+reduced: process fallback OK
+no-js: process fallback OK
+no-webgl: process fallback OK
+texture-failure: process fallback OK
+

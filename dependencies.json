@@ -11,5 +11,36 @@
       "path": "assets/vendor/three-0.180.0/three.core.min.js",
       "sha256": "61ba0df005b05991361d040d8ff670e1aadfd0ce7aeebd1fdb0725957a8957de"
     }
-  ]
+  ],
+  "runtime": {
+    "path": "assets/vendor/three-0.180.0/three.site.87639d42f226.min.js",
+    "sha256": "87639d42f226d793eefc1dccd4e3d3338de617ce0c2cae8216da788ca2e1b4bb",
+    "exports": [
+      "BoxGeometry",
+      "DirectionalLight",
+      "EdgesGeometry",
+      "Group",
+      "HemisphereLight",
+      "LineBasicMaterial",
+      "LineSegments",
+      "MathUtils",
+      "Mesh",
+      "MeshBasicMaterial",
+      "MeshStandardMaterial",
+      "PCFSoftShadowMap",
+      "PerspectiveCamera",
+      "PlaneGeometry",
+      "Quaternion",
+      "SRGBColorSpace",
+      "Scene",
+      "ShadowMaterial",
+      "SphereGeometry",
+      "TextureLoader",
+      "TorusGeometry",
+      "Vector2",
+      "Vector3",
+      "WebGLRenderer"
+    ],
+    "generator": "esbuild 0.25.11; npm ci && node scripts/build-three-subset.mjs"
+  }
 }
