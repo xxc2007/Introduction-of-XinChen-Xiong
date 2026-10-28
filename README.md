@@ -71,11 +71,11 @@ https://github.com/user-attachments/assets/674f7e9e-a87c-4235-b784-5ac5c5f1c822
 
 从一次访问开始，图中分别展开地球、制作分镜和影片的加载路径，以及图形或媒体不可用时的处理。灰色表示处理步骤，菱形表示判断，绿色表示可见结果，橙色表示后备路径或约束。
 
-[![个人展示网站 · 从访问到交互](docs/architecture/flow.zh.fe4a447f42e4.svg)](docs/architecture/flow.zh.fe4a447f42e4.svg)
+[![个人展示网站 · 从访问到交互](docs/architecture/flow.zh.b6c1441ea322.png)](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/architecture/flow.zh.b6c1441ea322.png)
 
-点击图片可打开矢量原图放大阅读。实现依据：[assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html)。
+点击图片直接打开 3600 像素宽的 PNG 原图，再次点击可按原尺寸放大查看。[可编辑 SVG 源文件](docs/architecture/flow.zh.fe4a447f42e4.svg)。实现依据：[assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html)。
 
-后续修改可编辑 [`render.mjs`](docs/architecture/render.mjs) 中的双语文字与节点，运行 `node docs/architecture/render.mjs` 同步生成两种语言的图。
+后续修改可编辑 [`render.mjs`](docs/architecture/render.mjs) 中的双语文字与节点，先运行 `npm ci --prefix docs/architecture` 安装文档导出工具，再运行 `node docs/architecture/render.mjs` 同步生成中英文 SVG 与高清 PNG；[导出说明](docs/architecture/README.md)。
 
 ## 本地运行
 
@@ -100,7 +100,7 @@ node --test "tests/*.test.mjs"
 
 | 项目 | 当前测量 | 复算方式 |
 |---|---|---|
-| 仓库文件 | **226** | `git ls-files \| wc -l` = 226 |
+| 仓库文件 | **233** | `git ls-files \| wc -l` = 233 |
 | 中英两页字节 | `24,135` / `24,621` B | index.html / en/index.html |
 | 全站 CSS | **51.8 KB** (`53,077` B), gzip **11.8 KB** | assets/css/style.css |
 | 首屏 JS（含 Three.js） | gzip **142.4 KB** | scripts/check-bytes.mjs |
