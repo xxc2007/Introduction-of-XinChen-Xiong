@@ -1,0 +1,9 @@
+{
+  "name": "intro-architecture-diagrams",
+  "private": true,
+  "type": "module",
+  "diagramRepository": "xxc2007/Introduction-of-XinChen-Xiong",
+  "dependencies": {
+    "@resvg/resvg-js": "2.6.2"
+  }
+}

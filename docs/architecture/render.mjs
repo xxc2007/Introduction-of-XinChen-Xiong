@@ -183,6 +183,7 @@ const spec = {
 
 
 import fs from 'node:fs';
+import { exportDiagram } from './raster.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
@@ -268,10 +269,7 @@ for (let lang=0; lang<2; lang++) {
  if(!previous.size)throw new Error('Missing diagram reference in '+readmePath);
  fs.writeFileSync(path.join(directory,filename),svg);
  fs.writeFileSync(readmePath,readme.replace(references,'docs/architecture/'+filename));
- // Only remove superseded diagram files explicitly referenced by this README.
- for(const reference of previous){
-  const oldFilename=path.basename(reference);
-  if(oldFilename!==filename && fs.existsSync(path.join(directory,oldFilename)))fs.unlinkSync(path.join(directory,oldFilename));
- }
+ // Retain editable SVG sources, including earlier fingerprinted versions.
+ exportDiagram({directory,language,svg,svgFilename:filename});
  console.log('Rendered '+filename+' and updated its README references');
 }

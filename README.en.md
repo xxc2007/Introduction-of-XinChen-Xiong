@@ -69,11 +69,11 @@ Olive green, warm cream, generous typography and scroll-linked motion guide the 
 
 Starting with a visit, the diagram follows Earth rendering, process scenes and film loading, including graphics and media fallbacks. Grey boxes are processing steps, diamonds are decisions, green boxes are visible results, and amber boxes mark fallbacks or constraints.
 
-[![Personal website · From request to interaction](docs/architecture/flow.en.715898465b84.svg)](docs/architecture/flow.en.715898465b84.svg)
+[![Personal website · From request to interaction](docs/architecture/flow.en.186aa1efbee7.png)](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/architecture/flow.en.186aa1efbee7.png)
 
-Open the image to zoom in. Source references: [assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html).
+Click the image to open the 3600 px PNG directly, then click again to view it at its original size. [Editable SVG source](docs/architecture/flow.en.715898465b84.svg). Source references: [assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html).
 
-To update both diagrams, edit the bilingual labels in [`render.mjs`](docs/architecture/render.mjs) and run `node docs/architecture/render.mjs`.
+To update both diagrams, install the documentation tool with `npm ci --prefix docs/architecture`, edit the bilingual labels in [`render.mjs`](docs/architecture/render.mjs), and run `node docs/architecture/render.mjs` to regenerate the SVG sources and high-resolution PNGs. See the [export notes](docs/architecture/README.md).
 
 ## Run locally
 
