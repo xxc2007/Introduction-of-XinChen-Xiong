@@ -100,7 +100,7 @@ node --test "tests/*.test.mjs"
 
 | 项目 | 当前测量 | 复算方式 |
 |---|---|---|
-| 仓库文件 | **226** | `git ls-files \| wc -l` = 226 |
+| 仓库文件 | **233** | `git ls-files \| wc -l` = 233 |
 | 中英两页字节 | `24,135` / `24,621` B | index.html / en/index.html |
 | 全站 CSS | **51.8 KB** (`53,077` B), gzip **11.8 KB** | assets/css/style.css |
 | 首屏 JS（含 Three.js） | gzip **142.4 KB** | scripts/check-bytes.mjs |
