@@ -193,7 +193,8 @@ a.brand:hover span{color:var(--terra-ink)}
   position:absolute;top:calc(100% + 10px);right:0;z-index:90;
   min-width:178px;max-width:calc(100vw - var(--gut) * 2);
   padding:6px;list-style:none;
-  background:var(--paper);border:1px solid var(--line);border-radius:2px;
+  background:var(--paper);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 18px 44px rgba(31,30,29,.16),0 2px 8px rgba(31,30,29,.06);
   display:flex;flex-direction:column;gap:2px;
   animation:langIn .18s var(--ease) both;
 }
@@ -202,14 +203,14 @@ a.brand:hover span{color:var(--terra-ink)}
 .lang-menu a{
   display:flex;align-items:center;justify-content:space-between;gap:14px;
   padding:9px 12px;border-radius:2px;
-  font-family:var(--serif);font-size:15px;font-weight:700;letter-spacing:.03em;
+  font-family:var(--sans);font-size:14px;line-height:1.5;font-weight:400;letter-spacing:.03em;
   color:var(--ink);text-decoration:none;
   transition:background-color .2s var(--ease),color .2s var(--ease);
 }
 .lang-menu a:hover{background:rgba(217,119,87,.12);color:var(--terra-ink-2)}
 
 .lang-menu [aria-current="true"]>a,.lang-menu a[aria-current="true"]{
-  color:var(--terra-ink-2);font-weight:900;background:rgba(217,119,87,.09);
+  color:var(--terra-ink-2);font-weight:600;background:rgba(217,119,87,.09);
 }
 .lang-menu [aria-current="true"]>a::after,.lang-menu a[aria-current="true"]::after{
   content:"✓";font-family:var(--sans);font-size:14px;line-height:1;
@@ -544,8 +545,6 @@ main>section{
   body{font-size:16px;line-height:1.9}
 
   .topbar{gap:8px}
-  .lang-current,.lang-caret{display:none}
-
   .lang-btn{padding:8px 10px;min-width:44px;min-height:44px}
   .controls{gap:7px}
   .brand{font-size:15px;letter-spacing:.01em;max-width:none}
@@ -663,7 +662,7 @@ html[lang=en] .portfolio .hero h1{font-size:clamp(80px,12.7vw,210px);letter-spac
 }
 @media(max-width:1000px){
  .portfolio{--bar:76px;--gut:22px}.portfolio .topbar{min-height:76px;padding-block:12px;flex-wrap:nowrap}
- .portfolio .brand{flex:1 1 0;min-width:0;white-space:normal}.portfolio .brand b{font-size:19px;white-space:normal;line-height:1.2}.portfolio .controls{order:2;margin-left:0}.portfolio .lang-current,.portfolio .lang-caret{display:none}
+ .portfolio .brand{flex:1 1 0;min-width:0;white-space:normal}.portfolio .brand b{font-size:19px;white-space:normal;line-height:1.2}.portfolio .controls{order:2;margin-left:0}
  .menu-toggle{flex:none;order:1;display:flex;align-items:center;gap:12px;font-size:13px;min-height:44px;margin-left:auto;color:var(--sand);border:1px solid var(--stage-line);padding:8px 15px;border-radius:40px}
  .portfolio #nav{display:none;position:absolute;left:0;right:0;top:76px;order:initial;margin:0;background:var(--forest);padding:20px 22px 28px;border-bottom:1px solid var(--stage-line)}
  .portfolio #nav.is-open{display:flex;flex-direction:column;align-items:stretch;gap:0}.portfolio #nav a{font-size:22px;padding:15px 0;border-bottom:1px solid var(--stage-line)}
@@ -739,7 +738,6 @@ html[lang=en] .portfolio .hero h1{font-size:clamp(60px,15.2vw,230px);line-height
 .portfolio .brand b{font-family:var(--sans);font-size:clamp(24px,1.6vw,40px);font-weight:800;letter-spacing:-.045em}
 .portfolio .brand span{display:none}
 .portfolio .lang-btn{color:inherit;border:0;padding:8px;background:transparent}
-.portfolio .lang-current,.portfolio .lang-caret{display:none}
 .portfolio .menu-toggle{color:inherit;border:0;border-radius:0;padding:10px 0}
 .portfolio .progress{visibility:hidden}
 .portfolio .topbar[data-tone=ink]{color:var(--night)}
