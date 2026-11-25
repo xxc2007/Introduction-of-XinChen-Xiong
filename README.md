@@ -86,7 +86,7 @@ node --test "tests/*.test.mjs"  # 静态与策略测试
 | 项目 | 当前测量 | 复算方式 |
 |---|---|---|
 | 仓库文件 | **238** | `git ls-files \| wc -l` = 238 |
-| 中英两页字节 | `24,172` / `24,659` B | index.html / en/index.html |
+| 中英两页字节 | `24,181` / `24,710` B | index.html / en/index.html |
 | 全站 CSS | **52.5 KB** (`53,757` B), gzip **11.9 KB** | assets/css/style.css |
 | 首屏 JS（含 Three.js） | gzip **146.3 KB** | scripts/check-bytes.mjs |
 | 图片（头像 + 两张作品截图） | **112.5 KB** (`115,154` B) | scripts/check-bytes.mjs |
