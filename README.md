@@ -83,13 +83,14 @@ node --test "tests/*.test.mjs"  # 静态与策略测试
 
 ## 当前源码体积
 
-| 指标 | 当前实测 | 复算入口 |
+| 项目 | 当前测量 | 复算方式 |
 |---|---|---|
-| 仓库跟踪文件 | **233** | `git ls-files \| wc -l` |
-| 中 / 英首页体积 | `24,135` / `24,621` B | `index.html` / `en/index.html` |
-| 全站样式表 | **51.8 KB**，gzip **11.8 KB** | `assets/css/style.css` |
-| 首屏 JS（含 Three.js） | gzip **142.4 KB** | `scripts/check-bytes.mjs` |
-| 展示图片（头像 + 双站截图） | **112.5 KB** | `scripts/check-bytes.mjs` |
+| 仓库文件 | **234** | `git ls-files \| wc -l` = 234 |
+| 中英两页字节 | `24,172` / `24,659` B | index.html / en/index.html |
+| 全站 CSS | **51.8 KB** (`53,001` B), gzip **11.8 KB** | assets/css/style.css |
+| 首屏 JS（含 Three.js） | gzip **146.3 KB** | scripts/check-bytes.mjs |
+| 图片（头像 + 两张作品截图） | **112.5 KB** (`115,154` B) | scripts/check-bytes.mjs |
+| 不进首屏的分享素材 | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
 ## 发布、署名与开源许可
 

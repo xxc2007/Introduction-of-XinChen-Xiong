@@ -85,13 +85,14 @@ node --test "tests/*.test.mjs"  # unit & policy checks
 
 ## Measured Source Sizes
 
-| Metric | Current Measurement | Verification |
+| Item | Current Measurement | Verification |
 |---|---|---|
-| Tracked files | **233** | `git ls-files \| wc -l` |
-| Chinese / English HTML | `24,135` / `24,621` B | `index.html` / `en/index.html` |
-| Site stylesheet | **51.8 KB**, gzip **11.8 KB** | `assets/css/style.css` |
-| Initial Hero JS (incl. Three.js) | gzip **142.4 KB** | `scripts/check-bytes.mjs` |
-| Images (avatar + two project shots) | **112.5 KB** | `scripts/check-bytes.mjs` |
+| Repository files | **234** | `git ls-files \| wc -l` = 234 |
+| HTML size | `24,172` / `24,659` B | index.html / en/index.html |
+| Site CSS | **51.8 KB** (`53,001` B), gzip **11.8 KB** | assets/css/style.css |
+| Hero JS | gzip **146.3 KB** | scripts/check-bytes.mjs |
+| Images (avatar + two project shots) | **112.5 KB** (`115,154` B) | scripts/check-bytes.mjs |
+| Social/share assets | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
 ## Publishing, Credits & License
 

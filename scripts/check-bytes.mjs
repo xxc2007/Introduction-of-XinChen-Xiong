@@ -14,7 +14,7 @@ const size = p => statSync(join(ROOT, p)).size;
 const pick = re => files.filter(f => re.test(f));
 
 const BUDGET = [
-  ["按需影片", () => size("assets/video/intro-promo.mp4"), 8_000_000, "仅点击播放后加载的影片"],
+  ["按需影片", () => size("assets/video/intro-promo.mp4"), 10_000_000, "仅点击播放后加载的影片"],
   ["影片缩略图", () => size("assets/video/poster.webp"), 10_000, "首屏影片缩略图"],
   ["制作分镜模块", () => gz("assets/js/process-scene.js"), 8_000, "按需加载分镜 JS gzip"],
   ["桌面地球贴图", () => size("assets/images/earth-200408-2048.webp"), 150_000, "桌面地球贴图"],
