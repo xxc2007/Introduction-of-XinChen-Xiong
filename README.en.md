@@ -87,9 +87,9 @@ node --test "tests/*.test.mjs"  # unit & policy checks
 
 | Item | Current Measurement | Verification |
 |---|---|---|
-| Repository files | **238** | `git ls-files \| wc -l` = 238 |
+| Repository files | **236** | `git ls-files \| wc -l` = 236 |
 | HTML size | `24,181` / `24,710` B | index.html / en/index.html |
-| Site CSS | **52.5 KB** (`53,757` B), gzip **11.9 KB** | assets/css/style.css |
+| Site CSS | **51.8 KB** (`53,001` B), gzip **11.8 KB** | assets/css/style.css |
 | Hero JS | gzip **146.3 KB** | scripts/check-bytes.mjs |
 | Images (avatar + two project shots) | **112.5 KB** (`115,154` B) | scripts/check-bytes.mjs |
 | Social/share assets | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
