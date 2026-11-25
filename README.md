@@ -22,7 +22,7 @@
 
 </div>
 
-![桌面首屏：大字姓名、个人介绍与可自由旋转的真实地球](assets/images/readme-hero-desktop.png?v=4430820db066)
+![桌面首屏：大字姓名、个人介绍与可自由旋转的真实地球](assets/images/readme-hero-desktop.png?v=1c6836b61a)
 
 ## 🎬 宣传片展示
 
@@ -54,7 +54,7 @@ https://github.com/user-attachments/assets/84a02c49-d0d7-48e9-80eb-6ba01b800be6
 
 ### 移动端页面
 
-<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="移动端：展开的文字导航、个人介绍、影片入口与真实地球"></p>
+<p align="center"><img src="assets/images/readme-hero-mobile.png?v=429c4bc475" width="390" alt="移动端：展开的文字导航、个人介绍、影片入口与真实地球"></p>
 
 ## 技术实现
 
@@ -85,7 +85,7 @@ node --test "tests/*.test.mjs"  # 静态与策略测试
 
 | 项目 | 当前测量 | 复算方式 |
 |---|---|---|
-| 仓库文件 | **234** | `git ls-files \| wc -l` = 234 |
+| 仓库文件 | **236** | `git ls-files \| wc -l` = 236 |
 | 中英两页字节 | `24,172` / `24,659` B | index.html / en/index.html |
 | 全站 CSS | **51.8 KB** (`53,001` B), gzip **11.8 KB** | assets/css/style.css |
 | 首屏 JS（含 Three.js） | gzip **146.3 KB** | scripts/check-bytes.mjs |
