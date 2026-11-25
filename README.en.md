@@ -2,101 +2,90 @@
 
 <div align="center">
 
-# Xiong Xinchen · Personal website
+# Xiong Xinchen · Personal Website
 
-*“I haven’t written code that changes the world yet.”*
+> *“I haven’t written code that changes the world yet.”*
 
-[![Website](https://img.shields.io/badge/Website-xxc2007.me-48583D)](https://xxc2007.me/)
+[![Website](https://img.shields.io/badge/Website-xxc2007.me%2Fen-48583D)](https://xxc2007.me/en/)
+[![中文版](https://img.shields.io/badge/中文版-xxc2007.me-1F1E1D)](https://xxc2007.me/)
 [![Stack](https://img.shields.io/badge/Stack-HTML_CSS_JavaScript-24251E)](#implementation)
 [![MIT](https://img.shields.io/badge/License-MIT-FF8B48)](LICENSE)
 
-**Ideas become websites. The work tells the story.**
+**Turn ideas into webpages. Let the work speak for the process.**
 
-This is my personal introduction and the shared entrance to two live projects: a place for campus memories and a daily geography publication.
-Through the projects, my working process and a few guiding beliefs, this bilingual site shows how I build with AI—from an initial idea to a website people can visit, explore and return to.
+This is my personal introduction and the shared doorway to two live open-source projects—<br>
+one preserving three years of high-school memory, the other reading a changing planet every morning in Chinese and English.<br>
+Through its works, four-step craft, and quiet convictions, this zero-build bilingual site records how one person building with AI<br>
+turns an idea into something people can visit, explore, and return to.
 
-[Visit the site](https://xxc2007.me/en/) · [Watch the film](#-product-film) · [Two projects](#two-projects) · [Experience](#experience) · [Implementation](#implementation) · [Run locally](#run-locally) · [License](#-license) · [Star History](#-star-history)
+[Visit the site](https://xxc2007.me/en/) · [Watch the film](#-product-film) · [Two Projects](#two-projects) · [Experience](#experience) · [Implementation](#implementation) · [Run Locally](#run-locally) · [Source Sizes](#measured-source-sizes) · [License](#-license) · [Star History](#-star-history)
 
 </div>
 
 ![Desktop introduction with large typography and an interactive Earth](assets/images/readme-hero-desktop.png?v=4430820db066)
 
-## 🎬 Product film
+## 🎬 Product Film
 
-A 44-second introduction, from the name and rotating Earth to the campus memorial, GEOHOT and the process behind the projects. The English edition follows the Chinese film's visual style and pacing, with English titles, real English website footage, the same soft score and gentle transition sounds. GEOHOT's original interface retains Chinese article text.
+Our new **68-second · 1080p 60fps** official launch film (available in both English and Chinese editions): carrying the site's exact olive, cream, forest, editorial-orange, and charcoal color-block rhythm from the Bezier opening and original NASA Blue Marble 3D Earth through the profile card, live English captures of both projects, the 4-step tilted 3D workflow, and the charcoal manifesto—scored to an original 116 BPM analog-synth soundtrack.
 
 [![Watch the English film](assets/video/poster-en-hd.jpg)](https://xxc2007.me/assets/video/en.html)
 
-[▶ Watch in the 1080p player](https://xxc2007.me/assets/video/en.html) · [Open MP4](https://xxc2007.me/assets/video/intro-promo-en.mp4) · [No-music edition, with transition sounds](https://xxc2007.me/assets/video/intro-promo-en-nobgm.mp4)
+Play directly below:
 
-## Two projects
+https://github.com/user-attachments/assets/5dcdb916-12bd-47fe-98d7-1f608fd5e6a3
 
-**One preserves memories; the other makes information easier to follow.** Their content and technical choices differ, while both bring together my practice in design, frontend development, mapping and ongoing maintenance.
+[▶ Watch in the 1080p player](https://xxc2007.me/assets/video/en.html) · [Open English MP4](https://xxc2007.me/assets/video/intro-promo-en.mp4) · [Chinese MP4](https://xxc2007.me/assets/video/intro-promo.mp4)
 
-| Project | Content and implementation | Explore |
+## Two Projects
+
+**One keeps a place alive in memory; the other brings order to a noisy world.** Their subjects and stacks differ, yet both reflect the same hands-on practice in typography, vanilla frontend craft, cartography, and ongoing care.
+
+| Project | Latest State & Engineering | Links |
 |---|---|---|
-| **The Nanchang No. 15 memorial** | A record of the school through 25 campus photographs I took, an eight-viewpoint photo tour, a Chinese-labelled map and a guestbook. Built with vanilla frontend code and a self-hosted comment service, with ten language editions. | [Visit](https://xxc2007.me/nc15/) · [Source](https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School) |
-| **GEOHOT** | Public geography sources become selected stories and daily editions through pre-filtering, two scoring passes and event grouping. Built on AIHOT, with server rendering and background job processing. | [Read](https://xxc2007.me/geohot/) · [Source](https://github.com/xxc2007/GeoHot) |
+| **Memorial by Qingshan Lake** | A tribute to Nanchang No. 15 Middle School built from 25 original campus photographs (served in AVIF), an eight-viewpoint photo tour, a multi-source campus map, and a login-free guestbook across ten static languages. | [Visit](https://xxc2007.me/nc15/en/) · [Source](https://github.com/xxc2007/In-memory-of-Nanchang-No.-15-Middle-School) |
+| **GEOHOT · Geography in Focus** | Monitors 1,000 public geography sources through pre-filtering, dual scoring, and event grouping to publish daily editions—now with a **native English interface** (`/geohot/en/`), SSR, job queues, and open API / MCP endpoints. | [English](https://xxc2007.me/geohot/en/) · [中文](https://xxc2007.me/geohot/) · [Source](https://github.com/xxc2007/GeoHot) |
 
 ![The project selector and a comparison of the memorial and GEOHOT](assets/images/readme-works-desktop.png?v=ddaf350d481d)
 
 ## Experience
 
-Olive green, warm cream, generous typography and scroll-linked motion guide the reading sequence: an introduction, the projects, the working process, then beliefs and contact details.
+- **An Earth you can turn by hand**: Self-hosted NASA Blue Marble imagery on a quaternion-driven 3D globe with unrestricted 360° tumbling, arrow-key controls, and view reset.
+- **Always-visible chapter & language controls**: Plain text links stay expanded on desktop and mobile with an orange dotted active marker; the upgraded globe language menu works smoothly online and over `file://`.
+- **A craft you can scroll through**: Four sticky chapters—*Purpose, Build, Mapping, Ship & Tend*—linked to tilted live previews.
+- **Built for every visitor**: Full keyboard accessibility, static Earth fallback, `prefers-reduced-motion` support, and lazy-loaded media.
 
-- **An Earth you can turn:** NASA Blue Marble imagery on a globe with unrestricted dragging and tumbling, arrow-key control and a view reset.
-- **Visible chapter navigation:** text links stay expanded on desktop and mobile, with a dotted current-section marker, natural wrapping on narrow screens and a Chinese/English switch.
-- **A process to explore:** four steps and their visual scenes follow purpose, design and construction, mapping, and publication and maintenance.
-- **Different ways to browse:** desktop and touch layouts, keyboard controls, a static Earth fallback and reduced-motion support. Video loads when activated.
+### Mobile Edition
 
-### Mobile edition
-
-<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="Mobile edition with expanded navigation, introduction, film entry and Earth"></p>
-
-<sub>Screenshots were captured on 16 October 2026. The film preserves the website at production time; its news footage does not change with GEOHOT’s daily updates.</sub>
+<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="Mobile edition with expanded navigation, introduction, film entry, and Earth"></p>
 
 ## Implementation
 
-| Area | Approach |
+| Layer | Engineering Choices |
 |---|---|
-| Structure | Static HTML with separate Chinese and English pages and SEO metadata; shared styles and behavior, with no application build step. |
-| Styles and interactions | CSS handles responsive layout and visual states; vanilla JavaScript handles chapter tracking, project selection, language controls and scroll-linked scenes. |
-| Earth | Self-hosted Three.js and textures, quaternion-based rotation for continuous tumbling, and WebGL context-loss and restoration handling. |
-| Loading | Earth and process modules load on demand; video loads after activation. Key visual assets are served locally, with static fallback content. |
-| Verification | Language parity, local links, asset budgets and static rules, alongside browser interaction regressions. Commands are listed below. |
+| **Structure** | Pure static HTML with separate Chinese and English pages, full SEO metadata, shared styles/scripts, and **zero build step**. |
+| **Style & Behavior** | Plain CSS handles color-block layout and states; vanilla JS drives scrollspy, project switching, language menu, and scroll choreography. |
+| **3D Earth** | Self-hosted, tree-shaken Three.js and NASA textures with quaternion rotation and WebGL context-loss recovery. |
+| **Quality Guardrails** | Automated bilingual parity, local link verification, byte budgets, and real-browser interaction regression tests. |
 
-### How it works
-
-Starting with a visit, the diagram follows Earth rendering, process scenes and film loading, including graphics and media fallbacks. Grey boxes are processing steps, diamonds are decisions, green boxes are visible results, and amber boxes mark fallbacks or constraints.
+### How It Works
 
 [![Personal website · From request to interaction](docs/architecture/flow.en.186aa1efbee7.png)](https://raw.githubusercontent.com/xxc2007/Introduction-of-XinChen-Xiong/main/docs/architecture/flow.en.186aa1efbee7.png)
 
-Click the image to open the 3600 px PNG directly, then click again to view it at its original size. [Editable SVG source](docs/architecture/flow.en.715898465b84.svg). Source references: [assets/js/main.js](assets/js/main.js) · [assets/js/scene.js](assets/js/scene.js) · [assets/js/process-scene.js](assets/js/process-scene.js) · [index.html](index.html) · [en/index.html](en/index.html).
+<sub>Click for 3600 px PNG · [Editable SVG source](docs/architecture/flow.en.715898465b84.svg) · Sources: [main.js](assets/js/main.js) · [scene.js](assets/js/scene.js) · [process-scene.js](assets/js/process-scene.js).</sub>
 
-To update both diagrams, install the documentation tool with `npm ci --prefix docs/architecture`, edit the bilingual labels in [`render.mjs`](docs/architecture/render.mjs), and run `node docs/architecture/render.mjs` to regenerate the SVG sources and high-resolution PNGs. See the [export notes](docs/architecture/README.md).
-
-## Run locally
+## Run Locally
 
 ```sh
-node tools/serve.mjs 8901
+node tools/serve.mjs 8901       # open http://127.0.0.1:8901/en/
+node scripts/check-parity.mjs   # bilingual parity check
+node scripts/check-links.mjs    # local link verification
+node scripts/check-bytes.mjs    # asset byte budgets
+node --test "tests/*.test.mjs"  # unit & policy checks
 ```
 
-Open http://127.0.0.1:8901/ or `/en/` for English. No application build is required. The main portfolio uses system sans-serif fonts; supporting pages retain local font assets.
+## Measured Source Sizes
 
-Check content, structure and resource sizes:
-
-```sh
-node scripts/check-parity.mjs
-node scripts/check-links.mjs
-node scripts/check-bytes.mjs
-node --test "tests/*.test.mjs"
-```
-
-## Measured source sizes
-
-The values below are checked against the files by the quality suite. JS totals include the local Three.js modules; the later process scene is counted separately from initial JS. Images, Earth textures and video are not included in the JS total. These source measurements are not a Lighthouse score or a measurement of a visitor’s connection.
-
-| Item | Current measurement | How to check |
+| Item | Current Measurement | Verification |
 |---|---|---|
 | Repository files | **234** | `git ls-files \| wc -l` = 234 |
 | HTML size | `24,172` / `24,659` B | index.html / en/index.html |
@@ -105,30 +94,22 @@ The values below are checked against the files by the quality suite. JS totals i
 | Images (avatar + two project shots) | **112.5 KB** (`115,154` B) | scripts/check-bytes.mjs |
 | Social/share assets | **77.8 KB** (`79,646` B) | scripts/check-bytes.mjs |
 
-## Publishing and verification
+## Publishing, Credits & License
 
-The existing deployment workflow pushes this repository to GitHub, publishes the tracked website files to the dedicated server directory and compares local files, GitHub blobs, server files and public responses. Deployment credentials stay in the ignored local configuration.
-
-```sh
-bash scripts/deploy.sh "feat: publish the redesigned portfolio and new film"
-bash scripts/verify-sync.sh
-```
-
-The personal site owns `/` and `/en/`. `/nc15/`, `/geohot/` and the comment service have their own deployment boundaries. Each project is published separately.
-
-## Content and credits
-
-Personal text, project descriptions and links follow [content sources](docs/content-sources.md). [ORYZO](https://oryzo.ai/) is the design reference; the site uses its own content and locally implemented visuals. Earth imagery: NASA Earth Observatory / Blue Marble Next Generation, August 2004, a cloud-free composite rather than live weather. Details: [image provenance](docs/image-provenance.md).
-
-The new film uses real website captures and an original synthesized soft score. Production notes and validation: [film release](docs/promo-release-20261016.md).
+Deploy via `bash scripts/deploy.sh "<msg>"` and verify with `bash scripts/verify-sync.sh` (`/` and `/en/` stay cleanly isolated from `/nc15/` and `/geohot/`). Visual inspiration: [ORYZO](https://oryzo.ai/). Earth imagery: NASA Earth Observatory / Blue Marble Next Generation (see [content sources](docs/content-sources.md) & [image provenance](docs/image-provenance.md)).
 
 ## 📄 License
 
-[MIT](LICENSE) © 2026 Xiong Xinchen (熊鑫晨). Third-party assets retain their respective terms; see [image provenance](docs/image-provenance.md).
+[MIT](LICENSE) © 2026 Xiong Xinchen (熊鑫晨). Third-party imagery retains its respective license.
 
 ## 📈 Star History
 
 <p align="center">
   <img src="https://api.star-history.com/svg?repos=xxc2007/Introduction-of-XinChen-Xiong&type=Date" alt="GitHub star history for the personal website repository" width="100%">
 </p>
-<p align="center"><sub>Chart generated by <a href="https://star-history.com">star-history.com</a>. GitHub’s image cache may delay updates.</sub></p>
+
+---
+
+<div align="center">
+  <sub>One person, building with AI.<br>Ideas made into webpages · <a href="https://xxc2007.me/en/">xxc2007.me</a></sub>
+</div>
