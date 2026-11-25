@@ -22,7 +22,7 @@ turns an idea into something people can visit, explore, and return to.
 
 </div>
 
-![Desktop introduction with large typography and an interactive Earth](assets/images/readme-hero-desktop.png?v=4430820db066)
+![Desktop introduction with large typography and an interactive Earth](assets/images/readme-hero-desktop-en.png?v=252567fe45)
 
 ## 🎬 Product Film
 
@@ -56,7 +56,7 @@ https://github.com/user-attachments/assets/5dcdb916-12bd-47fe-98d7-1f608fd5e6a3
 
 ### Mobile Edition
 
-<p align="center"><img src="assets/images/readme-hero-mobile.png?v=9c30c784e83b" width="390" alt="Mobile edition with expanded navigation, introduction, film entry, and Earth"></p>
+<p align="center"><img src="assets/images/readme-hero-mobile-en.png?v=5d78a2977a" width="390" alt="Mobile edition with expanded navigation, introduction, film entry, and Earth"></p>
 
 ## Implementation
 
@@ -87,7 +87,7 @@ node --test "tests/*.test.mjs"  # unit & policy checks
 
 | Item | Current Measurement | Verification |
 |---|---|---|
-| Repository files | **234** | `git ls-files \| wc -l` = 234 |
+| Repository files | **236** | `git ls-files \| wc -l` = 236 |
 | HTML size | `24,172` / `24,659` B | index.html / en/index.html |
 | Site CSS | **51.8 KB** (`53,001` B), gzip **11.8 KB** | assets/css/style.css |
 | Hero JS | gzip **146.3 KB** | scripts/check-bytes.mjs |
