@@ -134,7 +134,7 @@ body
 - 邮箱：`xxc200707@gmail.com`（来源 GitHub profile API 与各仓库 commit 作者）。
 - 作品一：`青山湖畔的纪念册 · 纪念南昌市第十五中学`，线上 `https://xxc2007.me/nc15/`，仓库 `In-memory-of-Nanchang-No.-15-Middle-School`；事实条：纯 HTML/CSS/Vanilla JS、结构·样式·行为三分离、25 张自己拍摄的校园实景、八机位时光漫游、一张中文定位图、一面无需登录的自托管留言墙、10 种语言。
 - 作品二：`GEOHOT 地理热点`，线上 `https://xxc2007.me/geohot/`，仓库 `GeoHot`（MIT）；事实条：建在开源框架 AIHOT 之上、行业层集中在 `industry/` 一个目录、信源采集→预筛→两次独立打分→按空间显著性定门槛、每天早上 8 点出一份地理日报、前端 React Router 8 服务端渲染、后端与采集分析各自独立成服务。
-- 信条（逐字三条）：`地理不止是知识，是一种看世界的方式。` / `做出来比说出来有用。` / `实践是唯一的检验标准。`
+- 信条（逐字三条）：`以地理观世，知万象皆有尺度。` / `以代码造物，使所思皆可触碰。` / `以真实为凭，任时光缓缓作答。`
 - 社媒（顺序与 URL 逐字照抄）：个人站 `https://xxc2007.me/`、GitHub `https://github.com/xxc2007`、抖音 `https://www.douyin.com/user/MS4wLjABAAAA-AYW1RCpFjwJmoMTnZy1vKmOQopmBOUjPLN9phlDpjI`、小红书 `https://www.xiaohongshu.com/user/profile/63bac6500000000026006c47`、哔哩哔哩 `https://space.bilibili.com/31961476`、X `https://x.com/xxc2007`、YouTube `https://www.youtube.com/@xxc2007`。
 - 页脚署名式样：`编辑标准与代码 · 熊鑫晨`，接 `· MIT License · 2026`。
 

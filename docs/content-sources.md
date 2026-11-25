@@ -86,9 +86,9 @@ GitHub profile API 与仓库 commit 元数据。所有命令都是 `gh api` / `c
 
 | 页面上出现的 | 出处 | 怎么核 | 核实日期 |
 |---|---|---|---|
-| `地理不止是知识，是一种看世界的方式。` | profile README「### 我相信的几件事」第一条，**逐字**（原记"第 61 行"随今日重排下移到该节） | `gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d \| grep -n '看世界'` | 2026-10-07 |
-| `做出来比说出来有用。` | profile README「### 我相信的几件事」第二条，逐字 | `gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d \| grep -n '做出来比说出来有用'` | 2026-10-07 |
-| `实践是唯一的检验标准。` | profile README「### 我相信的几件事」第三条，逐字 | `gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d \| grep -n '实践是唯一的检验标准'` | 2026-10-07 |
+| `以地理观世，知万象皆有尺度。` | profile README「## 原则与信念」第一条，**逐字**（原记"第 61 行"随今日重排下移到该节） | `gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d \| grep -n '以地理观世'` | 2026-11-26 |
+| `以代码造物，使所思皆可触碰。` | profile README「## 原则与信念」第二条，逐字 | `gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d \| grep -n '以代码造物'` | 2026-11-26 |
+| `以真实为凭，任时光缓缓作答。` | profile README「## 原则与信念」第三条，逐字 | `gh api repos/xxc2007/xxc2007/readme --jq .content \| base64 -d \| grep -n '以真实为凭'` | 2026-11-26 |
 | 三处 `cite` 署名 `熊鑫晨 · Xiong Xinchen` | 同「首屏」姓名行出处；**不加"某某大学/某某职位"这类头衔** | build-contract §3 | 2026-10-07 |
 
 ### 伍 · CONTACT `#contact` 与页脚
