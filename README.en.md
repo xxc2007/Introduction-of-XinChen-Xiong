@@ -18,13 +18,13 @@ one preserving three years of high-school memory, the other reading a changing p
 Through its works, four-step craft, and quiet convictions, this zero-build bilingual site records how one person building with AI<br>
 turns an idea into something people can visit, explore, and return to.
 
-[Visit the site](https://xxc2007.me/en/) · [Watch the film](#-product-film) · [Two Projects](#two-projects) · [Experience](#experience) · [Implementation](#implementation) · [Run Locally](#run-locally) · [Source Sizes](#measured-source-sizes) · [License](#-license) · [Star History](#-star-history)
+[Visit the site](https://xxc2007.me/en/) · [Watch the film](#product-film) · [Two Projects](#two-projects) · [Experience](#experience) · [Implementation](#implementation) · [Run Locally](#run-locally) · [Source Sizes](#measured-source-sizes) · [License](#license) · [Star History](#star-history)
 
 </div>
 
 ![Desktop introduction with large typography and an interactive Earth](assets/images/readme-hero-desktop-en.png?v=252567fe45)
 
-## 🎬 Product Film
+## Product Film
 
 Our new **68-second · 1080p 60fps** official launch film (available in both English and Chinese editions): carrying the site's exact olive, cream, forest, editorial-orange, and charcoal color-block rhythm from the Bezier opening and original NASA Blue Marble 3D Earth through the profile card, live English captures of both projects, the 4-step tilted 3D workflow, and the charcoal manifesto—scored to an original 116 BPM analog-synth soundtrack.
 
@@ -98,11 +98,11 @@ node --test "tests/*.test.mjs"  # unit & policy checks
 
 Deploy via `bash scripts/deploy.sh "<msg>"` and verify with `bash scripts/verify-sync.sh` (`/` and `/en/` stay cleanly isolated from `/nc15/` and `/geohot/`). Visual inspiration: [ORYZO](https://oryzo.ai/). Earth imagery: NASA Earth Observatory / Blue Marble Next Generation (see [content sources](docs/content-sources.md) & [image provenance](docs/image-provenance.md)).
 
-## 📄 License
+## License
 
 [MIT](LICENSE) © 2026 Xiong Xinchen (熊鑫晨). Third-party imagery retains its respective license.
 
-## 📈 Star History
+## Star History
 
 <p align="center">
   <img src="https://api.star-history.com/svg?repos=xxc2007/Introduction-of-XinChen-Xiong&type=Date" alt="GitHub star history for the personal website repository" width="100%">

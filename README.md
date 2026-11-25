@@ -18,13 +18,13 @@
 从个人简介、双站展厅、造站方法到心之所信，这座零构建的中英双语站点记录了一个人与 AI 协作，<br>
 如何把最初的念头一步步打磨成可访问、可触摸、也愿意长期照料的网页。
 
-[走进网站](https://xxc2007.me/) · [观看宣传片](#-宣传片展示) · [两个作品](#两个作品) · [交互与体验](#交互与体验) · [技术实现](#技术实现) · [本地运行](#本地运行) · [源码体积](#当前源码体积) · [License](#-license) · [Star History](#-star-history)
+[走进网站](https://xxc2007.me/) · [观看宣传片](#宣传片展示) · [两个作品](#两个作品) · [交互与体验](#交互与体验) · [技术实现](#技术实现) · [本地运行](#本地运行与质量检查) · [源码体积](#当前源码体积) · [License](#license) · [Star History](#star-history)
 
 </div>
 
 ![桌面首屏：大字姓名、个人介绍与可自由旋转的真实地球](assets/images/readme-hero-desktop.png?v=1c6836b61a)
 
-## 🎬 宣传片展示
+## 宣传片展示
 
 全新 **68 秒 · 1080p 60fps** 官方宣传片（同步提供中文版与英文版）：完整延续官网的深橄榄绿、暖米白、深森林绿、活力橙与深炭黑五重色块节奏——从开场贝塞尔曲线与原版 NASA Blue Marble 3D 旋转地球启程，穿行于个人名片、双站真实截屏展厅、「构思 / 建造 / 地图 / 上线」四步 3D 透视联动与大字信念宣言，最后落版超大 `XXC2007` 字标。配以原创 116 BPM 温暖模拟合成器配乐与卡点音效。
 
@@ -96,11 +96,11 @@ node --test "tests/*.test.mjs"  # 静态与策略测试
 
 发布流程：`bash scripts/deploy.sh "<msg>"` 随后 `bash scripts/verify-sync.sh`（本仓库仅负责 `/` 与 `/en/`，与 `/nc15/`、`/geohot/` 保持独立发布边界）。设计参考 [ORYZO](https://oryzo.ai/)，地球影像来自 NASA Earth Observatory / Blue Marble Next Generation（详见[内容出处](docs/content-sources.md)与[图像出处](docs/image-provenance.md)）。
 
-## 📄 License
+## License
 
 [MIT](LICENSE) © 2026 熊鑫晨（Xiong Xinchen）· 第三方素材遵循各自许可协议。
 
-## 📈 Star History
+## Star History
 
 <p align="center">
   <img src="https://api.star-history.com/svg?repos=xxc2007/Introduction-of-XinChen-Xiong&type=Date" alt="个人展示网站仓库的 GitHub Star 历史" width="100%">
